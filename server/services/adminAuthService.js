@@ -1,0 +1,6 @@
+import crypto from 'node:crypto';
+const sessions = new Map(); const failedAttempts = new Map(); const MAX_ATTEMPTS = 5; const WINDOW_MS = 10 * 60 * 1000;
+function cleanup() { const now = Date.now(); for (const [token, session] of sessions) if (session.expiresAt < now) sessions.delete(token); for (const [ip, attempt] of failedAttempts) if (attempt.until < now) failedAttempts.delete(ip); }
+export function loginAdmin(passphrase, ip) { cleanup(); const configured = process.env.ADMIN_PASSPHRASE; const attempt = failedAttempts.get(ip); if (attempt?.count >= MAX_ATTEMPTS) return { error: 'RATE_LIMITED' }; const valid = configured && typeof passphrase === 'string' && crypto.timingSafeEqual(crypto.createHash('sha256').update(passphrase).digest(), crypto.createHash('sha256').update(configured).digest()); if (!valid) { failedAttempts.set(ip, { count: (attempt?.count ?? 0) + 1, until: Date.now() + WINDOW_MS }); return { error: 'INVALID_CREDENTIALS' }; } failedAttempts.delete(ip); const token = crypto.randomBytes(32).toString('base64url'); sessions.set(token, { expiresAt: Date.now() + 30 * 60 * 1000 }); return { token }; }
+export function authenticated(token) { cleanup(); return Boolean(token && sessions.has(token)); }
+export function logoutAdmin(token) { if (token) sessions.delete(token); }
