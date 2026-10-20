@@ -14,6 +14,16 @@ import {
 import { GAME_CONFIG, GAME_STAGES } from '../../shared/gameConfig.js';
 import { ENTITY_KEYS, EVENT_TYPES } from '../../shared/eventNames.js';
 import { calculateScore } from '../../shared/scoreRules.js';
+import {
+  playLaneSwitchSfx,
+  playJumpSfx,
+  playShardPickupSfx,
+  playRareOrbSfx,
+  playCardFragmentSfx,
+  playCollisionHitSfx,
+  playStageClearSfx,
+  playJumpscareSfx,
+} from './soundEffects.js';
 
 export const POKEMON_CARD_ROSTER = [
   {
@@ -248,6 +258,7 @@ export class GameEngine {
       fragmentsCollected: 0,
       stageCardsCollected: 0,
       scheduledCardIndex: 0,
+      cardSpawnSafeGuardMs: 0,
       spawnElapsedMs: 0,
       jumpElapsedMs: 0,
       invulnerableMs: 0,
@@ -287,6 +298,9 @@ export class GameEngine {
     this.lossElapsedMs = 0;
     this.lossDurationMs = 1350;
 
+    // Trigger action-reactive Web Audio jumpscare SFX
+    playJumpscareSfx();
+
     // Hide player model so Pennywise's flight and unhinged bite are unobstructed
     if (this.playerEntity?.root) {
       this.playerEntity.root.visible = false;
@@ -315,6 +329,7 @@ export class GameEngine {
     if (next !== this.laneIndex) {
       this.laneIndex = next;
       this.targetX = GAME_CONFIG.laneCenters[next];
+      playLaneSwitchSfx(next);
       this.emit(EVENT_TYPES.LANE_CHANGE, laneKey[next], 0, next);
       this.updateHudImmediate();
     }
@@ -323,109 +338,61 @@ export class GameEngine {
   jump() {
     if (this.jumpElapsedMs === 0) {
       this.jumpElapsedMs = 1;
+      playJumpSfx();
       this.emit(EVENT_TYPES.JUMP, ENTITY_KEYS.PLAYER_JUMP);
       this.updateHudImmediate();
     }
   }
 
-  spawn() {
-    const stage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
-    const allowedHazards = stage.hazardTypes || ['blocker_crate', 'shadow_wave'];
+  getSafeLaneForScheduledCard(spawnZ) {
+    // 1. Scan this.objects for any active hazard where Math.abs(obj.mesh.position.z - spawnZ) < 9.5
+    const nearbyHazards = this.objects.filter(
+      (obj) => obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5
+    );
 
-    const isHazard = Math.random() < 0.64;
-
-    if (isHazard) {
-      const canDoDouble = allowedHazards.includes('double_blockade') && Math.random() < 0.28;
-      const canDoSway = allowedHazards.includes('swaying_specter') && Math.random() < 0.35;
-      const canDoWave = allowedHazards.includes('shadow_wave') && Math.random() < 0.40;
-
-      if (canDoDouble) {
-        const openLane = Math.floor(Math.random() * 3);
-        const blockedLanes = [0, 1, 2].filter((l) => l !== openLane);
-
-        blockedLanes.forEach((lane) => {
-          const mesh = createDoubleBlockadeSingle(lane, openLane);
-          mesh.position.set(GAME_CONFIG.laneCenters[lane], 0, -GAME_CONFIG.spawnDistance);
-          this.world.scene.add(mesh);
-          this.objects.push({
-            mesh,
-            lane,
-            isHazard: true,
-            isWave: false,
-            isSway: false,
-            entityKey: ENTITY_KEYS.DOUBLE_BLOCKADE,
-            consumed: false,
-          });
-        });
-        this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.DOUBLE_BLOCKADE, 0, openLane);
-        return;
+    // If any hazard within ±6.5 Z-units is a double_blockade or swaying_specter, remove it immediately
+    nearbyHazards.forEach((hazard) => {
+      if (Math.abs(hazard.mesh.position.z - spawnZ) < 6.5) {
+        if (hazard.entityKey === ENTITY_KEYS.DOUBLE_BLOCKADE || hazard.isSway) {
+          hazard.consumed = true;
+          this.world.scene.remove(hazard.mesh);
+        }
       }
+    });
 
-      const lane = Math.floor(Math.random() * 3);
-      if (canDoSway) {
-        const mesh = createSwayingSpecter();
-        mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.25, -GAME_CONFIG.spawnDistance);
-        this.world.scene.add(mesh);
-        this.objects.push({
-          mesh,
-          lane,
-          baseX: GAME_CONFIG.laneCenters[lane],
-          swayTime: Math.random() * 10,
-          isHazard: true,
-          isWave: false,
-          isSway: true,
-          entityKey: ENTITY_KEYS.SWAYING_SPECTER,
-          consumed: false,
-        });
-        this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.SWAYING_SPECTER, 0, lane);
-        return;
+    // Collect the lanes of any remaining single-lane hazards within ±9.5 Z-units
+    const occupiedLanes = new Set();
+    this.objects.forEach((obj) => {
+      if (obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5) {
+        occupiedLanes.add(obj.lane);
       }
+    });
 
-      const isWave = canDoWave;
-      const mesh = isWave ? createShadowWave() : createBlockerCrate();
-      mesh.position.set(GAME_CONFIG.laneCenters[lane], isWave ? 0.05 : 0.72, -GAME_CONFIG.spawnDistance);
-      this.world.scene.add(mesh);
-
-      const entityKey = isWave ? ENTITY_KEYS.SHADOW_WAVE : ENTITY_KEYS.BLOCKER_CRATE;
-      this.objects.push({
-        mesh,
-        lane,
-        isHazard: true,
-        isWave,
-        isSway: false,
-        entityKey,
-        consumed: false,
-      });
-      this.emit(EVENT_TYPES.OBSTACLE_SPAWN, entityKey, 0, lane);
+    // Pick a lane for the card that is 100% free of hazards
+    const freeLanes = [0, 1, 2].filter((l) => !occupiedLanes.has(l));
+    let chosenLane;
+    if (freeLanes.length > 0) {
+      chosenLane = freeLanes[Math.floor(Math.random() * freeLanes.length)];
     } else {
-      const lane = Math.floor(Math.random() * 3);
-      const isRare = Math.random() < 0.28;
-
-      const mesh = isRare ? createAmberOrb() : createRiftShard();
-      const entityKey = isRare ? ENTITY_KEYS.AMBER_ORB : ENTITY_KEYS.RIFT_SHARD;
-
-      mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.05, -GAME_CONFIG.spawnDistance);
-      this.world.scene.add(mesh);
-
-      this.objects.push({
-        mesh,
-        lane,
-        isHazard: false,
-        isWave: false,
-        isSway: false,
-        isRare,
-        isFragment: false,
-        isCard: false,
-        entityKey,
-        consumed: false,
+      // If all 3 lanes have a hazard in that range, remove the hazard in the chosen card lane
+      chosenLane = Math.floor(Math.random() * 3);
+      this.objects.forEach((obj) => {
+        if (obj.isHazard && !obj.consumed && obj.lane === chosenLane && Math.abs(obj.mesh.position.z - spawnZ) < 9.5) {
+          obj.consumed = true;
+          this.world.scene.remove(obj.mesh);
+        }
       });
     }
+
+    this.cardSpawnSafeGuardMs = 900;
+    return chosenLane;
   }
 
   spawnScheduledCard(cardIndex) {
-    const lane = Math.floor(Math.random() * 3);
+    const spawnZ = -GAME_CONFIG.spawnDistance;
+    const lane = this.getSafeLaneForScheduledCard(spawnZ);
     const mesh = createCardFragment();
-    mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.15, -GAME_CONFIG.spawnDistance);
+    mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.15, spawnZ);
     this.world.scene.add(mesh);
 
     this.objects.push({
@@ -443,6 +410,150 @@ export class GameEngine {
     });
   }
 
+  spawn() {
+    const stage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
+    const stageNum = this.currentStageIndex + 1;
+    const allowedHazards = stage.hazardTypes || ['blocker_crate', 'shadow_wave'];
+    const spawnZ = -GAME_CONFIG.spawnDistance;
+
+    const hazardChance = stage.hazardChance ?? 0.65;
+    const isHazard = Math.random() < hazardChance;
+
+    if (isHazard) {
+      // If card spawn safeguard grace window is active, skip spawning hazard on this tick
+      if (this.cardSpawnSafeGuardMs > 0) {
+        return;
+      }
+
+      // Check if any uncollected card is within 9.5 Z-units
+      const cardNearby = this.objects.some(
+        (obj) => (obj.isCard || obj.isFragment) && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5
+      );
+
+      const cardLanesOccupied = new Set(
+        this.objects
+          .filter((obj) => (obj.isCard || obj.isFragment) && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5)
+          .map((obj) => obj.lane)
+      );
+
+      // If a card is nearby, forbid double_blockade and swaying_specter
+      const canDoDouble = !cardNearby && allowedHazards.includes('double_blockade') && Math.random() < 0.28;
+      const canDoSway = !cardNearby && allowedHazards.includes('swaying_specter') && Math.random() < 0.35;
+      const canDoWave = allowedHazards.includes('shadow_wave') && Math.random() < 0.40;
+
+      if (canDoDouble) {
+        const openLane = Math.floor(Math.random() * 3);
+        const blockedLanes = [0, 1, 2].filter((l) => l !== openLane);
+
+        blockedLanes.forEach((lane) => {
+          const mesh = createDoubleBlockadeSingle(lane, openLane, stageNum);
+          mesh.position.set(GAME_CONFIG.laneCenters[lane], 0, spawnZ);
+          this.world.scene.add(mesh);
+          this.objects.push({
+            mesh,
+            lane,
+            isHazard: true,
+            isWave: false,
+            isSway: false,
+            entityKey: ENTITY_KEYS.DOUBLE_BLOCKADE,
+            consumed: false,
+          });
+        });
+        this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.DOUBLE_BLOCKADE, 0, openLane);
+        return;
+      }
+
+      // Choose a lane that excludes any nearby card's lane
+      let availableLanes = [0, 1, 2].filter((l) => !cardLanesOccupied.has(l));
+      if (availableLanes.length === 0) availableLanes = [0, 1, 2];
+      const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+
+      if (canDoSway) {
+        const mesh = createSwayingSpecter(stageNum);
+        mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.25, spawnZ);
+        this.world.scene.add(mesh);
+        this.objects.push({
+          mesh,
+          lane,
+          baseX: GAME_CONFIG.laneCenters[lane],
+          swayTime: Math.random() * 10,
+          isHazard: true,
+          isWave: false,
+          isSway: true,
+          entityKey: ENTITY_KEYS.SWAYING_SPECTER,
+          consumed: false,
+        });
+        this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.SWAYING_SPECTER, 0, lane);
+        return;
+      }
+
+      const isWave = canDoWave;
+      const mesh = isWave ? createShadowWave(stageNum) : createBlockerCrate(stageNum);
+      mesh.position.set(GAME_CONFIG.laneCenters[lane], isWave ? 0.05 : 0.72, spawnZ);
+      this.world.scene.add(mesh);
+
+      const entityKey = isWave ? ENTITY_KEYS.SHADOW_WAVE : ENTITY_KEYS.BLOCKER_CRATE;
+      this.objects.push({
+        mesh,
+        lane,
+        isHazard: true,
+        isWave,
+        isSway: false,
+        entityKey,
+        consumed: false,
+      });
+      this.emit(EVENT_TYPES.OBSTACLE_SPAWN, entityKey, 0, lane);
+
+      // In Stages 3 to 6, when spawning a single-lane blocker_crate (and no card is nearby),
+      // allow a (25% + stageIndex * 6%) chance to simultaneously spawn a jumpable shadow_wave in an adjacent safe lane
+      if (!isWave && !cardNearby && this.currentStageIndex >= 2 && allowedHazards.includes('shadow_wave')) {
+        const comboChance = 0.25 + this.currentStageIndex * 0.06;
+        if (Math.random() < comboChance) {
+          const adjCandidates = lane === 1 ? [0, 2] : [1];
+          const validAdj = adjCandidates.filter((l) => !cardLanesOccupied.has(l));
+          if (validAdj.length > 0) {
+            const adjLane = validAdj[Math.floor(Math.random() * validAdj.length)];
+            const waveMesh = createShadowWave(stageNum);
+            waveMesh.position.set(GAME_CONFIG.laneCenters[adjLane], 0.05, spawnZ);
+            this.world.scene.add(waveMesh);
+            this.objects.push({
+              mesh: waveMesh,
+              lane: adjLane,
+              isHazard: true,
+              isWave: true,
+              isSway: false,
+              entityKey: ENTITY_KEYS.SHADOW_WAVE,
+              consumed: false,
+            });
+            this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.SHADOW_WAVE, 0, adjLane);
+          }
+        }
+      }
+    } else {
+      const lane = Math.floor(Math.random() * 3);
+      const isRare = Math.random() < 0.28;
+
+      const mesh = isRare ? createAmberOrb() : createRiftShard();
+      const entityKey = isRare ? ENTITY_KEYS.AMBER_ORB : ENTITY_KEYS.RIFT_SHARD;
+
+      mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.05, spawnZ);
+      this.world.scene.add(mesh);
+
+      this.objects.push({
+        mesh,
+        lane,
+        isHazard: false,
+        isWave: false,
+        isSway: false,
+        isRare,
+        isFragment: false,
+        isCard: false,
+        entityKey,
+        consumed: false,
+      });
+    }
+  }
+
   updateObjects(deltaMs, speed) {
     const dt = deltaMs / 1000;
 
@@ -450,7 +561,7 @@ export class GameEngine {
       object.mesh.position.z += speed * dt;
 
       if (object.isSway) {
-        object.swayTime += deltaMs * 0.003;
+        object.swayTime += deltaMs * (0.0032 + this.currentStageIndex * 0.0008);
         const offset = Math.sin(object.swayTime) * 1.85;
         object.mesh.position.x = Math.max(-3.5, Math.min(3.5, object.baseX + offset));
         object.mesh.rotation.z = Math.cos(object.swayTime) * 0.25;
@@ -490,6 +601,7 @@ export class GameEngine {
           object.consumed = true;
           this.health -= 1;
           this.invulnerableMs = 900;
+          playCollisionHitSfx();
           this.emit(EVENT_TYPES.COLLISION, object.entityKey, 0, object.lane);
           this.updateHudImmediate({ hit: true });
           if (this.health <= 0) {
@@ -503,6 +615,8 @@ export class GameEngine {
           if (object.isFragment || object.isCard) {
             this.stageCardsCollected = (this.stageCardsCollected ?? 0) + 1;
             this.fragmentsCollected += 1;
+            const isFullCard = this.stageCardsCollected >= (GAME_CONFIG.cardsRequiredPerStage || 5);
+            playCardFragmentSfx(isFullCard);
             this.emit(EVENT_TYPES.FRAGMENT_PICKUP, ENTITY_KEYS.CARD_FRAGMENT, 1, object.lane);
             const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.currentStageIndex);
             this.updateHudImmediate({
@@ -512,10 +626,12 @@ export class GameEngine {
             });
           } else if (object.isRare) {
             this.rarePickups += 1;
+            playRareOrbSfx();
             this.emit(EVENT_TYPES.RARE_PICKUP, ENTITY_KEYS.AMBER_ORB, 3, object.lane);
             this.updateHudImmediate();
           } else {
             this.normalShards += 1;
+            playShardPickupSfx();
             this.emit(EVENT_TYPES.SHARD_PICKUP, ENTITY_KEYS.RIFT_SHARD, 1, object.lane);
             this.updateHudImmediate();
           }
@@ -543,6 +659,7 @@ export class GameEngine {
 
   advanceStage() {
     const completedStageNum = this.currentStageIndex + 1;
+    playStageClearSfx();
     const stageKey = ENTITY_KEYS[`STAGE_${completedStageNum}`];
     this.emit(EVENT_TYPES.STAGE_CLEAR, stageKey, 1);
     this.stagesCleared += 1;
@@ -632,6 +749,9 @@ export class GameEngine {
       this.distanceM += speed * dt;
       this.spawnElapsedMs += deltaMs;
       this.invulnerableMs -= deltaMs;
+      if (this.cardSpawnSafeGuardMs > 0) {
+        this.cardSpawnSafeGuardMs -= deltaMs;
+      }
 
       // 1. True Optic Flow: Infinite scrolling trackside chunks (140-unit loop)
       if (this.world.scrollingProps) {

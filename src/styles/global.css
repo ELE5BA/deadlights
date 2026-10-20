@@ -44,49 +44,73 @@ body {
   background: radial-gradient(circle at 50% 30%, #1a1329 0%, var(--void-navy) 82%);
 }
 
-/* ── HERO & OVERLAY PANELS (BESPOKE TACTILE CARDSTOCK & BRASS FRAMING) ── */
+/* ── HERO & OVERLAY PANELS (PRECISION CONTENT-HUGGING CARTOON INK BOX) ── */
 .hero-panel,
 .setup-card {
-  width: min(520px, 100%);
-  padding: clamp(2rem, 5vw, 3rem);
-  border: 1px solid var(--border-carnival);
+  width: fit-content;
+  min-width: min(340px, 90vw);
+  max-width: min(440px, 92vw);
+  padding: 1.5rem 1.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+  border: 3px solid var(--cartoon-ink, #120b1d);
+  outline: 2px solid var(--inner-gold, #f3c86b);
+  border-radius: var(--comic-radius, 12px);
   background-color: var(--midnight-panel);
-  background-image:
-    radial-gradient(circle at 50% 0%, rgba(212, 163, 73, 0.08) 0%, transparent 70%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
-  box-shadow: var(--shadow-modal), inset 0 0 0 1px rgba(212, 163, 73, 0.15);
+  box-shadow: var(--comic-shadow, 6px 6px 0px #120b1d);
   position: relative;
-  /* Notched carnival ticket corners */
-  clip-path: polygon(
-    0 12px, 12px 0,
-    calc(100% - 12px) 0, 100% 12px,
-    100% calc(100% - 12px), calc(100% - 12px) 100%,
-    12px 100%, 0 calc(100% - 12px)
-  );
 }
 
 .hero-panel::before,
 .setup-card::before {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border: 1px dashed rgba(212, 163, 73, 0.28);
-  pointer-events: none;
-  clip-path: polygon(
-    0 8px, 8px 0,
-    calc(100% - 8px) 0, 100% 8px,
-    100% calc(100% - 8px), calc(100% - 8px) 100%,
-    8px 100%, 0 calc(100% - 8px)
-  );
+  display: none;
 }
 
-.hero-panel {
-  text-align: center;
-  max-width: 580px;
+.poke-balloon-emblem-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.2rem;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
 }
 
-.attract-content {
-  max-width: 540px;
+.cartoon-pill-badge {
+  display: inline-block;
+  background: var(--cartoon-ink, #120b1d);
+  border: 2px solid var(--inner-gold, #f3c86b);
+  color: var(--inner-gold, #f3c86b);
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  padding: 0.22rem 0.85rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  box-shadow: var(--comic-shadow-sm, 3px 3px 0px #120b1d);
+  margin-bottom: 0.15rem;
+}
+
+.brand-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 3px 3px 0px var(--cartoon-ink, #120b1d), 0 0 16px rgba(243, 200, 107, 0.45);
+  text-transform: uppercase;
+}
+
+.hero-panel .summary {
+  margin: 0.2rem 0 0.65rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--secondary-text);
+  max-width: 24rem;
 }
 
 /* Typographic Hierarchy (Occult & Carnival Serif Accents) */
@@ -408,174 +432,283 @@ h1 span {
   display: block;
 }
 
-/* Common Corner Plate Framing */
+/* ── PERIPHERAL UNOBSTRUCTED HUD (CENTER SKY 100% CLEAR FOR PENNYWISE) ── */
+
 .hud-corner-plate {
   position: absolute;
-  top: 1.25rem;
-  display: flex;
-  align-items: center;
-  background: rgba(10, 8, 16, 0.88);
-  border: 1px solid var(--border-carnival);
-  padding: 0.5rem 0.9rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(212, 163, 73, 0.12);
+  top: 1.15rem;
+  background: rgba(18, 14, 28, 0.94);
+  border: 3px solid var(--cartoon-ink, #120b1d);
+  box-shadow: inset 0 0 0 2px var(--inner-gold, #f3c86b), 5px 5px 0px var(--cartoon-ink, #120b1d);
+  border-radius: 12px;
+  padding: 0.55rem 0.95rem;
   color: var(--primary-text);
-  z-index: 10;
-  /* Notched corners */
-  clip-path: polygon(
-    0 6px, 6px 0,
-    calc(100% - 6px) 0, 100% 6px,
-    100% calc(100% - 6px), calc(100% - 6px) 100%,
-    6px 100%, 0 calc(100% - 6px)
-  );
+  z-index: 20;
+  pointer-events: auto;
 }
 
-/* HUD Top-Left Plate: Vitality Hearts & Shard Pouch */
+/* 1. HUD Top-Left Cartoon Plate (Stage, Timer, Progress Bar, Hearts, Shards) */
 .hud-plate-left {
-  left: 1.5rem;
-  gap: 0.85rem;
+  left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 250px;
+}
+
+.hud-stage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.hud-stage-badge {
+  font-family: var(--font-display, inherit);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #120b1d;
+  background: #f3c86b;
+  border: 2px solid #120b1d;
+  border-radius: 999px;
+  padding: 0.12rem 0.55rem;
+  letter-spacing: 0.08em;
+  box-shadow: 1px 1px 0px #120b1d;
+  white-space: nowrap;
+}
+
+.hud-stage-title {
+  font-family: var(--font-display, inherit);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.hud-timer-tabular {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #f3c86b;
+  background: #090510;
+  border: 2px solid #120b1d;
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 1px 1px 0px #120b1d;
+}
+
+/* 60FPS DOM Progress Bar */
+.hud-progress-track {
+  width: 100%;
+  height: 4px;
+  background: #090510;
+  border: 1.5px solid #120b1d;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hud-progress-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f3c86b, #38bdf8);
+  transform-origin: left;
+  transform: scaleX(0);
+  will-change: transform;
+}
+
+/* Vitality & Shards Bottom Row */
+.hud-vitality-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid rgba(243, 200, 107, 0.2);
 }
 
 .hud-hearts {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
-.soul-heart {
-  transition: transform 0.18s ease, filter 0.18s ease;
+.poke-heart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.soul-heart--pulse {
-  animation: soulHeartbeat 0.85s infinite ease-in-out;
+.poke-heart--pulse {
+  animation: pokeHeartBeat 0.75s infinite ease-in-out;
 }
 
-@keyframes soulHeartbeat {
+@keyframes pokeHeartBeat {
   0%, 100% {
     transform: scale(1);
-    filter: drop-shadow(0 0 3px rgba(220, 38, 38, 0.5));
+    filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.8));
   }
   50% {
-    transform: scale(1.22);
-    filter: drop-shadow(0 0 10px rgba(243, 200, 107, 0.85));
+    transform: scale(1.28);
+    filter: drop-shadow(0 0 8px rgba(243, 200, 107, 1)) drop-shadow(0 0 12px rgba(239, 68, 68, 0.9));
   }
 }
 
 .hud-pouch-divider {
-  width: 1px;
+  width: 2px;
   height: 20px;
-  background: var(--border-carnival);
-  opacity: 0.5;
+  background: #120b1d;
 }
 
 .hud-shards {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--shard-cyan);
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #38bdf8;
+  text-shadow: 1px 1px 0px #120b1d;
 }
 
 .shard-val {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, monospace);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.05em;
 }
 
-/* HUD Top-Center: Compact Marquee Ribbon & Fanned Cards */
-.hud-center-marquee {
+/* 2. HUD Top-Right Cartoon Plate (Odometer, Audio Toggle, Pause Keycap) */
+.hud-plate-right {
+  right: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hud-odometer-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+  padding-right: 0.25rem;
+}
+
+.score-eyebrow {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #f3c86b;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0px #120b1d;
+}
+
+.odometer-digits {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #f8fafc;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 2px 2px 0px #120b1d, 0 0 12px rgba(243, 200, 107, 0.4);
+}
+
+.hud-sound-toggle-btn {
+  background: #272038;
+  border: 2.5px solid #120b1d;
+  box-shadow: inset 0 0 0 1.5px #f3c86b, 3px 3px 0px #120b1d;
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.hud-sound-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1.5px #fef08a, 4px 4px 0px #120b1d;
+}
+
+.hud-sound-toggle-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: inset 0 0 0 1.5px #f3c86b, 1px 1px 0px #120b1d;
+}
+
+.hud-pause-keycap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #272038;
+  border: 2.5px solid #120b1d;
+  box-shadow: inset 0 0 0 1.5px #f3c86b, 3px 3px 0px #120b1d;
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.hud-pause-keycap:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1.5px #fef08a, 4px 4px 0px #120b1d;
+}
+
+.hud-pause-keycap:active {
+  transform: translate(2px, 2px);
+  box-shadow: inset 0 0 0 1.5px #f3c86b, 1px 1px 0px #120b1d;
+}
+
+.keycap-hint {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.64rem;
+  padding: 0.1rem 0.35rem;
+  background: #090510;
+  border: 1.5px solid #120b1d;
+  border-radius: 4px;
+  color: #f3c86b;
+  font-weight: 800;
+}
+
+/* 3. Bottom-Center Fanned 5-Card Dock (Unobstructed Pennywise in Upper Sky) */
+.hud-bottom-card-dock {
   position: absolute;
-  top: 1.0rem;
+  bottom: 0.85rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  z-index: 10;
+  z-index: 15;
   pointer-events: none;
 }
 
-.hud-center-marquee * {
-  pointer-events: auto;
-}
-
-.marquee-ribbon {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(19, 16, 28, 0.92);
-  border: 1px solid var(--border-carnival);
-  padding: 0.35rem 0.95rem;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
-  clip-path: polygon(
-    0 6px, 6px 0,
-    calc(100% - 6px) 0, 100% 6px,
-    100% calc(100% - 6px), calc(100% - 6px) 100%,
-    6px 100%, 0 calc(100% - 6px)
-  );
-}
-
-.marquee-stage-badge {
-  color: var(--gold-accent);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-family: var(--font-sans);
-}
-
-.marquee-stage-name {
-  color: var(--primary-text);
-  font-size: 0.88rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.marquee-timer {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: var(--gold-accent);
-  background: var(--panel-sunken);
-  padding: 0.12rem 0.45rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 3px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* 60FPS DOM Progress Bar */
-.marquee-progress-track {
-  width: 200px;
-  height: 3px;
-  background: rgba(10, 8, 16, 0.85);
-  border: 1px solid var(--border-carnival);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.marquee-progress-bar {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, var(--reward-gold), var(--gold-accent));
-  transform-origin: left;
-  transform: scaleX(0);
-  will-change: transform;
-}
-
-/* 5 Physical Mini-Card Slots in Poker-Hand Fan */
-.hud-fanned-cards {
+.hud-dock-fanned-cards {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: 6px;
-  margin-top: 2px;
-  perspective: 600px;
+  gap: 8px;
+  perspective: 700px;
+  pointer-events: auto;
+  padding: 0.4rem 0.8rem;
+  background: rgba(18, 14, 28, 0.85);
+  border: 2.5px solid #120b1d;
+  box-shadow: inset 0 0 0 1.5px rgba(243, 200, 107, 0.6), 4px 4px 0px #120b1d;
+  border-radius: 12px;
 }
 
 .fanned-card-slot {
-  width: 22px;
-  height: 32px;
+  width: 28px;
+  height: 40px;
   position: relative;
   transform-style: preserve-3d;
   transform: rotate(var(--card-fan-rot, 0deg)) translateY(var(--card-fan-y, 0px));
@@ -584,8 +717,8 @@ h1 span {
 }
 
 .fanned-card-slot:hover {
-  transform: rotate(var(--card-fan-rot, 0deg)) translateY(-4px) scale(1.15);
-  z-index: 5;
+  transform: rotate(var(--card-fan-rot, 0deg)) translateY(-8px) scale(1.22);
+  z-index: 10;
 }
 
 .card-flipper {
@@ -594,7 +727,7 @@ h1 span {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .card-pending .card-flipper {
@@ -610,123 +743,63 @@ h1 span {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
-  border-radius: 3px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+  border: 2px solid #120b1d;
+  box-shadow: 2px 2px 0px #120b1d;
 }
 
 /* Card Back (Uncollected Slot) */
 .card-back {
   background: #110e19;
-  border: 1px solid #352c42;
-  color: #5c4d72;
+  border: 2px solid #120b1d;
+  color: #645579;
 }
 
 .fanned-back-pattern {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   line-height: 1;
 }
 
 /* Card Front (Collected Slot) */
 .card-front {
-  background: linear-gradient(135deg, #a16207 0%, #ca8a04 100%);
-  border: 1px solid #fef08a;
-  color: #ffffff;
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
+  border: 2px solid #120b1d;
+  box-shadow: inset 0 0 0 1px #fef08a, 2px 2px 0px #120b1d;
+  color: #120b1d;
   transform: rotateY(180deg);
-  box-shadow: 0 0 10px rgba(243, 200, 107, 0.7);
 }
 
 .fanned-card-index {
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 900;
   margin-right: 1px;
 }
 
 .fanned-card-mark {
-  font-size: 0.6rem;
-  color: #fffbeb;
-}
-
-/* HUD Top-Right Plate: Score Odometer & Pause Keycap */
-.hud-plate-right {
-  right: 1.5rem;
-  gap: 0.95rem;
-}
-
-.hud-odometer-box {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  line-height: 1.1;
-}
-
-.score-eyebrow {
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: var(--reward-gold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.odometer-digits {
-  font-family: var(--font-mono);
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--primary-text);
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 8px rgba(243, 200, 107, 0.3);
-}
-
-.hud-pause-keycap {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: var(--panel-elevated);
-  border: 1px solid var(--border-carnival);
-  color: var(--secondary-text);
-  padding: 0.32rem 0.65rem;
-  cursor: pointer;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  transition: all 0.15s ease;
-  clip-path: polygon(0 3px, 3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px));
-}
-
-.hud-pause-keycap:hover {
-  background: #272038;
-  color: var(--primary-text);
-  border-color: var(--gold-accent);
-}
-
-.keycap-hint {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  padding: 0.08rem 0.28rem;
-  background: var(--panel-sunken);
-  border: 1px solid var(--border-subtle);
-  border-radius: 2px;
-  color: var(--gold-accent);
+  font-size: 0.7rem;
+  color: #ffffff;
+  text-shadow: 1px 1px 0px #120b1d;
 }
 
 /* In-Game Bottom Footnote (Auto-Fading) */
 .game-help {
   position: absolute;
   left: 50%;
-  bottom: 1.75rem;
+  bottom: 4.8rem;
   transform: translateX(-50%);
   color: var(--secondary-text);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  background: rgba(10, 8, 16, 0.92);
+  background: rgba(18, 14, 28, 0.94);
   padding: 0.45rem 1.4rem;
-  border: 1px solid var(--border-carnival);
-  border-radius: 4px;
+  border: 2px solid #120b1d;
+  box-shadow: 3px 3px 0px #120b1d;
+  border-radius: 8px;
   text-align: center;
   pointer-events: none;
   z-index: 10;
@@ -788,45 +861,61 @@ h1 span {
   border-color: var(--border-strong);
 }
 
-/* Stage Clear Celebration Banner */
+/* Stage Clear Celebration Banner (Positioned well below Pennywise at bottom: 5.5rem) */
 .stage-clear-banner {
   position: absolute;
-  top: 18%;
+  bottom: 5.5rem;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--midnight-panel);
-  border: 1px solid var(--border-carnival);
-  border-radius: 6px;
-  padding: 1.35rem 2.8rem;
+  transform: translateX(-50%);
+  background: rgba(18, 14, 28, 0.96);
+  border: 3.5px solid #120b1d;
+  box-shadow: inset 0 0 0 2px #f3c86b, 6px 6px 0px #120b1d;
+  border-radius: 12px;
+  padding: 1.1rem 2.2rem;
   text-align: center;
-  box-shadow: var(--shadow-modal);
   z-index: 25;
+  animation: bannerPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bannerPopIn {
+  from {
+    transform: translate(-50%, 20px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
 }
 
 .banner-eyebrow {
   margin: 0;
-  color: var(--reward-gold);
+  color: #f3c86b;
   font-size: 0.75rem;
   letter-spacing: 0.18em;
-  font-weight: 800;
+  font-weight: 900;
+  text-shadow: 1px 1px 0px #120b1d;
 }
 
 .stage-clear-banner h2 {
-  margin: 0.35rem 0;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  color: var(--primary-text);
+  margin: 0.25rem 0;
+  font-family: var(--font-display, inherit);
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #f8fafc;
   letter-spacing: 0.04em;
+  text-shadow: 2px 2px 0px #120b1d;
 }
 
 .banner-sub {
-  margin: 0.2rem 0 0;
-  color: var(--secondary-text);
-  font-size: 0.9rem;
+  margin: 0.15rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .banner-sub strong {
-  color: var(--gold-accent);
+  color: #f3c86b;
 }
 
 /* Countdown Overlay */
@@ -901,11 +990,11 @@ h1 span {
 /* Handcrafted Physical Collectible Card with 3D Tilt & Foil Sheen */
 .pokemon-tcg-card {
   width: 310px;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px;
-  background: #14101e;
-  border: 1px solid var(--border-carnival);
-  box-shadow: var(--shadow-modal);
+  background: #181226;
+  border: 3.5px solid #120b1d;
+  box-shadow: inset 0 0 0 2px #f3c86b, 6px 6px 0px #120b1d;
   position: relative;
   color: var(--primary-text);
   user-select: none;
@@ -917,7 +1006,7 @@ h1 span {
 }
 
 .pokemon-tcg-card:hover {
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85), 0 0 25px rgba(212, 163, 73, 0.3);
+  box-shadow: inset 0 0 0 2px #fef08a, 8px 8px 0px #120b1d;
 }
 
 .card-foil-sheen {
@@ -953,8 +1042,9 @@ h1 span {
   align-items: center;
   background: #0d0a15;
   padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  border: 2px solid #120b1d;
+  box-shadow: 2px 2px 0px #120b1d;
 }
 
 .tcg-header-left,
@@ -1004,14 +1094,15 @@ h1 span {
 
 .tcg-type-badge,
 .tcg-type-icon {
-  font-size: 0.62rem;
-  font-weight: 800;
+  font-size: 0.65rem;
+  font-weight: 900;
   letter-spacing: 0.08em;
-  color: var(--gold-accent);
-  background: var(--gold-subtle);
-  border: 1px solid var(--border-carnival);
-  padding: 0.15rem 0.4rem;
-  border-radius: 3px;
+  color: #120b1d;
+  background: #f3c86b;
+  border: 2px solid #120b1d;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  box-shadow: 1px 1px 0px #120b1d;
   margin-left: 2px;
 }
 
@@ -1020,9 +1111,10 @@ h1 span {
 .tcg-art-box {
   position: relative;
   height: 140px;
-  border-radius: 4px;
+  border-radius: 8px;
   background: #06050a;
-  border: 1px solid var(--border-carnival);
+  border: 2.5px solid #120b1d;
+  box-shadow: inset 0 0 0 1.5px #f3c86b;
   overflow: hidden;
   display: flex;
   flex-direction: column;

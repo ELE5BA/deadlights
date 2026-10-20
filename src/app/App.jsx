@@ -10,6 +10,8 @@ import LeaderboardScreen from '../screens/LeaderboardScreen.jsx';
 import AdminLoginScreen from '../screens/AdminLoginScreen.jsx';
 import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen.jsx';
 
+import PokeBalloonEmblem from '../components/PokeBalloonEmblem.jsx';
+
 export default function App() {
   const [health, setHealth] = useState({ state: 'checking' });
   const [screen, setScreen] = useState('attract');
@@ -34,11 +36,11 @@ export default function App() {
   return (
     <main className="app-shell">
       <section className="hero-panel" aria-labelledby="title">
-        <p className="eyebrow">MIDNIGHT CARNIVAL · 60-SECOND ARCADE RUNNER</p>
-        <h1 id="title">DEADLIGHTS <span>3D</span></h1>
-        <p className="subtitle">The Lost Pokédex</p>
+        <PokeBalloonEmblem />
+        <span className="cartoon-pill-badge">CURSED CARNIVAL POKÉDEX</span>
+        <h1 id="title" className="brand-title">HEXEDEX</h1>
         <p className="summary">
-          Survive the haunted fairgrounds. Assemble all five stage cards within 60 seconds to unlock each entity in the Lost Pokédex before the Deadlights claim you.
+          Survive the haunted fairgrounds. Assemble all 5 stage cards within 60 seconds to unlock each entity in the Lost Pokédex before the Deadlights claim you.
         </p>
         <button
           className="primary-button hero-start-btn"
@@ -75,13 +77,6 @@ export default function App() {
             ADMIN
           </button>
         </nav>
-
-        <div className={`health health--${health.state}`} role="status">
-          <span className="health-dot" />
-          {health.state === 'checking' && 'Connecting to local arcade service…'}
-          {health.state === 'ready' && `System Operational · Version ${health.data.configVersion}`}
-          {health.state === 'unavailable' && 'Local service offline · Please verify backend daemon.'}
-        </div>
       </section>
     </main>
   );

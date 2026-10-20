@@ -415,56 +415,236 @@ export class PursuerEntity {
     });
     this.bodyGroup.add(this.collarGroup);
 
-    // ── HEAD: INVERTED PEAR CRANIUM & FIERY MANE ──────────────────
+    // ── HEAD: HIGH-ACCURACY 3D SCULPTED PENNYWISE (BILL SKARSGÅRD) ─────────
     this.headGroup = new THREE.Group();
     this.headGroup.position.set(0, 2.40, 0);
 
-    const craniumGeo = this.trackDisposable(new THREE.SphereGeometry(0.68, 8, 8));
-    const cranium = new THREE.Mesh(craniumGeo, doubletMat);
-    cranium.scale.set(1.0, 1.15, 0.95);
+    const porcelainMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#f8fafc',
+      roughness: 0.25,
+      flatShading: true,
+    }));
+
+    const socketMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#090510',
+      roughness: 0.8,
+      flatShading: true,
+    }));
+
+    const scleraMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#fef08a',
+      roughness: 0.3,
+      flatShading: true,
+    }));
+
+    const pupilMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#000000',
+      roughness: 0.1,
+      flatShading: true,
+    }));
+
+    const browMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#0f172a',
+      roughness: 0.6,
+      flatShading: true,
+    }));
+
+    const paintMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#dc2626',
+      emissive: '#991b1b',
+      emissiveIntensity: 1.2,
+      roughness: 0.35,
+      flatShading: true,
+    }));
+
+    // 1. Porcelain Cranium & Forehead Dome (Expanded upper skull)
+    const craniumGeo = this.trackDisposable(new THREE.SphereGeometry(0.72, 10, 8));
+    const cranium = new THREE.Mesh(craniumGeo, porcelainMat);
+    cranium.scale.set(1.05, 1.24, 0.98);
+    cranium.position.set(0, 0.10, -0.04);
     addHullOutline(cranium, 1.07);
     this.headGroup.add(cranium);
+
+    // Sculpted 3D Menacing Brow Ridges
+    [-0.22, 0.22].forEach((bx) => {
+      const browRidge = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.32, 0.12, 0.16)),
+        porcelainMat
+      );
+      browRidge.position.set(bx, 0.20, 0.52);
+      browRidge.rotation.z = bx > 0 ? 0.20 : -0.20;
+      browRidge.rotation.x = -0.15;
+      addBoxOutline(browRidge);
+      this.headGroup.add(browRidge);
+    });
+
+    // Sculpted 3D Tapered Cheekbones
+    [-0.34, 0.34].forEach((cx) => {
+      const cheek = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.24, 0.24, 0.22)),
+        porcelainMat
+      );
+      cheek.position.set(cx, -0.06, 0.44);
+      cheek.rotation.z = cx > 0 ? -0.18 : 0.18;
+      addBoxOutline(cheek);
+      this.headGroup.add(cheek);
+    });
+
+    // Upper Muzzle & Snout Base
+    const muzzle = new THREE.Mesh(
+      this.trackDisposable(new THREE.BoxGeometry(0.58, 0.20, 0.34)),
+      porcelainMat
+    );
+    muzzle.position.set(0, -0.18, 0.44);
+    addBoxOutline(muzzle);
+    this.headGroup.add(muzzle);
+
+    // 2. 3D Sunken Eye Sockets & Glowing Deadlights Eyeballs
+    [-0.22, 0.22].forEach((ex) => {
+      // Dark eye socket cavity
+      const socket = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.25, 0.23, 0.16)),
+        socketMat
+      );
+      socket.position.set(ex, 0.08, 0.48);
+      this.headGroup.add(socket);
+
+      // Sclera sphere
+      const sclera = new THREE.Mesh(
+        this.trackDisposable(new THREE.SphereGeometry(0.10, 8, 8)),
+        scleraMat
+      );
+      sclera.position.set(ex, 0.08, 0.51);
+      this.headGroup.add(sclera);
+
+      // Blazing Deadlights Iris (Linked to this.faceMat for jumpscare emissive flares!)
+      const iris = new THREE.Mesh(
+        this.trackDisposable(new THREE.SphereGeometry(0.065, 6, 6)),
+        this.faceMat
+      );
+      iris.position.set(ex, 0.08, 0.58);
+      this.headGroup.add(iris);
+
+      // Pinpoint demonic black pupil
+      const pupil = new THREE.Mesh(
+        this.trackDisposable(new THREE.SphereGeometry(0.026, 6, 6)),
+        pupilMat
+      );
+      pupil.position.set(ex, 0.08, 0.63);
+      this.headGroup.add(pupil);
+
+      // High-arched sinister 3D eyebrow
+      const eyebrow = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.28, 0.06, 0.08)),
+        browMat
+      );
+      eyebrow.position.set(ex, 0.25, 0.57);
+      eyebrow.rotation.z = ex > 0 ? 0.30 : -0.30;
+      eyebrow.rotation.y = ex > 0 ? -0.15 : 0.15;
+      this.headGroup.add(eyebrow);
+    });
+
+    // 3. 3D Sculpted Crimson Face-Paint Lines
+    // Forehead vertical paint points slicing straight down through each eye
+    [-0.22, 0.22].forEach((px) => {
+      // Forehead spearhead
+      const foreheadStrip = new THREE.Mesh(
+        this.trackDisposable(new THREE.ConeGeometry(0.05, 0.38, 4)),
+        paintMat
+      );
+      foreheadStrip.position.set(px, 0.44, 0.48);
+      foreheadStrip.rotation.x = 0.25;
+      this.headGroup.add(foreheadStrip);
+
+      // Eye-slice vertical strip
+      const eyeStrip = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.055, 0.40, 0.08)),
+        paintMat
+      );
+      eyeStrip.position.set(px, 0.10, 0.59);
+      this.headGroup.add(eyeStrip);
+
+      // Curved cheek paint slicing toward mouth corners
+      const cheekStrip = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.06, 0.28, 0.08)),
+        paintMat
+      );
+      cheekStrip.position.set(px > 0 ? px + 0.12 : px - 0.12, -0.18, 0.51);
+      cheekStrip.rotation.z = px > 0 ? -0.42 : 0.42;
+      this.headGroup.add(cheekStrip);
+
+      // Extended smile tips curling upward
+      const curl = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.06, 0.14, 0.06)),
+        paintMat
+      );
+      curl.position.set(px > 0 ? px + 0.20 : px - 0.20, -0.14, 0.46);
+      curl.rotation.z = px > 0 ? 0.35 : -0.35;
+      this.headGroup.add(curl);
+    });
+
+    // 4. Glossy 3D Red Clown Nose
+    const nose = new THREE.Mesh(
+      this.trackDisposable(new THREE.SphereGeometry(0.16, 8, 8)),
+      pomMat
+    );
+    nose.position.set(0, -0.04, 0.73);
+    addHullOutline(nose, 1.15);
+    this.headGroup.add(nose);
+
+    // 5. Signature Buck-Toothed Maw with Two Prominent Front Incisors + Razor Fangs
+    const teethMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#ffffff',
+      roughness: 0.15,
+      emissive: '#f8fafc',
+      emissiveIntensity: 0.9,
+    }));
+
+    // Two signature prominent front incisors (buck teeth)
+    [-0.045, 0.045].forEach((ix) => {
+      const buckTooth = new THREE.Mesh(
+        this.trackDisposable(new THREE.BoxGeometry(0.075, 0.22, 0.05)),
+        teethMat
+      );
+      buckTooth.position.set(ix, -0.29, 0.57);
+      addBoxOutline(buckTooth);
+      this.headGroup.add(buckTooth);
+    });
+
+    // Flanking upper razor fangs
+    [-0.26, -0.19, -0.12, 0.12, 0.19, 0.26].forEach((tx) => {
+      const fang = new THREE.Mesh(
+        this.trackDisposable(new THREE.ConeGeometry(0.04, 0.18, 4)),
+        teethMat
+      );
+      fang.position.set(tx, -0.27, 0.52 - Math.abs(tx) * 0.22);
+      fang.rotation.x = Math.PI;
+      this.headGroup.add(fang);
+    });
 
     // Unhinging Lower Jaw Group
     this.jawGroup = new THREE.Group();
     this.jawGroup.position.set(0, -0.28, 0.22);
 
-    const chinGeo = this.trackDisposable(new THREE.ConeGeometry(0.55, 0.55, 6));
-    const chin = new THREE.Mesh(chinGeo, doubletMat);
-    chin.position.set(0, -0.28, -0.14);
+    const chinGeo = this.trackDisposable(new THREE.ConeGeometry(0.52, 0.52, 6));
+    const chin = new THREE.Mesh(chinGeo, porcelainMat);
+    chin.position.set(0, -0.26, -0.12);
     chin.rotation.x = Math.PI;
     addHullOutline(chin, 1.07);
     this.jawGroup.add(chin);
 
-    // Upper Razor Teeth
-    const upperTeethMat = this.trackDisposable(new THREE.MeshStandardMaterial({
-      color: '#ffffff',
-      roughness: 0.2,
-      emissive: '#ffffff',
-      emissiveIntensity: 0.85,
-    }));
+    // Lower Razor Teeth
     for (let t = -0.30; t <= 0.30; t += 0.075) {
       const tooth = new THREE.Mesh(
-        this.trackDisposable(new THREE.ConeGeometry(0.042, 0.19, 4)),
-        upperTeethMat
+        this.trackDisposable(new THREE.ConeGeometry(0.038, 0.17, 4)),
+        teethMat
       );
-      tooth.position.set(t, -0.22, 0.38 - Math.abs(t) * 0.18);
-      tooth.rotation.x = Math.PI;
-      this.headGroup.add(tooth);
-    }
-
-    // Lower Razor Teeth
-    for (let t = -0.32; t <= 0.32; t += 0.08) {
-      const tooth = new THREE.Mesh(
-        this.trackDisposable(new THREE.ConeGeometry(0.04, 0.18, 4)),
-        upperTeethMat
-      );
-      tooth.position.set(t, 0.02, 0.18 - Math.abs(t) * 0.2);
+      tooth.position.set(t, 0.02, 0.19 - Math.abs(t) * 0.2);
       this.jawGroup.add(tooth);
     }
     this.headGroup.add(this.jawGroup);
 
-    // Inner Glowing Deadlights Core
+    // Inner Glowing Deadlights Core (Throat cavity)
     this.deadlightsCore = new THREE.Group();
     this.deadlightsCore.position.set(0, -0.24, 0.16);
 
@@ -489,18 +669,6 @@ export class PursuerEntity {
       this.deadlightsCore.add(subCore);
     });
     this.headGroup.add(this.deadlightsCore);
-
-    // Front Face Plate
-    const facePlateGeo = this.trackDisposable(new THREE.CylinderGeometry(0.62, 0.62, 1.05, 8, 1, false, -Math.PI / 2.5, Math.PI / 1.25));
-    const facePlate = new THREE.Mesh(facePlateGeo, this.faceMat);
-    facePlate.position.set(0, -0.02, 0.08);
-    this.headGroup.add(facePlate);
-
-    // 3D Red Clown Nose
-    const nose = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.16, 8, 8)), pomMat);
-    nose.position.set(0, -0.02, 0.72);
-    addHullOutline(nose, 1.15);
-    this.headGroup.add(nose);
 
     // ── GLORIOUS FIERY ORANGE HAIR MANE ────────────────────────────
     const crownSpikes = [

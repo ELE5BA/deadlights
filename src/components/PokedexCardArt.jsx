@@ -1,483 +1,583 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Draws bespoke 48x48 16-bit pixel art sprite & habitat for each creature,
- * supporting idle micro-animations (blinking eyes, floating embers/spores, sprite bobbing).
+ * High-Resolution 160x120 HTML5 Canvas Cartoon Renderer for Hexedex Pokédex Cards.
+ * Features bold #120b1d comic ink outlines, cel-shaded color fills, hard rim highlights,
+ * expressive cartoon eyes, and action-reactive animated habitats.
  */
-function drawCreaturePixelArt(ctx, artKey, isOwned, animFrame = 0) {
-  const w = 48;
-  const h = 48;
-  ctx.imageSmoothingEnabled = false;
+function drawCreatureCartoon(ctx, artKey, isOwned, animFrame = 0) {
+  const w = 160;
+  const h = 120;
   ctx.clearRect(0, 0, w, h);
 
-  // Bobbing offset for owned creatures
-  const bobY = isOwned ? (animFrame === 1 || animFrame === 2 ? 1 : 0) : 0;
-  const blink = isOwned && animFrame === 2; // Eyes blink shut on frame 2
+  const bobY = isOwned ? (animFrame === 1 || animFrame === 3 ? 1.5 : (animFrame === 2 ? -1.5 : 0)) : 0;
+  const blink = isOwned && animFrame === 2;
 
-  // ── BACKGROUND HABITATS (Dithered 16-bit Gradients) ──────────────
+  // Helper for cartoon ink outline drawing
+  function strokeCartoon(fillColor, strokeColor = '#120b1d', lineWidth = 3.5) {
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // ── 1. ANIMATED BACKGROUND HABITAT ──────────────────────────────
   switch (artKey) {
     case 'mossbyte': {
-      // Twilight mossy forest
-      ctx.fillStyle = '#060e17';
+      // Twilight Mossy Forest
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#06131c');
+      grad.addColorStop(0.65, '#0d2836');
+      grad.addColorStop(1, '#051814');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      // Dithered canopy
-      for (let y = 0; y < 18; y++) {
-        for (let x = 0; x < w; x++) {
-          if ((x * 7 + y * 13) % 4 === 0) {
-            ctx.fillStyle = '#0f2430';
-            ctx.fillRect(x, y, 1, 1);
-          }
-        }
-      }
-      // Peat ground
-      ctx.fillStyle = '#0a1d24';
-      ctx.fillRect(0, 32, w, 16);
-      ctx.fillStyle = '#0e313d';
-      ctx.fillRect(0, 36, w, 12);
+
+      // Distant mist silhouettes
+      ctx.fillStyle = '#0f3847';
+      ctx.beginPath();
+      ctx.arc(35, 95, 38, Math.PI, 0);
+      ctx.arc(125, 95, 45, Math.PI, 0);
+      ctx.fill();
+
+      // Mossy ground
+      ctx.fillStyle = '#064e3b';
+      ctx.fillRect(0, 88, w, 32);
+      ctx.fillStyle = '#022c22';
+      ctx.fillRect(0, 96, w, 24);
 
       // Glowing cyan mushrooms
-      ctx.fillStyle = '#43d9f2';
-      ctx.fillRect(4, 34, 4, 3);
-      ctx.fillRect(38, 36, 3, 3);
-      ctx.fillStyle = '#164e63';
-      ctx.fillRect(5, 37, 2, 3);
-      ctx.fillRect(39, 39, 1, 3);
+      [20, 138].forEach((mx) => {
+        ctx.beginPath();
+        ctx.arc(mx, 92, 9, Math.PI, 0);
+        ctx.fillStyle = '#06b6d4';
+        ctx.fill();
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = '#120b1d';
+        ctx.stroke();
 
-      // Floating spores
+        ctx.fillStyle = '#e0f2fe';
+        ctx.beginPath();
+        ctx.arc(mx - 3, 89, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Animated floating spores
       if (isOwned) {
         ctx.fillStyle = '#34d399';
-        const s1 = (animFrame * 3) % 12;
-        const s2 = (animFrame * 4) % 16;
-        ctx.fillRect(10, 16 - s1, 1, 1);
-        ctx.fillRect(34, 22 - s2, 1, 1);
+        const sY = (animFrame * 6) % 36;
+        ctx.beginPath();
+        ctx.arc(32, 70 - sY, 3, 0, Math.PI * 2);
+        ctx.arc(120, 62 - ((sY + 12) % 36), 3.5, 0, Math.PI * 2);
+        ctx.arc(75, 45 - ((sY + 22) % 36), 2.5, 0, Math.PI * 2);
+        ctx.fill();
       }
       break;
     }
 
     case 'lantern-hare': {
-      // Amber hollow grove
-      ctx.fillStyle = '#1a0e04';
+      // Amber Hollow Lantern Grove
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#1c0f05');
+      grad.addColorStop(0.7, '#381c08');
+      grad.addColorStop(1, '#1f0d04');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      for (let y = 0; y < 20; y++) {
-        for (let x = 0; x < w; x++) {
-          if ((x * 5 + y * 11) % 4 === 0) {
-            ctx.fillStyle = '#381604';
-            ctx.fillRect(x, y, 1, 1);
-          }
-        }
-      }
-      ctx.fillStyle = '#3d1602';
-      ctx.fillRect(0, 34, w, 14);
 
-      // Floating golden embers
+      // Warm spirit lantern aura
+      const radial = ctx.createRadialGradient(80, 55, 10, 80, 55, 75);
+      radial.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
+      radial.addColorStop(1, 'rgba(251, 191, 36, 0)');
+      ctx.fillStyle = radial;
+      ctx.fillRect(0, 0, w, h);
+
+      // Peat ground
+      ctx.fillStyle = '#291409';
+      ctx.fillRect(0, 90, w, 30);
+
+      // Hanging lanterns on ropes
+      ctx.strokeStyle = '#120b1d';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(15, 0); ctx.lineTo(24, 38);
+      ctx.moveTo(145, 0); ctx.lineTo(136, 42);
+      ctx.stroke();
+
+      [24, 136].forEach((lx, idx) => {
+        const ly = idx === 0 ? 38 : 42;
+        ctx.beginPath();
+        ctx.arc(lx, ly, 8, 0, Math.PI * 2);
+        strokeCartoon('#fbbf24', '#120b1d', 2.5);
+
+        ctx.fillStyle = '#a855f7';
+        ctx.beginPath();
+        ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Floating amber embers
       if (isOwned) {
-        ctx.fillStyle = '#f3c86b';
-        const e1 = (animFrame * 2) % 10;
-        const e2 = (animFrame * 3) % 14;
-        ctx.fillRect(8, 20 - e1, 1, 1);
-        ctx.fillRect(38, 16 - e2, 2, 2);
-        ctx.fillRect(42, 28 - e1, 1, 1);
+        ctx.fillStyle = '#fef08a';
+        const eY = (animFrame * 5) % 30;
+        ctx.fillRect(40, 80 - eY, 3, 3);
+        ctx.fillRect(115, 75 - ((eY + 14) % 30), 4, 4);
       }
       break;
     }
 
     case 'static-moth': {
-      // Crimson electric night sky
-      ctx.fillStyle = '#22040b';
+      // Crimson Mire Electric Sky
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#2b0713');
+      grad.addColorStop(0.65, '#450a1d');
+      grad.addColorStop(1, '#1b030b');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#3a0815';
-      ctx.fillRect(0, 24, w, 24);
 
-      // Electric lightning discharges
-      ctx.fillStyle = '#43d9f2';
-      ctx.fillRect(4, 4, 2, 8);
-      ctx.fillRect(6, 12, 3, 2);
-      ctx.fillRect(40, 8, 2, 6);
-      ctx.fillRect(38, 14, 2, 2);
-      if (isOwned && (animFrame === 1 || animFrame === 3)) {
-        ctx.fillStyle = '#e0f2fe';
-        ctx.fillRect(5, 5, 1, 6);
-        ctx.fillRect(41, 9, 1, 4);
-      }
+      // Red reeds ground
+      ctx.fillStyle = '#4c0519';
+      ctx.fillRect(0, 90, w, 30);
+
+      // Crackling lightning bolts
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(25, 10); ctx.lineTo(34, 35); ctx.lineTo(28, 42); ctx.lineTo(38, 70);
+      ctx.moveTo(135, 15); ctx.lineTo(122, 38); ctx.lineTo(129, 45); ctx.lineTo(118, 68);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
       break;
     }
 
     case 'velvet-wisp': {
-      // Glitch purple void
-      ctx.fillStyle = '#12041d';
+      // Fractured Glitch Void
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#1a0b2e');
+      grad.addColorStop(0.7, '#2e1065');
+      grad.addColorStop(1, '#0f051d');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      for (let y = 0; y < h; y += 3) {
-        for (let x = 0; x < w; x += 3) {
-          if ((x + y) % 6 === 0) {
-            ctx.fillStyle = '#2a0b3f';
-            ctx.fillRect(x, y, 2, 2);
-          }
-        }
-      }
-      ctx.fillStyle = '#581c87';
-      ctx.fillRect(4, 8, 16, 1);
-      ctx.fillRect(28, 38, 16, 1);
+
+      // Stepped floating glitch voxel blocks
+      ctx.fillStyle = '#d946ef';
+      ctx.fillRect(12, 65, 26, 12);
+      ctx.fillStyle = '#06b6d4';
+      ctx.fillRect(122, 55, 28, 14);
+      ctx.fillStyle = '#3b0764';
+      ctx.fillRect(0, 92, w, 28);
       break;
     }
 
     case 'clockwork-crow': {
-      // Abyssal industrial clockwork sky
-      ctx.fillStyle = '#06080e';
+      // Abyssal Void Steampunk Cave
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#090d16');
+      grad.addColorStop(0.7, '#1e293b');
+      grad.addColorStop(1, '#05070a');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(0, 34, w, 14);
 
-      // Rotating brass gear outline
-      ctx.fillStyle = '#b45309';
-      ctx.fillRect(34, 4, 10, 10);
-      ctx.fillStyle = '#06080e';
-      ctx.fillRect(37, 7, 4, 4);
-      ctx.fillStyle = '#d4a349';
-      ctx.fillRect(38, 8, 2, 2);
+      // Large gear silhouettes
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(24, 35, 22, 0, Math.PI * 2);
+      ctx.arc(138, 45, 28, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 90, w, 30);
       break;
     }
 
     case 'grinfin': {
-      // Deep dark bioluminescent abyssal ocean
-      ctx.fillStyle = '#040d17';
+      // Deadlights Deep Carnival Abyss
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#240013');
+      grad.addColorStop(0.7, '#3b0020');
+      grad.addColorStop(1, '#12000a');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#081d30';
-      ctx.fillRect(0, 26, w, 22);
-      ctx.fillStyle = '#0e304d';
-      ctx.fillRect(0, 16, w, 4);
-      if (isOwned) {
-        ctx.fillStyle = '#3ce3e8';
-        const b = (animFrame * 2) % 8;
-        ctx.fillRect(8, 24 - b, 1, 1);
-        ctx.fillRect(38, 20 - b, 1, 1);
-      }
+
+      // Distant carnival tent stripes
+      ctx.fillStyle = '#831843';
+      ctx.beginPath();
+      ctx.moveTo(0, 90); ctx.lineTo(35, 45); ctx.lineTo(70, 90);
+      ctx.fill();
+
+      // Glowing Deadlights orbs
+      [35, 125, 80].forEach((ox, idx) => {
+        const oy = idx === 2 ? 30 : 50;
+        ctx.beginPath();
+        ctx.arc(ox, oy, 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffaa00';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#120b1d';
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = '#1c0010';
+      ctx.fillRect(0, 92, w, 28);
       break;
     }
 
     case 'moonjaw': {
-      // Lunar crater terrain
-      ctx.fillStyle = '#0a0c13';
+      // Lunar Twilight Cliff
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#0a1128');
+      grad.addColorStop(0.7, '#1c2541');
+      grad.addColorStop(1, '#050914');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#181b26';
-      ctx.fillRect(0, 32, w, 16);
-      ctx.fillStyle = '#f3c86b';
-      ctx.fillRect(36, 6, 7, 7); // Distant gold moon
-      ctx.fillStyle = '#d4a349';
-      ctx.fillRect(38, 8, 3, 3);
+
+      // Glowing Crescent Moon
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(130, 32, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0a1128';
+      ctx.beginPath();
+      ctx.arc(124, 30, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#0b132b';
+      ctx.fillRect(0, 90, w, 30);
       break;
     }
 
-    case 'the-tethered': {
-      // Carnival silhouette with Ferris wheel in crimson fog
-      ctx.fillStyle = '#19000d';
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#3b0322';
-      ctx.fillRect(0, 26, w, 22);
-      // Circus tent silhouette
-      ctx.fillStyle = '#580833';
-      ctx.fillRect(4, 20, 12, 28);
-      // Ferris wheel in distance
-      ctx.fillStyle = '#d4a349';
-      ctx.fillRect(32, 6, 12, 12);
-      ctx.fillStyle = '#19000d';
-      ctx.fillRect(34, 8, 8, 8);
-      break;
-    }
-
+    case 'the-tethered':
     default: {
-      ctx.fillStyle = '#101422';
+      // Midnight Carnival Balloon Horizon
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#190a28');
+      grad.addColorStop(0.7, '#2d124d');
+      grad.addColorStop(1, '#0d0417');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
+
+      // Floating red balloons on strings
+      [28, 132].forEach((bx, idx) => {
+        const by = 35 + idx * 8;
+        ctx.beginPath();
+        ctx.moveTo(bx, by + 12);
+        ctx.lineTo(bx - 3, 90);
+        ctx.strokeStyle = '#120b1d';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(bx, by, 10, 0, Math.PI * 2);
+        strokeCartoon('#ef4444', '#120b1d', 2.5);
+      });
+
+      ctx.fillStyle = '#150624';
+      ctx.fillRect(0, 92, w, 28);
+      break;
     }
   }
 
-  // ── CREATURE SPRITES ─────────────────────────────────────────────
-  if (!isOwned) {
-    // Mysterious dark silhouette with glowing eyes in mist
-    ctx.fillStyle = '#06070d';
-    ctx.fillRect(14, 12, 20, 24);
-    ctx.fillRect(10, 18, 28, 14);
+  // ── 2. CREATURE DRAWING (CARTOON OUTLINED & CEL SHADED) ──────────
+  const cx = 80;
+  const cy = 64 + bobY;
 
-    ctx.fillStyle = '#f3c86b';
-    ctx.fillRect(18, 20, 3, 2);
-    ctx.fillRect(27, 20, 3, 2);
+  if (!isOwned) {
+    // Mystery Silhouette Mode
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = '#120b1d';
+    ctx.stroke();
+
+    // Large glowing Mystery Question Mark
+    ctx.font = '900 38px Impact, sans-serif';
+    ctx.fillStyle = '#38bdf8';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', cx, cy - 2);
+    ctx.restore();
     return;
   }
 
+  // DRAW VIBRANT CEL-SHADED CREATURE
+  ctx.save();
+
   switch (artKey) {
     case 'mossbyte': {
-      const y0 = 12 + bobY;
-      // Stone body
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(14, y0 + 4, 20, 18);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(16, y0 + 6, 16, 14);
+      // Forest Bug/Lizard Voxel Sprite
+      // Body
+      ctx.beginPath();
+      ctx.roundRect(cx - 24, cy - 14, 48, 38, [14, 14, 8, 8]);
+      strokeCartoon('#10b981', '#120b1d', 3.5);
 
-      // Lush moss crest & overgrowth
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(12, y0, 24, 6);
-      ctx.fillRect(16, y0 + 6, 4, 4);
-      ctx.fillRect(28, y0 + 6, 4, 3);
-      ctx.fillStyle = '#34d399';
-      ctx.fillRect(14, y0 + 1, 20, 2);
+      // Shadow underbelly
+      ctx.fillStyle = '#047857';
+      ctx.beginPath();
+      ctx.roundRect(cx - 22, cy + 10, 44, 12, [0, 0, 8, 8]);
+      ctx.fill();
 
-      // Pointed stone ears
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(11, y0 - 3, 4, 6);
-      ctx.fillRect(33, y0 - 3, 4, 6);
+      // Leaf horns
+      [-14, 14].forEach((hx) => {
+        ctx.beginPath();
+        ctx.moveTo(cx + hx, cy - 14);
+        ctx.quadraticCurveTo(cx + hx * 1.8, cy - 34, cx + hx * 2.2, cy - 38);
+        ctx.quadraticCurveTo(cx + hx * 0.8, cy - 26, cx + hx, cy - 14);
+        strokeCartoon('#34d399', '#120b1d', 3.0);
+      });
 
-      // Glowing cyan eyes
-      if (blink) {
-        ctx.fillStyle = '#164e63';
-        ctx.fillRect(17, y0 + 11, 4, 1);
-        ctx.fillRect(27, y0 + 11, 4, 1);
-      } else {
-        ctx.fillStyle = '#3ce3e8';
-        ctx.fillRect(17, y0 + 10, 4, 3);
-        ctx.fillRect(27, y0 + 10, 4, 3);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(18, y0 + 10, 2, 2);
-        ctx.fillRect(28, y0 + 10, 2, 2);
-      }
+      // Expressive Cartoon Eyes
+      [-11, 11].forEach((ex) => {
+        if (blink) {
+          ctx.beginPath();
+          ctx.moveTo(cx + ex - 6, cy - 2);
+          ctx.lineTo(cx + ex + 6, cy - 2);
+          ctx.strokeStyle = '#120b1d';
+          ctx.lineWidth = 3.5;
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(cx + ex, cy - 2, 7.5, 0, Math.PI * 2);
+          strokeCartoon('#ffffff', '#120b1d', 3.0);
+
+          ctx.beginPath();
+          ctx.arc(cx + ex, cy - 2, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#06b6d4';
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(cx + ex - 1.5, cy - 4, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
       break;
     }
 
     case 'lantern-hare': {
-      const y0 = 14 + bobY;
-      // Shadow bunny body
-      ctx.fillStyle = '#1c152a';
-      ctx.fillRect(16, y0 + 4, 16, 16);
-      ctx.fillStyle = '#291e3e';
-      ctx.fillRect(18, y0 + 6, 12, 12);
+      // Spirit Rabbit with lantern ears
+      // Body
+      ctx.beginPath();
+      ctx.arc(cx, cy + 6, 25, 0, Math.PI * 2);
+      strokeCartoon('#fef3c7', '#120b1d', 3.5);
 
-      // Long bunny ears
-      ctx.fillStyle = '#291e3e';
-      ctx.fillRect(16, y0 - 8, 4, 12);
-      ctx.fillRect(28, y0 - 8, 4, 12);
-      ctx.fillStyle = '#f472b6';
-      ctx.fillRect(17, y0 - 6, 2, 8);
-      ctx.fillRect(29, y0 - 6, 2, 8);
+      // Tall bunny ears
+      [-12, 12].forEach((ex) => {
+        ctx.beginPath();
+        ctx.ellipse(cx + ex, cy - 32, 7.5, 22, ex > 0 ? 0.2 : -0.2, 0, Math.PI * 2);
+        strokeCartoon('#fef3c7', '#120b1d', 3.5);
 
-      // Glowing golden lantern core
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(19, y0 + 9, 10, 9);
-      ctx.fillStyle = '#fef08a';
-      ctx.fillRect(21, y0 + 11, 6, 5);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(23, y0 + 12, 2, 3);
+        ctx.beginPath();
+        ctx.ellipse(cx + ex, cy - 32, 4, 16, ex > 0 ? 0.2 : -0.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+      });
 
       // Eyes
-      if (blink) {
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(17, y0 + 5, 3, 1);
-      } else {
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(17, y0 + 4, 3, 3);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(18, y0 + 4, 1, 1);
-      }
+      [-9, 9].forEach((ex) => {
+        if (blink) {
+          ctx.beginPath();
+          ctx.moveTo(cx + ex - 5, cy + 2);
+          ctx.lineTo(cx + ex + 5, cy + 2);
+          ctx.strokeStyle = '#120b1d';
+          ctx.lineWidth = 3.0;
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(cx + ex, cy + 2, 6, 0, Math.PI * 2);
+          strokeCartoon('#78350f', '#120b1d', 2.5);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(cx + ex - 1.5, cy, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      // Little pink nose
+      ctx.beginPath();
+      ctx.arc(cx, cy + 9, 2.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#f43f5e';
+      ctx.fill();
       break;
     }
 
     case 'static-moth': {
-      const y0 = 12 + bobY;
-      // Indigo body
-      ctx.fillStyle = '#1e1b4b';
-      ctx.fillRect(22, y0 + 4, 4, 18);
+      // Electric Crimson Moth
+      // Wings
+      [-22, 22].forEach((wx) => {
+        ctx.beginPath();
+        ctx.ellipse(cx + wx, cy - 8, 22, 16, wx > 0 ? 0.4 : -0.4, 0, Math.PI * 2);
+        strokeCartoon('#e11d48', '#120b1d', 3.5);
 
-      // Electric cyan wings
-      const wingSpread = animFrame === 1 || animFrame === 3 ? 1 : 0;
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(8 - wingSpread, y0 + 2, 14, 11);
-      ctx.fillRect(26 + wingSpread, y0 + 2, 14, 11);
-      ctx.fillRect(11 - wingSpread, y0 + 13, 11, 9);
-      ctx.fillRect(26 + wingSpread, y0 + 13, 11, 9);
+        // Wing lightning markings
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(cx + wx, cy - 8, 7, 0, Math.PI * 2);
+        ctx.fill();
+      });
 
-      // Wing lightning veins
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(12 - wingSpread, y0 + 5, 7, 3);
-      ctx.fillRect(29 + wingSpread, y0 + 5, 7, 3);
+      // Fluffy body
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 2, 13, 20, 0, 0, Math.PI * 2);
+      strokeCartoon('#4c0519', '#120b1d', 3.5);
 
-      // Antennae
-      ctx.fillStyle = '#3ce3e8';
-      ctx.fillRect(20, y0 - 1, 2, 5);
-      ctx.fillRect(26, y0 - 1, 2, 5);
-
-      // Eyes
-      if (!blink) {
-        ctx.fillStyle = '#fef08a';
-        ctx.fillRect(21, y0 + 5, 2, 2);
-        ctx.fillRect(25, y0 + 5, 2, 2);
-      }
+      // Glowing Eyes
+      [-6, 6].forEach((ex) => {
+        ctx.beginPath();
+        ctx.arc(cx + ex, cy - 5, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#facc15';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#120b1d';
+        ctx.stroke();
+      });
       break;
     }
 
     case 'velvet-wisp': {
-      const y0 = 10 + bobY;
-      // Flowing phantom shroud
-      ctx.fillStyle = '#7e22ce';
-      ctx.fillRect(14, y0 + 4, 20, 18);
-      ctx.fillStyle = '#a855f7';
-      ctx.fillRect(16, y0 + 2, 16, 8);
+      // Ghostly psychic phantom wisp
+      ctx.beginPath();
+      ctx.arc(cx, cy - 6, 24, Math.PI, 0);
+      ctx.quadraticCurveTo(cx + 26, cy + 25, cx, cy + 32);
+      ctx.quadraticCurveTo(cx - 26, cy + 25, cx - 24, cy - 6);
+      strokeCartoon('#a855f7', '#120b1d', 3.5);
 
-      // Draped silk tentacles
-      ctx.fillStyle = '#6b21a8';
-      const wave = animFrame % 2;
-      ctx.fillRect(13 + wave, y0 + 22, 4, 8);
-      ctx.fillRect(22, y0 + 22, 5, 10);
-      ctx.fillRect(30 - wave, y0 + 22, 4, 8);
+      // Inner glowing core
+      ctx.beginPath();
+      ctx.arc(cx, cy + 4, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#e879f9';
+      ctx.fill();
 
-      // Radiant magenta occult core
-      ctx.fillStyle = '#df293b';
-      ctx.fillRect(19, y0 + 9, 10, 9);
-      ctx.fillStyle = '#f472b6';
-      ctx.fillRect(21, y0 + 11, 6, 5);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(23, y0 + 12, 2, 3);
-
-      // Eyes
-      if (!blink) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(18, y0 + 7, 3, 2);
-        ctx.fillRect(27, y0 + 7, 3, 2);
-      }
+      // Slanted sinister eyes
+      [-9, 9].forEach((ex) => {
+        ctx.beginPath();
+        ctx.ellipse(cx + ex, cy - 4, 6, 3, ex > 0 ? 0.4 : -0.4, 0, Math.PI * 2);
+        ctx.fillStyle = '#facc15';
+        ctx.fill();
+      });
       break;
     }
 
     case 'clockwork-crow': {
-      const y0 = 12 + bobY;
-      // Iron body
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(15, y0 + 4, 18, 16);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(17, y0 + 6, 14, 12);
+      // Mechanical steampunk raven
+      // Body
+      ctx.beginPath();
+      ctx.arc(cx, cy + 4, 22, 0, Math.PI * 2);
+      strokeCartoon('#334155', '#120b1d', 3.5);
 
-      // Brass wings
-      ctx.fillStyle = '#d4a349';
-      ctx.fillRect(9, y0 + 6, 6, 12);
-      ctx.fillRect(33, y0 + 6, 6, 12);
+      // Wings with brass gears
+      ctx.beginPath();
+      ctx.ellipse(cx - 16, cy + 8, 12, 18, 0.4, 0, Math.PI * 2);
+      strokeCartoon('#1e293b', '#120b1d', 3.0);
 
-      // Sharp golden beak
-      ctx.fillStyle = '#f3c86b';
-      ctx.fillRect(9, y0 + 9, 6, 4);
+      // Sharp gold beak
+      ctx.beginPath();
+      ctx.moveTo(cx + 12, cy - 2);
+      ctx.lineTo(cx + 34, cy + 5);
+      ctx.lineTo(cx + 12, cy + 12);
+      ctx.closePath();
+      strokeCartoon('#f59e0b', '#120b1d', 3.0);
 
-      // Rotating mechanical clockwork eye
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(17, y0 + 7, 5, 5);
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(19, y0 + 9, 1, 1);
+      // Ruby monocle eye
+      ctx.beginPath();
+      ctx.arc(cx + 4, cy - 3, 6.5, 0, Math.PI * 2);
+      strokeCartoon('#ef4444', '#120b1d', 2.8);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx + 2, cy - 5, 2, 0, Math.PI * 2);
+      ctx.fill();
       break;
     }
 
     case 'grinfin': {
-      const y0 = 12 + bobY;
-      // Abyssal body
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(12, y0 + 4, 24, 16);
-      ctx.fillStyle = '#0369a1';
-      ctx.fillRect(14, y0 + 6, 20, 12);
+      // Apex Pennywise x Darkrai nightmare fish
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 28, 18, 0, 0, Math.PI * 2);
+      strokeCartoon('#be123c', '#120b1d', 3.5);
 
-      // Fins
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(21, y0 - 1, 6, 5);
-      ctx.fillRect(6, y0 + 9, 6, 7);
+      // Spiky dorsal fin
+      ctx.beginPath();
+      ctx.moveTo(cx - 16, cy - 14);
+      ctx.lineTo(cx - 4, cy - 32);
+      ctx.lineTo(cx + 8, cy - 16);
+      ctx.closePath();
+      strokeCartoon('#dc2626', '#120b1d', 3.0);
 
-      // Crescent neon smile
-      ctx.fillStyle = '#3ce3e8';
-      ctx.fillRect(22, y0 + 13, 11, 3);
-      ctx.fillRect(31, y0 + 11, 3, 3);
+      // Glowing Deadlights eye
+      ctx.beginPath();
+      ctx.arc(cx + 12, cy - 4, 7, 0, Math.PI * 2);
+      strokeCartoon('#ffaa00', '#120b1d', 2.5);
+
+      // Razor-toothed wide grin
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(24, y0 + 14, 2, 2);
-      ctx.fillRect(28, y0 + 14, 2, 2);
-
-      // Eye
-      if (!blink) {
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(26, y0 + 7, 3, 3);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(27, y0 + 7, 1, 1);
+      for (let t = -12; t <= 12; t += 6) {
+        ctx.fillRect(cx + t, cy + 6, 3, 6);
       }
       break;
     }
 
     case 'moonjaw': {
-      const y0 = 10 + bobY;
-      // Massive beast
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(11, y0 + 4, 26, 22);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(13, y0 + 6, 22, 18);
+      // Midnight celestial beast
+      ctx.beginPath();
+      ctx.roundRect(cx - 24, cy - 18, 48, 38, [18, 18, 8, 8]);
+      strokeCartoon('#3b82f6', '#120b1d', 3.5);
 
-      // Gold fissure veins
-      ctx.fillStyle = '#f3c86b';
-      ctx.fillRect(14, y0 + 8, 6, 2);
-      ctx.fillRect(18, y0 + 10, 2, 6);
-      ctx.fillRect(25, y0 + 11, 5, 2);
+      // Golden celestial horn
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 18);
+      ctx.lineTo(cx + 6, cy - 38);
+      ctx.lineTo(cx - 6, cy - 18);
+      ctx.closePath();
+      strokeCartoon('#facc15', '#120b1d', 3.0);
 
-      // Massive jaw & razor teeth
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(11, y0 + 17, 26, 9);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(14, y0 + 17, 3, 4);
-      ctx.fillRect(20, y0 + 17, 3, 4);
-      ctx.fillRect(26, y0 + 17, 3, 4);
-      ctx.fillRect(32, y0 + 17, 3, 4);
-
-      if (!blink) {
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(16, y0 + 8, 3, 3);
-        ctx.fillRect(29, y0 + 8, 3, 3);
-      }
+      // Glowing Cyan Eyes
+      [-10, 10].forEach((ex) => {
+        ctx.beginPath();
+        ctx.arc(cx + ex, cy - 4, 6, 0, Math.PI * 2);
+        strokeCartoon('#38bdf8', '#120b1d', 2.5);
+      });
       break;
     }
 
-    case 'the-tethered': {
-      const y0 = 12 + bobY;
-      // Porcelain clown face
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(15, y0 + 4, 18, 18);
+    case 'the-tethered':
+    default: {
+      // Tethered clown puppet with porcelain face & red balloons
+      ctx.beginPath();
+      ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+      strokeCartoon('#f8fafc', '#120b1d', 3.5);
 
-      // Fiery flame hair mane
-      ctx.fillStyle = '#ea580c';
-      ctx.fillRect(11, y0 + 1, 6, 14);
-      ctx.fillRect(31, y0 + 1, 6, 14);
-      ctx.fillRect(17, y0 - 3, 14, 7);
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillRect(21, y0 - 6, 6, 5);
-
-      // Demonic red clown eyes
-      if (blink) {
-        ctx.fillStyle = '#991b1b';
-        ctx.fillRect(18, y0 + 8, 4, 1);
-        ctx.fillRect(26, y0 + 8, 4, 1);
-      } else {
-        ctx.fillStyle = '#ff1744';
-        ctx.fillRect(18, y0 + 7, 4, 4);
-        ctx.fillRect(26, y0 + 7, 4, 4);
-        ctx.fillStyle = '#ffea00';
-        ctx.fillRect(19, y0 + 8, 2, 2);
-        ctx.fillRect(27, y0 + 8, 2, 2);
-      }
+      // Crimson face paint strips
+      [-8, 8].forEach((px) => {
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(cx + px - 2, cy - 14, 4, 28);
+      });
 
       // Red nose
-      ctx.fillStyle = '#dc2626';
-      ctx.fillRect(22, y0 + 11, 4, 3);
+      ctx.beginPath();
+      ctx.arc(cx, cy + 2, 5, 0, Math.PI * 2);
+      strokeCartoon('#ef4444', '#120b1d', 2.0);
 
-      // Wide razor grin
-      ctx.fillStyle = '#7f1d1d';
-      ctx.fillRect(17, y0 + 16, 14, 5);
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(19, y0 + 16, 2, 3);
-      ctx.fillRect(23, y0 + 16, 2, 3);
-      ctx.fillRect(27, y0 + 16, 2, 3);
-
-      // 3 Red balloons
-      ctx.fillStyle = '#e11d48';
-      ctx.fillRect(8, y0 - 9, 6, 7);
-      ctx.fillRect(34, y0 - 8, 6, 7);
-      ctx.fillRect(21, y0 - 12, 6, 7);
+      // Blazing Deadlights eyes
+      [-8, 8].forEach((ex) => {
+        ctx.beginPath();
+        ctx.arc(cx + ex, cy - 3, 5, 0, Math.PI * 2);
+        strokeCartoon('#ffaa00', '#120b1d', 2.0);
+      });
       break;
     }
   }
+
+  ctx.restore();
 }
 
 export default function PokedexCardArt({ artKey, isOwned, creatureName }) {
@@ -489,14 +589,14 @@ export default function PokedexCardArt({ artKey, isOwned, creatureName }) {
     const ctx = canvas.getContext('2d');
 
     let animFrame = 0;
-    drawCreaturePixelArt(ctx, artKey, isOwned, animFrame);
+    drawCreatureCartoon(ctx, artKey, isOwned, animFrame);
 
     if (!isOwned) return undefined;
 
     // 250ms tick micro-animation for owned cards (eyes blink, spores float, gentle bobbing)
     const interval = setInterval(() => {
       animFrame = (animFrame + 1) % 4;
-      drawCreaturePixelArt(ctx, artKey, isOwned, animFrame);
+      drawCreatureCartoon(ctx, artKey, isOwned, animFrame);
     }, 250);
 
     return () => clearInterval(interval);
@@ -506,14 +606,14 @@ export default function PokedexCardArt({ artKey, isOwned, creatureName }) {
     <div className="pokedex-art-frame">
       <canvas
         ref={canvasRef}
-        width={48}
-        height={48}
+        width={160}
+        height={120}
         className="pokedex-pixel-canvas"
         style={{
-          imageRendering: 'pixelated',
           width: '100%',
           height: '100%',
           display: 'block',
+          borderRadius: '6px',
         }}
         title={creatureName}
       />

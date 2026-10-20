@@ -1,12 +1,14 @@
+import PokeBalloonEmblem from '../components/PokeBalloonEmblem.jsx';
+
 export default function AttractScreen({ onPlay }) {
   return (
     <main className="attract-screen">
       <section className="attract-content hero-panel">
-        <p className="eyebrow">MIDNIGHT CARNIVAL · 60-SECOND ARCADE RUNNER</p>
-        <h1>DEADLIGHTS <span>3D</span></h1>
-        <p className="subtitle">The Lost Pokédex</p>
+        <PokeBalloonEmblem />
+        <span className="cartoon-pill-badge">CURSED CARNIVAL POKÉDEX</span>
+        <h1 className="brand-title">HEXEDEX</h1>
         <p className="summary">
-          Survive the haunted fairgrounds. Assemble all five stage cards within 60 seconds to unlock each entity in the Lost Pokédex before the Deadlights claim you.
+          Survive the haunted fairgrounds. Assemble all 5 stage cards within 60 seconds to unlock each entity in the Lost Pokédex before the Deadlights claim you.
         </p>
         <button className="primary-button attract-play-btn" onClick={onPlay}>
           COMMENCE RUN

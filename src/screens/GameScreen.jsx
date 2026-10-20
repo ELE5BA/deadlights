@@ -3,145 +3,73 @@ import { GAME_CONFIG } from '../../shared/gameConfig.js';
 import GameCanvas from '../game/GameCanvas.jsx';
 import PokedexCardArt from '../components/PokedexCardArt.jsx';
 import { finishSession, startSession } from '../services/apiClient.js';
-
-function playCardPickupChime(isFullCard) {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    const now = ctx.currentTime;
-    const freqs = isFullCard
-      ? [523.25, 659.25, 783.99, 1046.50, 1318.51]
-      : [523.25, 659.25, 783.99, 1046.50];
-
-    freqs.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = isFullCard ? 'square' : 'triangle';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-      gain.gain.setValueAtTime(0.12, now + idx * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + (isFullCard ? 0.32 : 0.20));
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + idx * 0.08);
-      osc.stop(now + idx * 0.08 + (isFullCard ? 0.35 : 0.22));
-    });
-  } catch {
-    // Ignore audio blockage
-  }
-}
-
-function playPennywiseJumpscareStinger() {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    const now = ctx.currentTime;
-
-    // 1. Sub-bass dive impact
-    const subOsc = ctx.createOscillator();
-    const subGain = ctx.createGain();
-    subOsc.type = 'sawtooth';
-    subOsc.frequency.setValueAtTime(150, now);
-    subOsc.frequency.exponentialRampToValueAtTime(28, now + 1.2);
-    subGain.gain.setValueAtTime(0.35, now);
-    subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.25);
-    subOsc.connect(subGain);
-    subGain.connect(ctx.destination);
-    subOsc.start(now);
-    subOsc.stop(now + 1.25);
-
-    // 2. Dissonant horror cluster
-    [720, 784, 880, 932].forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq + idx * 6, now);
-      osc.frequency.linearRampToValueAtTime(freq * 0.45, now + 1.15);
-      gain.gain.setValueAtTime(0.14, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.15);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 1.2);
-    });
-
-    // 3. Deadlights static burst
-    const bufferSize = Math.floor(ctx.sampleRate * 0.45);
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.12));
-    }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.24, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-    noise.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
-    noise.start(now);
-  } catch {
-    // Ignore audio blockage
-  }
-}
+import {
+  isMuted,
+  toggleMute,
+  subscribeMuteChange,
+  playCountdownSfx,
+  playButtonClickSfx,
+} from '../game/soundEffects.js';
 
 /**
- * Custom Bespoke Inline SVG Soul-Lantern Heart
+ * Custom Bespoke Cartoon-Outlined Poké-Heart SVG
+ * Shaped like a heart-styled Pokéball with comic ink outlines, pulsing at 1 HP.
  */
-function SoulLanternHeart({ active, isCritical }) {
+function PokeHeartSvg({ active, isCritical }) {
   if (!active) {
     return (
       <svg
-        className="soul-heart soul-heart--depleted"
-        viewBox="0 0 24 24"
-        width="26"
-        height="26"
-        fill="none"
+        className="poke-heart poke-heart--depleted"
+        viewBox="0 0 28 28"
+        width="28"
+        height="28"
         aria-hidden="true"
       >
         <path
-          d="M12 2L4 7v10l8 5 8-5V7L12 2z"
-          stroke="#4a3e30"
-          strokeWidth="1.5"
+          d="M14 24 C14 24 3 17 3 9 C3 5 6 2 10 2 C12 2 13.5 3 14 4.5 C14.5 3 16 2 18 2 C22 2 25 5 25 9 C25 17 14 24 14 24 Z"
+          fill="#27272a"
+          stroke="#120b1d"
+          strokeWidth="2.5"
           strokeLinejoin="round"
-          fill="#0a0810"
         />
-        <path d="M7 9l4 4-2 3 5 2" stroke="#6b5e52" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M16 8l-3 4 2 2" stroke="#6b5e52" strokeWidth="1.0" strokeLinecap="round" />
-        <circle cx="12" cy="14" r="1.5" fill="#2b231c" />
+        <path d="M3 10.5 H25" stroke="#120b1d" strokeWidth="2.0" />
+        <circle cx="14" cy="10.5" r="3.2" fill="#3f3f46" stroke="#120b1d" strokeWidth="2.0" />
       </svg>
     );
   }
 
   return (
     <svg
-      className={`soul-heart soul-heart--active ${isCritical ? 'soul-heart--pulse' : ''}`}
-      viewBox="0 0 24 24"
-      width="26"
-      height="26"
-      fill="none"
+      className={`poke-heart poke-heart--active ${isCritical ? 'poke-heart--pulse' : ''}`}
+      viewBox="0 0 28 28"
+      width="28"
+      height="28"
       aria-hidden="true"
     >
-      <path
-        d="M12 2L4 7v10l8 5 8-5V7L12 2z"
-        stroke="#d4a349"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-        fill="#26060c"
-      />
-      <path
-        d="M12 5.5c-3 3-4 6-1 9 1 1 3 2 4 0 2-2 1-4-1-6-1-1-1.5-2-2-3z"
-        fill="url(#soulFlameGrad)"
-      />
-      <circle cx="12.5" cy="13.5" r="2" fill="#fff5d6" />
       <defs>
-        <linearGradient id="soulFlameGrad" x1="12" y1="5.5" x2="12" y2="16.5" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#ff4d6d" />
-          <stop offset="0.6" stopColor="#b81d2c" />
-          <stop offset="1" stopColor="#f3c86b" />
-        </linearGradient>
+        <clipPath id="topHeartHalf">
+          <rect x="0" y="0" width="28" height="10.5" />
+        </clipPath>
       </defs>
+      {/* Base white heart with thick ink outline */}
+      <path
+        d="M14 24 C14 24 3 17 3 9 C3 5 6 2 10 2 C12 2 13.5 3 14 4.5 C14.5 3 16 2 18 2 C22 2 25 5 25 9 C25 17 14 24 14 24 Z"
+        fill="#f8fafc"
+        stroke="#120b1d"
+        strokeWidth="2.8"
+        strokeLinejoin="round"
+      />
+      {/* Top red hemisphere */}
+      <path
+        d="M14 24 C14 24 3 17 3 9 C3 5 6 2 10 2 C12 2 13.5 3 14 4.5 C14.5 3 16 2 18 2 C22 2 25 5 25 9 C25 17 14 24 14 24 Z"
+        fill="#ef4444"
+        clipPath="url(#topHeartHalf)"
+      />
+      {/* Dividing belt */}
+      <path d="M3 10.5 H25" stroke="#120b1d" strokeWidth="2.6" />
+      {/* Center Pokéball button */}
+      <circle cx="14" cy="10.5" r="3.5" fill="#f8fafc" stroke="#120b1d" strokeWidth="2.2" />
+      <circle cx="14" cy="10.5" r="1.3" fill="#120b1d" />
     </svg>
   );
 }
@@ -151,9 +79,9 @@ function SoulLanternHeart({ active, isCritical }) {
  */
 function FacetedRiftShardSvg() {
   return (
-    <svg className="rift-shard-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
-      <path d="M12 2L5 9l7 13 7-13-7-7z" fill="url(#shardGradGame)" stroke="#3ce3e8" strokeWidth="1.2" />
-      <path d="M12 2v20M5 9h14M12 9l-4 7m4-7l4 7" stroke="rgba(255, 255, 255, 0.45)" strokeWidth="0.8" />
+    <svg className="rift-shard-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+      <path d="M12 2L5 9l7 13 7-13-7-7z" fill="url(#shardGradGame)" stroke="#120b1d" strokeWidth="2.2" strokeLinejoin="round" />
+      <path d="M12 2v20M5 9h14M12 9l-4 7m4-7l4 7" stroke="rgba(255, 255, 255, 0.55)" strokeWidth="1.0" />
       <defs>
         <linearGradient id="shardGradGame" x1="5" y1="2" x2="19" y2="22" gradientUnits="userSpaceOnUse">
           <stop stopColor="#67e8f9" />
@@ -189,6 +117,7 @@ export default function GameScreen({ player, onFinished }) {
     fragmentsCollected: 0,
   });
 
+  const [soundMuted, setSoundMuted] = useState(() => isMuted());
   const [stageBanner, setStageBanner] = useState(null);
   const [completedCardModal, setCompletedCardModal] = useState(null);
   const [lossModal, setLossModal] = useState(null);
@@ -199,6 +128,10 @@ export default function GameScreen({ player, onFinished }) {
   const [pendingSummary, setPendingSummary] = useState(null);
   const [reducedEffects, setReducedEffects] = useState(() => localStorage.getItem('deadlights.reducedEffects') === 'true');
   const [runToken, setRunToken] = useState(() => crypto.randomUUID());
+
+  useEffect(() => {
+    return subscribeMuteChange(setSoundMuted);
+  }, []);
 
   // 60FPS DOM Progress Bar Callback hookup
   const onEngine = useCallback((engine) => {
@@ -223,14 +156,9 @@ export default function GameScreen({ player, onFinished }) {
       if (next.stageCompletedCard) {
         setCompletedCardModal(next.stageCompletedCard);
         engineRef.current?.pause();
-        playCardPickupChime(true);
-      }
-      if (next.cardPickup) {
-        playCardPickupChime(next.cardPickup.isFullCard);
       }
       if (next.jumpscareActive) {
         setJumpscareActive(true);
-        playPennywiseJumpscareStinger();
       }
       return { ...current, ...next };
     });
@@ -256,7 +184,14 @@ export default function GameScreen({ player, onFinished }) {
   useEffect(() => {
     if (sessionState !== 'countdown') return undefined;
     setCountdown(3);
-    const interval = window.setInterval(() => setCountdown((value) => value - 1), 1000);
+    playCountdownSfx(3);
+    const interval = window.setInterval(() => {
+      setCountdown((value) => {
+        const nextVal = value - 1;
+        playCountdownSfx(nextVal);
+        return nextVal;
+      });
+    }, 1000);
     const startTimer = window.setTimeout(() => {
       window.clearInterval(interval);
       setSessionState('playing');
@@ -299,6 +234,7 @@ export default function GameScreen({ player, onFinished }) {
   }, [engineState.stageNumber, engineState.stageCardsCollected, engineState.cardsRequiredPerStage, submitSummary]);
 
   const restartRun = useCallback(() => {
+    playButtonClickSfx();
     setLossModal(null);
     setCompletedCardModal(null);
     setJumpscareActive(false);
@@ -307,6 +243,7 @@ export default function GameScreen({ player, onFinished }) {
   }, []);
 
   const dismissCardModal = useCallback(() => {
+    playButtonClickSfx();
     setCompletedCardModal(null);
     if (completedCardModal?.stageNumber >= (GAME_CONFIG.stageCount || 6)) {
       engineRef.current?.finish('all_stages_cleared');
@@ -330,12 +267,19 @@ export default function GameScreen({ player, onFinished }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lossModal, completedCardModal, restartRun, dismissCardModal]);
 
-  const endRun = () => engineRef.current?.finish('player_exit');
-  const toggleEffects = () => setReducedEffects((current) => {
-    const next = !current;
-    localStorage.setItem('deadlights.reducedEffects', String(next));
-    return next;
-  });
+  const endRun = () => {
+    playButtonClickSfx();
+    engineRef.current?.finish('player_exit');
+  };
+
+  const toggleEffects = () => {
+    playButtonClickSfx();
+    setReducedEffects((current) => {
+      const next = !current;
+      localStorage.setItem('deadlights.reducedEffects', String(next));
+      return next;
+    });
+  };
 
   // Interactive 3D Perspective Tilt for Card Modal
   function handleModalCardMouseMove(e) {
@@ -377,43 +321,76 @@ export default function GameScreen({ player, onFinished }) {
         reducedEffects={reducedEffects}
       />
 
-      {/* ── PERIPHERAL CORNER-ANCHORED IN-GAME HUD ── */}
-      {/* Top-Left Plate: Vitality Lanterns & Shard Pouch */}
-      <aside className="hud-corner-plate hud-plate-left" aria-label="Player Vitality and Shards">
-        <div className="hud-hearts" title={`Soul Vitality: ${currentHp} of ${maxHp} Hearts`}>
-          {Array.from({ length: maxHp }).map((_, i) => (
-            <SoulLanternHeart
-              key={i}
-              active={i < currentHp}
-              isCritical={isHeartCritical && i === 0}
-            />
-          ))}
+      {/* ── UNOBSTRUCTED PERIPHERAL HUD (PENNYWISE 100% UNBLOCKED IN TOP SKY) ── */}
+
+      {/* 1. TOP-LEFT CARTOON PLATE */}
+      <aside className="hud-corner-plate hud-plate-left" aria-label="Stage Progress and Vitality">
+        {/* Top Row: Stage Badge, Name, Timer, and 60FPS Bar */}
+        <div className="hud-stage-row">
+          <span className="hud-stage-badge">STAGE {engineState.stageNumber}/6</span>
+          <span className="hud-stage-title">{engineState.stageName}</span>
+          <span className="hud-timer-tabular">{stageSecondsRemaining}s</span>
         </div>
-        <div className="hud-pouch-divider" />
-        <div className="hud-shards" title="Collected Rift Shards">
-          <FacetedRiftShardSvg />
-          <span className="shard-val">{engineState.shards}</span>
+        <div className="hud-progress-track">
+          <div ref={stageProgressRef} className="hud-progress-fill" />
+        </div>
+
+        {/* Bottom Row: 3 Poké-Heart SVGs & Rift Shard Counter */}
+        <div className="hud-vitality-row">
+          <div className="hud-hearts" title={`Soul Vitality: ${currentHp} of ${maxHp} Hearts`}>
+            {Array.from({ length: maxHp }).map((_, i) => (
+              <PokeHeartSvg
+                key={i}
+                active={i < currentHp}
+                isCritical={isHeartCritical && i === 0}
+              />
+            ))}
+          </div>
+          <div className="hud-pouch-divider" />
+          <div className="hud-shards" title="Collected Rift Shards">
+            <FacetedRiftShardSvg />
+            <span className="shard-val">{engineState.shards}</span>
+          </div>
         </div>
       </aside>
 
-      {/* Top-Center Compact Marquee & Fanned Card Hand */}
-      <section className="hud-center-marquee" aria-label="Stage Progress and Cards Hand">
-        <div className="marquee-ribbon">
-          <span className="marquee-stage-badge">STAGE {engineState.stageNumber}</span>
-          <span className="marquee-stage-name">{engineState.stageName}</span>
-          <span className="marquee-timer">{stageSecondsRemaining}s</span>
+      {/* 2. TOP-RIGHT CARTOON PLATE */}
+      <aside className="hud-corner-plate hud-plate-right" aria-label="Score and Audio Controls">
+        <div className="hud-odometer-box">
+          <span className="score-eyebrow">SCORE</span>
+          <span className="odometer-digits">{paddedScore}</span>
         </div>
 
-        {/* 60FPS GPU Transform Progress Bar */}
-        <div className="marquee-progress-track">
-          <div ref={stageProgressRef} className="marquee-progress-bar" />
-        </div>
+        <button
+          className="hud-sound-toggle-btn"
+          onClick={() => {
+            playButtonClickSfx();
+            toggleMute();
+          }}
+          title={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
+          aria-label={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
+        >
+          {soundMuted ? '🔇' : '🔊'}
+        </button>
 
-        {/* 5 Physical Mini-Card Slots in Poker-Hand Fan */}
-        <div className="hud-fanned-cards" title="Gather all 5 cards across 60 seconds">
+        <button
+          className="hud-pause-keycap"
+          onClick={() => {
+            playButtonClickSfx();
+            engineState.paused ? engineRef.current?.resume() : engineRef.current?.pause();
+          }}
+          title="Pause Game [ESC]"
+        >
+          <span className="keycap-label">{engineState.paused ? 'RESUME' : 'PAUSE'}</span>
+          <kbd className="keycap-hint">ESC</kbd>
+        </button>
+      </aside>
+
+      {/* 3. BOTTOM-CENTER FANNED 5-CARD DOCK (Below player boots, leaving center sky completely open) */}
+      <section className="hud-bottom-card-dock" aria-label="5 Stage Pokédex Cards">
+        <div className="hud-dock-fanned-cards" title="Gather all 5 cards across 60 seconds">
           {[1, 2, 3, 4, 5].map((slot) => {
             const isGot = slot <= cardsGot;
-            // Angle spread: -8deg to +8deg
             const angles = [-8, -4, 0, 4, 8];
             const angle = angles[slot - 1];
             return (
@@ -422,7 +399,7 @@ export default function GameScreen({ player, onFinished }) {
                 className={`fanned-card-slot ${isGot ? 'card-collected' : 'card-pending'}`}
                 style={{
                   '--card-fan-rot': `${angle}deg`,
-                  '--card-fan-y': `${Math.abs(angle) * 0.8}px`,
+                  '--card-fan-y': `${Math.abs(angle) * 0.7}px`,
                 }}
                 title={`Stage Card ${slot}/5: ${isGot ? 'Secured' : 'Missing'}`}
               >
@@ -441,23 +418,7 @@ export default function GameScreen({ player, onFinished }) {
         </div>
       </section>
 
-      {/* Top-Right Plate: Score Odometer & Pause Keycap */}
-      <aside className="hud-corner-plate hud-plate-right" aria-label="Score and Controls">
-        <div className="hud-odometer-box">
-          <span className="score-eyebrow">SCORE</span>
-          <span className="odometer-digits">{paddedScore}</span>
-        </div>
-        <button
-          className="hud-pause-keycap"
-          onClick={() => (engineState.paused ? engineRef.current?.resume() : engineRef.current?.pause())}
-          title="Pause Game [ESC]"
-        >
-          <span className="keycap-label">{engineState.paused ? 'RESUME' : 'PAUSE'}</span>
-          <kbd className="keycap-hint">ESC</kbd>
-        </button>
-      </aside>
-
-      {/* Stage Clear Celebration Banner */}
+      {/* Stage Clear Celebration Banner (Positioned well below Pennywise at bottom: 5.5rem) */}
       {stageBanner && (
         <div className="stage-clear-banner">
           <p className="banner-eyebrow">STAGE {stageBanner.clearedNum} PURIFIED</p>
@@ -626,7 +587,10 @@ export default function GameScreen({ player, onFinished }) {
         <div className="pause-overlay">
           <h2>GAME PAUSED</h2>
           <p className="pause-info">Stage {engineState.stageNumber}: {engineState.stageName}</p>
-          <button className="primary-button" onClick={() => engineRef.current?.resume()}>
+          <button className="primary-button" onClick={() => {
+            playButtonClickSfx();
+            engineRef.current?.resume();
+          }}>
             RESUME RUN
           </button>
           <button className="text-button" onClick={toggleEffects}>

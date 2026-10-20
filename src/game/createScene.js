@@ -298,23 +298,77 @@ export function createScene(canvas) {
     });
   }
 
-  // Chunk 0: Initial track segment (Z = +14) with Route Signpost
+  // Chunk 0: Haunted Carnival Entrance Archway & Route Signpost with Litwick Lamps (Z = +14)
   {
     const chunk0 = new THREE.Group();
     chunk0.position.z = 14;
     buildFenceSegment(chunk0, 0);
 
+    // Archway spanning over the path
+    const archway = new THREE.Group();
+    const stonePillarMat = new THREE.MeshStandardMaterial({ color: '#1e293b', roughness: 0.75, flatShading: true });
+    const archGoldMat = new THREE.MeshStandardMaterial({ color: '#f59e0b', metalness: 0.6, roughness: 0.3 });
+    const archCrimsonMat = new THREE.MeshStandardMaterial({ color: '#991b1b', roughness: 0.6, flatShading: true });
+
+    [-6.2, 6.2].forEach((px) => {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.9, 6.2, 0.9), stonePillarMat);
+      pillar.position.set(px, 3.1, 0);
+      addBoxOutline(pillar);
+      archway.add(pillar);
+
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 1.2), archGoldMat);
+      cap.position.set(px, 6.2, 0);
+      addBoxOutline(cap);
+      archway.add(cap);
+
+      // Litwick Streetlamps
+      const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.3, 1.2, 6), stonePillarMat);
+      lampBase.position.set(px > 0 ? px + 1.2 : px - 1.2, 0.6, 1.5);
+      addBoxOutline(lampBase);
+      archway.add(lampBase);
+
+      const litwickWax = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.24, 0.7, 8),
+        new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.3, flatShading: true })
+      );
+      litwickWax.position.set(px > 0 ? px + 1.2 : px - 1.2, 1.5, 1.5);
+      addHullOutline(litwickWax, 1.1);
+      archway.add(litwickWax);
+
+      const flame = new THREE.Mesh(
+        new THREE.ConeGeometry(0.12, 0.35, 6),
+        new THREE.MeshStandardMaterial({ color: '#c084fc', emissive: '#a855f7', emissiveIntensity: 2.8 })
+      );
+      flame.position.set(px > 0 ? px + 1.2 : px - 1.2, 2.0, 1.5);
+      addHullOutline(flame, 1.15);
+      archway.add(flame);
+    });
+
+    // Archway crossbeam & decorative crest banner
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(13.4, 0.8, 0.9), archCrimsonMat);
+    beam.position.set(0, 5.8, 0);
+    addBoxOutline(beam);
+    archway.add(beam);
+
+    const archSign = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.2, 0.2), archGoldMat);
+    archSign.position.set(0, 6.7, 0.35);
+    addBoxOutline(archSign);
+    archway.add(archSign);
+
+    chunk0.add(archway);
+
+    // Route Signpost
     const routeSign = new THREE.Group();
-    routeSign.position.set(6.8, 0, 0);
+    routeSign.position.set(7.2, 0, -2);
     const signPost = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), fenceMat);
     signPost.position.y = 1.3;
     addBoxOutline(signPost);
     routeSign.add(signPost);
 
     const plankMat = new THREE.MeshStandardMaterial({ color: '#d8c29d', roughness: 0.8 });
-    const plank1 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.32, 0.08), plankMat);
-    plank1.position.set(0.65, 2.2, 0.1);
-    plank1.rotation.z = -0.08;
+    const plank1 = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.36, 0.08), plankMat);
+    plank1.position.set(0.7, 2.2, 0.1);
+    plank1.rotation.z = -0.06;
     addBoxOutline(plank1);
     routeSign.add(plank1);
     chunk0.add(routeSign);
@@ -323,39 +377,85 @@ export function createScene(canvas) {
     scrollingProps.push(chunk0);
   }
 
-  // Chunk 1: Trevenant Gnarled Ghost-Wood (Z = -6)
+  // Chunk 1: Trevenant & Pumpkaboo Haunted Grove (Z = -6)
   {
     const chunk1 = new THREE.Group();
     chunk1.position.z = -6;
     buildFenceSegment(chunk1, 0);
 
-    const tree = new THREE.Group();
-    tree.position.set(-11.5, 0, 0);
-    const deadWoodMat = new THREE.MeshStandardMaterial({ color: '#1a1820', roughness: 0.95 });
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.85, 4.8, 6), deadWoodMat);
+    const grove = new THREE.Group();
+    grove.position.set(-11.5, 0, 0);
+
+    // Gnarled spooky Trevenant tree
+    const deadWoodMat = new THREE.MeshStandardMaterial({ color: '#1c1917', roughness: 0.95, flatShading: true });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.9, 4.8, 6), deadWoodMat);
     trunk.position.y = 2.4;
     addBoxOutline(trunk);
-    tree.add(trunk);
+    grove.add(trunk);
 
-    const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 2.8, 5), deadWoodMat);
-    branch.position.set(0.9, 4.4, 0);
-    branch.rotation.z = -0.75;
-    addBoxOutline(branch);
-    tree.add(branch);
+    const branchL = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.3, 2.6, 5), deadWoodMat);
+    branchL.position.set(-0.8, 4.2, 0);
+    branchL.rotation.z = 0.65;
+    addBoxOutline(branchL);
+    grove.add(branchL);
+
+    const branchR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 2.8, 5), deadWoodMat);
+    branchR.position.set(0.9, 4.4, 0);
+    branchR.rotation.z = -0.75;
+    addBoxOutline(branchR);
+    grove.add(branchR);
 
     const eyeKnot = new THREE.Mesh(
-      new THREE.BoxGeometry(0.15, 0.12, 0.1),
-      new THREE.MeshStandardMaterial({ color: '#ff1e42', emissive: '#ff1e42', emissiveIntensity: 2.8 })
+      new THREE.BoxGeometry(0.18, 0.14, 0.12),
+      new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#dc2626', emissiveIntensity: 3.2 })
     );
     eyeKnot.position.set(0, 2.8, 0.55);
-    tree.add(eyeKnot);
-    chunk1.add(tree);
+    grove.add(eyeKnot);
+    chunk1.add(grove);
+
+    // Carved Glowing Pumpkaboo Jack-o'-Lanterns along the fence
+    const pumpkinOrangeMat = new THREE.MeshStandardMaterial({ color: '#ea580c', roughness: 0.7, flatShading: true });
+    const pumpkinVioletMat = new THREE.MeshStandardMaterial({ color: '#7c3aed', roughness: 0.7, flatShading: true });
+    const pumpkinGlowMat = new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#eab308', emissiveIntensity: 3.0 });
+    const batEarMat = new THREE.MeshStandardMaterial({ color: '#18181b', flatShading: true });
+
+    [
+      { x: -5.5, z: -3.5, mat: pumpkinOrangeMat },
+      { x: -5.4, z: 3.5, mat: pumpkinVioletMat },
+      { x: 5.4, z: -1.0, mat: pumpkinOrangeMat },
+    ].forEach((p) => {
+      const pumpkaboo = new THREE.Group();
+      pumpkaboo.position.set(p.x, 0.4, p.z);
+
+      // Segmented pumpkin body
+      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.38, 8, 8), p.mat);
+      pBody.scale.set(1.15, 0.85, 1.15);
+      addHullOutline(pBody, 1.1);
+      pumpkaboo.add(pBody);
+
+      // Glowing carved eyes
+      [-0.12, 0.12].forEach((ex) => {
+        const pEye = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), pumpkinGlowMat);
+        pEye.position.set(ex, 0.05, 0.36);
+        pumpkaboo.add(pEye);
+      });
+
+      // Cute Bat-Ear Stems on top
+      [-0.16, 0.16].forEach((bx) => {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.22, 4), batEarMat);
+        ear.position.set(bx, 0.42, 0);
+        ear.rotation.z = bx > 0 ? -0.4 : 0.4;
+        pumpkaboo.add(ear);
+      });
+
+      chunk1.add(pumpkaboo);
+    });
 
     scene.add(chunk1);
     scrollingProps.push(chunk1);
   }
 
-  // Chunk 2: PRIZES Carnival Game Booth & Mimikyu Decoy (Z = -26)
+  // Chunk 2: Mimikyu Prize Booth (Z = -26)
   {
     const chunk2 = new THREE.Group();
     chunk2.position.z = -26;
@@ -387,167 +487,363 @@ export function createScene(canvas) {
     addBoxOutline(awning);
     booth.add(awning);
 
-    // Mimikyu on counter
-    const burlapMat = new THREE.MeshStandardMaterial({ color: '#c4ad7a', roughness: 0.9 });
-    const mimikyuBody = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.85, 0.65), burlapMat);
-    mimikyuBody.position.set(0, 1.58, 0);
-    addBoxOutline(mimikyuBody);
-    booth.add(mimikyuBody);
+    // Mimikyu on counter: tilted head, 2 ears (one bent), crayoned belly face, glowing eyes under hem
+    const mimikyu = new THREE.Group();
+    mimikyu.position.set(0, 1.25, 0);
+
+    const burlapMat = new THREE.MeshStandardMaterial({ color: '#d97706', roughness: 0.85, flatShading: true });
+    const earTipMat = new THREE.MeshStandardMaterial({ color: '#18181b', flatShading: true });
+    const crayonFaceMat = new THREE.MeshStandardMaterial({ color: '#09090b', flatShading: true });
+    const hemGlowEyeMat = new THREE.MeshStandardMaterial({ color: '#c084fc', emissive: '#9333ea', emissiveIntensity: 3.5 });
+
+    const mBody = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.85, 6), burlapMat);
+    mBody.position.y = 0.42;
+    addHullOutline(mBody, 1.08);
+    mimikyu.add(mBody);
+
+    // Crayoned eyes & mouth on belly
+    [-0.10, 0.10].forEach((cx) => {
+      const cEye = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.04), crayonFaceMat);
+      cEye.position.set(cx, 0.42, 0.32);
+      mimikyu.add(cEye);
+    });
+    const cMouth = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.04), crayonFaceMat);
+    cMouth.position.set(0, 0.30, 0.34);
+    mimikyu.add(cMouth);
+
+    // Glowing purple eyes under its hem!
+    [-0.10, 0.10].forEach((hx) => {
+      const hEye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), hemGlowEyeMat);
+      hEye.position.set(hx, 0.06, 0.32);
+      mimikyu.add(hEye);
+    });
+
+    // Tilted Head with 2 ears (one bent)
+    const mHead = new THREE.Mesh(new THREE.SphereGeometry(0.32, 6, 6), burlapMat);
+    mHead.position.set(0.04, 0.95, 0);
+    mHead.rotation.z = -0.22;
+    addHullOutline(mHead, 1.08);
+    mimikyu.add(mHead);
+
+    const earStraight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.45, 0.08), earTipMat);
+    earStraight.position.set(-0.16, 1.30, 0);
+    earStraight.rotation.z = 0.15;
+    addBoxOutline(earStraight);
+    mimikyu.add(earStraight);
+
+    const earBent = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.42, 0.08), earTipMat);
+    earBent.position.set(0.20, 1.25, 0);
+    earBent.rotation.z = -0.65;
+    addBoxOutline(earBent);
+    mimikyu.add(earBent);
+
+    booth.add(mimikyu);
 
     chunk2.add(booth);
     scene.add(chunk2);
     scrollingProps.push(chunk2);
   }
 
-  // Chunk 3: DRIFLOON GHOST-BALLOON KIOSK (Z = -46)
+  // Chunk 3: Drifloon & Pikachu Balloon Cart (Z = -46)
   {
     const chunk3 = new THREE.Group();
     chunk3.position.z = -46;
     buildFenceSegment(chunk3, 0);
 
-    const kiosk = new THREE.Group();
-    kiosk.position.set(12.5, 0, 0);
+    const wagon = new THREE.Group();
+    wagon.position.set(12.5, 0, 0);
 
-    const cartWoodMat = new THREE.MeshStandardMaterial({ color: '#271c19', roughness: 0.9 });
-    const cartBase = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.2, 2.2), cartWoodMat);
-    cartBase.position.y = 0.6;
-    addBoxOutline(cartBase);
-    kiosk.add(cartBase);
+    const wagonWoodMat = new THREE.MeshStandardMaterial({ color: '#271c19', roughness: 0.9, flatShading: true });
+    const wagonBase = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.2, 2.2), wagonWoodMat);
+    wagonBase.position.y = 0.6;
+    addBoxOutline(wagonBase);
+    wagon.add(wagonBase);
 
-    // Drifloon ghost balloons
-    const drifloonPurpleMat = new THREE.MeshStandardMaterial({
-      color: '#8b5cf6',
-      emissive: '#4c1d95',
-      emissiveIntensity: 0.6,
-      roughness: 0.35,
+    // 4 Wagon wheels
+    const wheelMat = new THREE.MeshStandardMaterial({ color: '#78350f', metalness: 0.4, roughness: 0.6 });
+    [[-1.4, -0.9], [1.4, -0.9], [-1.4, 0.9], [1.4, 0.9]].forEach(([wx, wz]) => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.14, 8), wheelMat);
+      wheel.position.set(wx, 0.42, wz);
+      wheel.rotation.z = Math.PI / 2;
+      wagon.add(wheel);
     });
+
+    // Complete Drifloon Balloons
+    const drifloonPurpleMat = new THREE.MeshStandardMaterial({ color: '#7e22ce', roughness: 0.35, flatShading: true });
+    const drifloonCloudMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.6, flatShading: true });
+    const drifloonYellowMat = new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#eab308', emissiveIntensity: 1.8 });
+
     [-0.8, 0.8].forEach((dx) => {
       const drifloon = new THREE.Group();
-      drifloon.position.set(dx, 4.8, 0);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.65, 8, 8), drifloonPurpleMat);
-      head.scale.set(1.0, 1.15, 1.0);
-      addHullOutline(head, 1.08);
-      drifloon.add(head);
+      drifloon.position.set(dx, 4.6, dx > 0 ? 0.3 : -0.3);
 
-      const tuft = new THREE.Mesh(
-        new THREE.SphereGeometry(0.32, 6, 6),
-        new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.4 })
-      );
-      tuft.position.y = 0.72;
-      drifloon.add(tuft);
-      kiosk.add(drifloon);
+      const dBody = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), drifloonPurpleMat);
+      dBody.scale.set(1.0, 1.15, 1.0);
+      addHullOutline(dBody, 1.08);
+      drifloon.add(dBody);
+
+      const cloud = new THREE.Mesh(new THREE.SphereGeometry(0.28, 6, 6), drifloonCloudMat);
+      cloud.position.y = 0.62;
+      drifloon.add(cloud);
+
+      // Yellow X tape mouth
+      const xTapeH = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.04), drifloonYellowMat);
+      xTapeH.position.set(0, 0, 0.54);
+      drifloon.add(xTapeH);
+
+      const xTapeV = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.2, 0.04), drifloonYellowMat);
+      xTapeV.position.set(0, 0, 0.54);
+      drifloon.add(xTapeV);
+
+      // Dangling string & heart feet
+      [-0.18, 0.18].forEach((fx) => {
+        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.06), drifloonYellowMat);
+        foot.position.set(fx, -0.85, 0);
+        foot.rotation.z = Math.PI / 4;
+        drifloon.add(foot);
+      });
+
+      wagon.add(drifloon);
     });
 
-    chunk3.add(kiosk);
+    // Pikachu Balloon
+    const pikaYellowMat = new THREE.MeshStandardMaterial({ color: '#facc15', roughness: 0.3, flatShading: true });
+    const pikaRedMat = new THREE.MeshStandardMaterial({ color: '#ef4444', flatShading: true });
+    const pikaBlackMat = new THREE.MeshStandardMaterial({ color: '#18181b', flatShading: true });
+
+    const pikaBalloon = new THREE.Group();
+    pikaBalloon.position.set(0, 5.1, 0);
+
+    const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.62, 8, 8), pikaYellowMat);
+    addHullOutline(pHead, 1.08);
+    pikaBalloon.add(pHead);
+
+    // Red cheeks
+    [-0.38, 0.38].forEach((cx) => {
+      const cheek = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 6), pikaRedMat);
+      cheek.position.set(cx, -0.1, 0.56);
+      cheek.rotation.x = Math.PI / 2;
+      pikaBalloon.add(cheek);
+    });
+
+    // Black-tipped pointed ears
+    [-0.32, 0.32].forEach((ex) => {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.55, 5), pikaYellowMat);
+      ear.position.set(ex, 0.65, 0);
+      ear.rotation.z = ex > 0 ? -0.45 : 0.45;
+      addHullOutline(ear, 1.1);
+      pikaBalloon.add(ear);
+
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 5), pikaBlackMat);
+      tip.position.set(ex > 0 ? ex + 0.12 : ex - 0.12, 0.88, 0);
+      tip.rotation.z = ex > 0 ? -0.45 : 0.45;
+      pikaBalloon.add(tip);
+    });
+
+    wagon.add(pikaBalloon);
+
+    chunk3.add(wagon);
     scene.add(chunk3);
     scrollingProps.push(chunk3);
   }
 
-  // Chunk 4: GENGAR PHANTOM MANOR FACADE (Z = -66)
+  // Chunk 4: Gengar Funhouse Facade (Z = -66)
   {
     const chunk4 = new THREE.Group();
     chunk4.position.z = -66;
     buildFenceSegment(chunk4, 0);
 
-    const manor = new THREE.Group();
-    manor.position.set(-16.5, 0, 0);
+    const gengarManor = new THREE.Group();
+    gengarManor.position.set(-16.5, 0, 0);
 
-    const manorWallMat = new THREE.MeshStandardMaterial({
-      color: '#1a0d28',
-      roughness: 0.8,
+    const gengarPurpleMat = new THREE.MeshStandardMaterial({
+      color: '#3b0764',
+      roughness: 0.6,
       flatShading: true,
     });
-    const mainFacade = new THREE.Mesh(new THREE.BoxGeometry(9.5, 7.5, 5.0), manorWallMat);
-    mainFacade.position.y = 3.75;
-    addBoxOutline(mainFacade);
-    manor.add(mainFacade);
-
-    // Glowing Gengar red eyes
-    const eyeMat = new THREE.MeshStandardMaterial({
+    const gengarEyeMat = new THREE.MeshStandardMaterial({
       color: '#ff1e42',
       emissive: '#ff1e42',
       emissiveIntensity: 3.8,
     });
+    const toothMat = new THREE.MeshStandardMaterial({
+      color: '#f8fafc',
+      roughness: 0.2,
+      flatShading: true,
+    });
+
+    const mainFacade = new THREE.Mesh(new THREE.BoxGeometry(9.5, 7.5, 5.0), gengarPurpleMat);
+    mainFacade.position.y = 3.75;
+    addBoxOutline(mainFacade);
+    gengarManor.add(mainFacade);
+
+    // Gengar pointed 3D ears
+    [-3.8, 3.8].forEach((ex) => {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.8, 5), gengarPurpleMat);
+      ear.position.set(ex, 8.5, 0);
+      ear.rotation.z = ex > 0 ? -0.35 : 0.35;
+      addHullOutline(ear, 1.08);
+      gengarManor.add(ear);
+    });
+
+    // Spiky roof crown
+    for (let c = -2.5; c <= 2.5; c += 1.25) {
+      const crownSpike = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.5, 4), gengarPurpleMat);
+      crownSpike.position.set(c, 7.9, 0);
+      gengarManor.add(crownSpike);
+    }
+
+    // Glowing slanted crimson Gengar eyes
     [-1.8, 1.8].forEach((ex) => {
-      const eye = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.45, 0.2), eyeMat);
+      const eye = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.55, 0.2), gengarEyeMat);
       eye.position.set(ex, 5.2, 2.6);
       eye.rotation.z = ex > 0 ? 0.35 : -0.35;
       addBoxOutline(eye);
-      manor.add(eye);
+      gengarManor.add(eye);
     });
 
-    // Dark tunnel mouth
+    // Wide tooth-lined tunnel mouth
     const tunnel = new THREE.Mesh(
-      new THREE.BoxGeometry(4.2, 3.2, 3.5),
+      new THREE.BoxGeometry(4.6, 3.4, 3.5),
       new THREE.MeshBasicMaterial({ color: '#030206' })
     );
-    tunnel.position.set(0, 1.6, 1.5);
+    tunnel.position.set(0, 1.7, 1.5);
     addBoxOutline(tunnel);
-    manor.add(tunnel);
+    gengarManor.add(tunnel);
 
-    chunk4.add(manor);
+    // Tooth row (upper and lower fangs)
+    for (let t = -1.8; t <= 1.8; t += 0.6) {
+      const topFang = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.45, 4), toothMat);
+      topFang.position.set(t, 3.1, 3.3);
+      topFang.rotation.x = Math.PI;
+      gengarManor.add(topFang);
+
+      const btmFang = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.45, 4), toothMat);
+      btmFang.position.set(t, 0.25, 3.3);
+      gengarManor.add(btmFang);
+    }
+
+    chunk4.add(gengarManor);
     scene.add(chunk4);
     scrollingProps.push(chunk4);
   }
 
-  // Chunk 5: BALLOONS CARNIVAL TARGET BOOTH (Z = -86)
+  // Chunk 5: Voltorb & Pokéball Target Gallery (Z = -86)
   {
     const chunk5 = new THREE.Group();
     chunk5.position.z = -86;
     buildFenceSegment(chunk5, 0);
 
-    const booth = new THREE.Group();
-    booth.position.set(9.8, 0, 0);
-    booth.rotation.y = -Math.PI / 2;
+    const gallery = new THREE.Group();
+    gallery.position.set(9.8, 0, 0);
+    gallery.rotation.y = -Math.PI / 2;
 
-    const baseBooth = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.1, 2.4), fenceMat);
+    const baseBooth = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.1, 2.4), fenceMat);
     baseBooth.position.y = 0.55;
     addBoxOutline(baseBooth);
-    booth.add(baseBooth);
+    gallery.add(baseBooth);
 
     const awning = new THREE.Mesh(
-      new THREE.BoxGeometry(4.0, 0.22, 2.8),
+      new THREE.BoxGeometry(4.6, 0.22, 2.8),
       new THREE.MeshStandardMaterial({ color: '#1d4ed8', roughness: 0.65 })
     );
     awning.position.set(0, 3.4, 0);
     awning.rotation.x = 0.12;
     addBoxOutline(awning);
-    booth.add(awning);
+    gallery.add(awning);
 
-    chunk5.add(booth);
+    // Tiered target shelf with Pokéball and Voltorb targets
+    const targetRedMat = new THREE.MeshStandardMaterial({ color: '#dc2626', roughness: 0.4 });
+    const targetWhiteMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.4 });
+    const targetCenterMat = new THREE.MeshStandardMaterial({ color: '#18181b' });
+    const starGoldMat = new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#eab308', emissiveIntensity: 2.2 });
+
+    [-1.2, 0, 1.2].forEach((tx, idx) => {
+      const targetGroup = new THREE.Group();
+      targetGroup.position.set(tx, 1.6 + (idx === 1 ? 0.35 : 0), 0.2);
+
+      // Pokéball target sphere
+      const topHemi = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), targetRedMat);
+      targetGroup.add(topHemi);
+
+      const btmHemi = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), targetWhiteMat);
+      targetGroup.add(btmHemi);
+
+      const centerBand = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.03, 6, 12), targetCenterMat);
+      centerBand.rotation.x = Math.PI / 2;
+      targetGroup.add(centerBand);
+
+      // Star target above
+      const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.14), starGoldMat);
+      star.position.y = 0.52;
+      targetGroup.add(star);
+
+      gallery.add(targetGroup);
+    });
+
+    chunk5.add(gallery);
     scene.add(chunk5);
     scrollingProps.push(chunk5);
   }
 
-  // Chunk 6: POKÉ-AID & TICKETS BOOTHS (Z = -106)
+  // Chunk 6: Poké-Aid Haunted Healing Pavilion (Z = -106)
   {
     const chunk6 = new THREE.Group();
     chunk6.position.z = -106;
     buildFenceSegment(chunk6, 0);
 
-    const aidBooth = new THREE.Group();
-    aidBooth.position.set(-10.2, 0, 0);
-    aidBooth.rotation.y = Math.PI / 2;
+    const pavilion = new THREE.Group();
+    pavilion.position.set(-10.2, 0, 0);
+    pavilion.rotation.y = Math.PI / 2;
 
-    const base = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.1, 2.4), fenceMat);
+    const pavilionMat = new THREE.MeshStandardMaterial({ color: '#dc2626', roughness: 0.7, flatShading: true });
+    const base = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.1, 2.6), pavilionMat);
     base.position.y = 0.55;
     addBoxOutline(base);
-    aidBooth.add(base);
+    pavilion.add(base);
 
-    // Glowing cyan vitality tube
-    const tube = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.2, 0.2, 0.7, 8),
-      new THREE.MeshStandardMaterial({
-        color: '#43D9F2',
-        emissive: '#43D9F2',
-        emissiveIntensity: 2.5,
-      })
+    // Striped pavilion roof
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(3.2, 2.2, 8), tentMat);
+    roof.position.y = 3.2;
+    addHullOutline(roof, 1.05);
+    pavilion.add(roof);
+
+    // Glowing 3D Pokéball Neon Emblem on roof
+    const emblemGroup = new THREE.Group();
+    emblemGroup.position.set(0, 4.4, 0);
+
+    const ballRed = new THREE.Mesh(
+      new THREE.SphereGeometry(0.48, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#dc2626', emissiveIntensity: 2.5 })
     );
-    tube.position.set(0, 1.65, 0);
-    addBoxOutline(tube);
-    aidBooth.add(tube);
+    emblemGroup.add(ballRed);
 
-    chunk6.add(aidBooth);
+    const ballWhite = new THREE.Mesh(
+      new THREE.SphereGeometry(0.48, 8, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: '#f8fafc', emissive: '#e2e8f0', emissiveIntensity: 1.5 })
+    );
+    emblemGroup.add(ballWhite);
+
+    pavilion.add(emblemGroup);
+
+    // Glowing cyan healing vitality capsules
+    [-1.2, 1.2].forEach((cx) => {
+      const tube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.24, 0.24, 0.85, 8),
+        new THREE.MeshStandardMaterial({
+          color: '#43D9F2',
+          emissive: '#43D9F2',
+          emissiveIntensity: 2.8,
+          transparent: true,
+          opacity: 0.9,
+        })
+      );
+      tube.position.set(cx, 1.65, 0);
+      addBoxOutline(tube);
+      pavilion.add(tube);
+    });
+
+    chunk6.add(pavilion);
     scene.add(chunk6);
     scrollingProps.push(chunk6);
   }
@@ -557,7 +853,7 @@ export function createScene(canvas) {
   // ─────────────────────────────────────────────────────────────────
   const distantLandmarks = new THREE.Group();
 
-  // 1. Illuminated Rotating Ferris Wheel at (X = 23, Y = 14, Z = -82)
+  // 1. Illuminated Rotating Poké-Ferris Wheel at (X = 23, Y = 14, Z = -82)
   const ferrisWheelGroup = new THREE.Group();
   const ferrisMetalMat = new THREE.MeshStandardMaterial({
     color: '#26344d',
@@ -588,8 +884,9 @@ export function createScene(canvas) {
     ferrisWheelGroup.add(bulbCube);
   }
 
-  for (let g = 0; g < 6; g++) {
-    const angle = (g / 6) * Math.PI * 2;
+  // 8 Outlined passenger gondolas
+  for (let g = 0; g < 8; g++) {
+    const angle = (g / 8) * Math.PI * 2;
     const gondola = new THREE.Mesh(
       new THREE.BoxGeometry(1.6, 1.4, 1.2),
       new THREE.MeshStandardMaterial({ color: g % 2 === 0 ? '#ef4444' : '#3b82f6', roughness: 0.5 })
@@ -598,6 +895,31 @@ export function createScene(canvas) {
     addBoxOutline(gondola);
     ferrisWheelGroup.add(gondola);
   }
+
+  // Glowing 3D Pokéball Center Hub
+  const ferrisHub = new THREE.Group();
+  const hubRed = new THREE.Mesh(
+    new THREE.SphereGeometry(2.2, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#dc2626', emissiveIntensity: 2.2 })
+  );
+  hubRed.rotation.x = Math.PI / 2;
+  ferrisHub.add(hubRed);
+
+  const hubWhite = new THREE.Mesh(
+    new THREE.SphereGeometry(2.2, 10, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color: '#f8fafc', emissive: '#cbd5e1', emissiveIntensity: 1.2 })
+  );
+  hubWhite.rotation.x = Math.PI / 2;
+  ferrisHub.add(hubWhite);
+
+  const hubCenterButton = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.65, 0.65, 0.4, 8),
+    new THREE.MeshStandardMaterial({ color: '#f8fafc', emissive: '#ffffff', emissiveIntensity: 3.0 })
+  );
+  hubCenterButton.rotation.x = Math.PI / 2;
+  hubCenterButton.position.z = 2.0;
+  ferrisHub.add(hubCenterButton);
+  ferrisWheelGroup.add(ferrisHub);
 
   const ferrisRig = new THREE.Group();
   ferrisWheelGroup.position.y = 14;
@@ -616,7 +938,7 @@ export function createScene(canvas) {
   ferrisRig.position.set(23, 0, -82);
   distantLandmarks.add(ferrisRig);
 
-  // 2. Rotating Carousel at (X = -21, Z = -68)
+  // 2. Rotating Carousel with Ponyta & Pikachu Mounts at (X = -21, Z = -68)
   const carouselRig = new THREE.Group();
   carouselRig.position.set(-21, 0, -68);
 
@@ -648,34 +970,133 @@ export function createScene(canvas) {
   starFinial.position.y = 7.1;
   carouselGroup.add(starFinial);
 
+  // 6 Brass poles holding recognizable Ponyta & Pikachu mounts
+  const brassPoleMat = new THREE.MeshStandardMaterial({ color: '#d97706', metalness: 0.8, roughness: 0.2 });
+  const ponytaBodyMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.4 });
+  const ponytaManeMat = new THREE.MeshStandardMaterial({ color: '#f97316', emissive: '#ea580c', emissiveIntensity: 2.2 });
+  const pikaMountMat = new THREE.MeshStandardMaterial({ color: '#facc15', roughness: 0.4 });
+
+  for (let m = 0; m < 6; m++) {
+    const angle = (m / 6) * Math.PI * 2;
+    const px = Math.cos(angle) * 4.4;
+    const pz = Math.sin(angle) * 4.4;
+
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.6, 6), brassPoleMat);
+    pole.position.set(px, 2.3, pz);
+    carouselGroup.add(pole);
+
+    if (m % 2 === 0) {
+      // Ponyta mount (white body + fiery orange mane)
+      const ponyta = new THREE.Group();
+      ponyta.position.set(px, 1.8, pz);
+      ponyta.rotation.y = angle + Math.PI / 2;
+
+      const pBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.45, 1.1), ponytaBodyMat);
+      addBoxOutline(pBody);
+      ponyta.add(pBody);
+
+      const pNeck = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.6, 0.35), ponytaBodyMat);
+      pNeck.position.set(0, 0.4, 0.4);
+      pNeck.rotation.x = -0.3;
+      ponyta.add(pNeck);
+
+      const pMane = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.7, 0.5), ponytaManeMat);
+      pMane.position.set(0, 0.55, 0.3);
+      ponyta.add(pMane);
+
+      carouselGroup.add(ponyta);
+    } else {
+      // Pikachu mount (yellow body + ears)
+      const pika = new THREE.Group();
+      pika.position.set(px, 1.8, pz);
+      pika.rotation.y = angle + Math.PI / 2;
+
+      const pBody = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.75), pikaMountMat);
+      addBoxOutline(pBody);
+      pika.add(pBody);
+
+      [-0.18, 0.18].forEach((ex) => {
+        const pEar = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 4), pikaMountMat);
+        pEar.position.set(ex, 0.45, 0.2);
+        pEar.rotation.z = ex > 0 ? -0.3 : 0.3;
+        pika.add(pEar);
+      });
+
+      carouselGroup.add(pika);
+    }
+  }
+
   carouselRig.add(carouselGroup);
   distantLandmarks.add(carouselRig);
 
-  // 3. Distant Roller Coaster Trestle at (X = -22, Z = -95)
+  // 3. Continuous Ghost-Coaster Track & Haunter Coaster Train at (X = -22, Z = -95)
   const coasterGroup = new THREE.Group();
   coasterGroup.position.set(-22, 0, -95);
   const coasterMat = new THREE.MeshStandardMaterial({ color: '#1e293b', roughness: 0.7, metalness: 0.4 });
   const coasterTrackCyan = new THREE.MeshStandardMaterial({
     color: '#43D9F2',
     emissive: '#43D9F2',
-    emissiveIntensity: 1.8,
+    emissiveIntensity: 2.2,
   });
 
-  [
+  const trestles = [
     { x: -5, y: 7, z: 20 },
     { x: 0, y: 13, z: 8 },
     { x: 6, y: 9, z: -6 },
     { x: 11, y: 15, z: -20 },
-  ].forEach((tp) => {
+  ];
+
+  trestles.forEach((tp) => {
     const tower = new THREE.Mesh(new THREE.BoxGeometry(1.2, tp.y, 1.2), coasterMat);
     tower.position.set(tp.x, tp.y / 2, tp.z);
     addBoxOutline(tower);
     coasterGroup.add(tower);
-
-    const trackRail = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 14), coasterTrackCyan);
-    trackRail.position.set(tp.x, tp.y + 0.15, tp.z);
-    coasterGroup.add(trackRail);
   });
+
+  // Continuous connected angled track beams between towers
+  for (let i = 0; i < trestles.length - 1; i++) {
+    const t1 = trestles[i];
+    const t2 = trestles[i + 1];
+    const dx = t2.x - t1.x;
+    const dy = t2.y - t1.y;
+    const dz = t2.z - t1.z;
+    const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+    const trackBeam = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, len), coasterTrackCyan);
+    trackBeam.position.set((t1.x + t2.x) / 2, (t1.y + t2.y) / 2 + 0.15, (t1.z + t2.z) / 2);
+    trackBeam.lookAt(t2.x, t2.y + 0.15, t2.z);
+    coasterGroup.add(trackBeam);
+  }
+
+  // Multi-car Haunter Coaster Train riding along the first incline
+  const haunterPurpleMat = new THREE.MeshStandardMaterial({ color: '#581c87', roughness: 0.5, flatShading: true });
+  const haunterEyeMat = new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#dc2626', emissiveIntensity: 3.5 });
+
+  const trainLead = new THREE.Group();
+  trainLead.position.set(-1.8, 10.8, 12.5);
+  trainLead.rotation.x = -0.45;
+  trainLead.rotation.y = 0.35;
+
+  const leadCar = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.75, 1.4), haunterPurpleMat);
+  addBoxOutline(leadCar);
+  trainLead.add(leadCar);
+
+  // Haunter face spikes and glowing eyes
+  [-0.3, 0.3].forEach((ex) => {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.08), haunterEyeMat);
+    eye.position.set(ex, 0.15, 0.72);
+    trainLead.add(eye);
+  });
+  coasterGroup.add(trainLead);
+
+  // Second coaster car
+  const trainCar2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.65, 1.2), coasterMat);
+  trainCar2.position.set(-3.2, 9.2, 15.6);
+  trainCar2.rotation.x = -0.45;
+  trainCar2.rotation.y = 0.35;
+  addBoxOutline(trainCar2);
+  coasterGroup.add(trainCar2);
+
   distantLandmarks.add(coasterGroup);
 
   // 4. Grand Big Top Circus Tent at (X = -12, Z = -122)
