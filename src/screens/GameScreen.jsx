@@ -93,7 +93,31 @@ function FacetedRiftShardSvg() {
   );
 }
 
-export default function GameScreen({ player, onFinished }) {
+const PENNYWISE_LINES = [
+  'WE ALL FLOAT DOWN HERE... EVEN YOUR POKÉMON!',
+  "GOTTA CATCH 'EM ALL? I'LL CATCH YOU FIRST!",
+  'TAKE A POKÉ-BALLOON, RUNNER... IT FLOATS!',
+  "YOUR POKÉDEX CAN'T SAVE YOU FROM THE DEADLIGHTS!",
+  "HEE-HEE! MISS ONE CARD AND YOU'RE MINE!",
+];
+
+function formatDialogue(text) {
+  const keywords = ['FLOAT', 'POKÉMON', 'CATCH', 'POKÉ-BALLOON', 'POKÉDEX', 'DEADLIGHTS', 'MINE!'];
+  const parts = text.split(/(\b[A-ZÉ\-'!]+\b)/g);
+  return parts.map((part, idx) => {
+    const clean = part.replace(/[!,]/g, '');
+    const isSpecial = keywords.some((k) => k.includes(clean) && clean.length > 3);
+    return isSpecial ? (
+      <strong key={idx} className="bubble-accent">
+        {part}
+      </strong>
+    ) : (
+      part
+    );
+  });
+}
+
+export default function GameScreen({ player, onFinished, runnerId }) {
   const engineRef = useRef(null);
   const stageProgressRef = useRef(null);
 
@@ -101,7 +125,7 @@ export default function GameScreen({ player, onFinished }) {
     lane: 1,
     jumping: false,
     paused: false,
-    health: 2,
+    health: 3,
     maxHealth: 3,
     shards: 0,
     score: 0,
@@ -128,10 +152,48 @@ export default function GameScreen({ player, onFinished }) {
   const [pendingSummary, setPendingSummary] = useState(null);
   const [reducedEffects, setReducedEffects] = useState(() => localStorage.getItem('deadlights.reducedEffects') === 'true');
   const [runToken, setRunToken] = useState(() => crypto.randomUUID());
+  const [dialogueIndex, setDialogueIndex] = useState(() => Math.floor(Math.random() * PENNYWISE_LINES.length));
+  const [dialoguePhase, setDialoguePhase] = useState('visible');
+  const [flyingCardAnim, setFlyingCardAnim] = useState(null);
+  const [recentDockSlot, setRecentDockSlot] = useState(null);
 
   useEffect(() => {
     return subscribeMuteChange(setSoundMuted);
   }, []);
+
+  // Randomized Pennywise cartoon dialogue with smooth pop-in, pop-out, and periodic silence gaps
+  useEffect(() => {
+    if (sessionState !== 'playing' || engineState.paused || jumpscareActive || completedCardModal || lossModal) {
+      setDialoguePhase('hidden');
+      return undefined;
+    }
+
+    let timer = null;
+
+    if (dialoguePhase === 'visible') {
+      // Stay visible for 3.8s before smooth exit animation
+      timer = window.setTimeout(() => {
+        setDialoguePhase('exiting');
+      }, 3800);
+    } else if (dialoguePhase === 'exiting') {
+      // Exit animation runs for 350ms, then becomes hidden
+      timer = window.setTimeout(() => {
+        setDialoguePhase('hidden');
+      }, 350);
+    } else if (dialoguePhase === 'hidden') {
+      // Periodic silence interval (disappeared for 2.6s - 3.4s) before popping in with a random new line
+      const silenceMs = 2600 + Math.floor(Math.random() * 800);
+      timer = window.setTimeout(() => {
+        setDialogueIndex((prev) => {
+          const pool = [0, 1, 2, 3, 4].filter((i) => i !== prev);
+          return pool[Math.floor(Math.random() * pool.length)];
+        });
+        setDialoguePhase('visible');
+      }, silenceMs);
+    }
+
+    return () => window.clearTimeout(timer);
+  }, [sessionState, engineState.paused, jumpscareActive, completedCardModal, lossModal, dialoguePhase]);
 
   // 60FPS DOM Progress Bar Callback hookup
   const onEngine = useCallback((engine) => {
@@ -145,6 +207,20 @@ export default function GameScreen({ player, onFinished }) {
 
   const onStateChange = useCallback((next) => {
     setEngineState((current) => {
+      if (next.cardPickup) {
+        const slot = next.stageCardsCollected;
+        setFlyingCardAnim({
+          id: Date.now(),
+          slot,
+          cardName: next.cardPickup.cardName,
+          cardColor: next.cardPickup.cardColor,
+        });
+        setTimeout(() => {
+          setRecentDockSlot(slot);
+          setTimeout(() => setRecentDockSlot(null), 900);
+        }, 550);
+        setTimeout(() => setFlyingCardAnim(null), 1050);
+      }
       if (next.stageClearedBanner) {
         setStageBanner({
           clearedNum: next.clearedStageNum,
@@ -319,6 +395,7 @@ export default function GameScreen({ player, onFinished }) {
         onStateChange={onStateChange}
         onRunEnd={onRunEnd}
         reducedEffects={reducedEffects}
+        runnerId={runnerId}
       />
 
       {/* ── UNOBSTRUCTED PERIPHERAL HUD (PENNYWISE 100% UNBLOCKED IN TOP SKY) ── */}
@@ -386,7 +463,36 @@ export default function GameScreen({ player, onFinished }) {
         </button>
       </aside>
 
-      {/* 3. BOTTOM-CENTER FANNED 5-CARD DOCK (Below player boots, leaving center sky completely open) */}
+      {/* 3. PENNYWISE RANDOMIZED SILENT CARTOON SPEECH BUBBLE (To the side, disappears smoothly every once in awhile) */}
+      {sessionState === 'playing' && !engineState.paused && !jumpscareActive && !completedCardModal && !lossModal && dialoguePhase !== 'hidden' && (
+        <aside
+          className={`pennywise-speech-bubble ${dialoguePhase === 'exiting' ? 'bubble-exiting' : 'bubble-entering'}`}
+          key={`${dialogueIndex}-${dialoguePhase === 'exiting' ? 'exit' : 'enter'}`}
+          aria-live="polite"
+        >
+          <div className="speech-bubble-tail" />
+          <p className="speech-bubble-text">
+            {formatDialogue(PENNYWISE_LINES[dialogueIndex])}
+          </p>
+        </aside>
+      )}
+
+      {/* 4. 2D CARTOON FLYING CARD-TO-DOCK ANIMATION */}
+      {flyingCardAnim && (
+        <div
+          className={`flying-card-overlay fly-to-slot-${flyingCardAnim.slot}`}
+          key={flyingCardAnim.id}
+          style={{ '--card-pickup-color': flyingCardAnim.cardColor || '#f59e0b' }}
+        >
+          <div className="flying-card-pop-banner">POKÉ-CARD FRAGMENT!</div>
+          <div className="flying-card-mini">
+            <div className="mini-card-sparkle">✦</div>
+            <div className="mini-card-name">{flyingCardAnim.cardName}</div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. BOTTOM-CENTER FANNED 5-CARD DOCK */}
       <section className="hud-bottom-card-dock" aria-label="5 Stage Pokédex Cards">
         <div className="hud-dock-fanned-cards" title="Gather all 5 cards across 60 seconds">
           {[1, 2, 3, 4, 5].map((slot) => {
@@ -396,7 +502,9 @@ export default function GameScreen({ player, onFinished }) {
             return (
               <div
                 key={slot}
-                className={`fanned-card-slot ${isGot ? 'card-collected' : 'card-pending'}`}
+                className={`fanned-card-slot ${isGot ? 'card-collected' : 'card-pending'} ${
+                  recentDockSlot === slot ? 'slot-bounce-glow' : ''
+                }`}
                 style={{
                   '--card-fan-rot': `${angle}deg`,
                   '--card-fan-y': `${Math.abs(angle) * 0.7}px`,

@@ -23,110 +23,146 @@ import {
   playCollisionHitSfx,
   playStageClearSfx,
   playJumpscareSfx,
+  startBackgroundMusic,
+  stopBackgroundMusic,
 } from './soundEffects.js';
 
 export const POKEMON_CARD_ROSTER = [
   {
     id: '001',
     artKey: 'mossbyte',
-    name: 'Mossbyte',
-    type: 'Grass / Glitch',
+    name: 'Bulba-Moss',
+    type: 'Grass / Poison',
     color: '#10b981',
     accentColor: '#34d399',
     symbol: 'GRS',
     hp: 120,
     attacks: [
-      { name: 'Spore Glitch', damage: '30', desc: 'Distorts the peripheral carnival vision with static spores.' },
-      { name: 'Photosynthetic Surge', damage: '80', desc: 'Channels ambient fog luminescence into radiant kinetic energy.' },
+      { name: 'Vine Whip', damage: '40', desc: 'Strikes with emerald thorn-vines across the carnival rails.' },
+      { name: 'Solar Beam', damage: '90', desc: 'Gathers radiant solar energy to blast incoming obstacles.' },
     ],
     rarity: 'Holo Rare',
     illustrator: 'ELE5BA Studio',
-    lore: 'Found clinging to weathered carnival tents, pulsing with residual digital signals.',
+    lore: 'A bulb-dinosaur sprite bearing a glowing cyan carnival blossom that purifies dark mist.',
   },
   {
     id: '002',
     artKey: 'lantern-hare',
-    name: 'Lantern Hare',
-    type: 'Fire / Spirit',
+    name: 'Pika-Lantern',
+    type: 'Electric / Light',
     color: '#f59e0b',
     accentColor: '#fbbf24',
     symbol: 'FIR',
     hp: 130,
     attacks: [
-      { name: 'Wisp Flick', damage: '40', desc: 'Fires twin ghost-sparks that illuminate hidden obstacles.' },
-      { name: 'Amber Conflagration', damage: '90', desc: 'Burns away pursuer shadows with intense spectral heat.' },
+      { name: 'Thunder Shock', damage: '45', desc: 'Discharges electric sparks from its red cheeks.' },
+      { name: 'Volt Tackle', damage: '95', desc: 'Charges forward enveloped in high-voltage electricity.' },
     ],
     rarity: 'Ultra Rare',
     illustrator: 'ELE5BA Studio',
-    lore: 'Leaps gracefully across abandoned ticket booths, guiding lost souls with its tail lantern.',
+    lore: 'An energetic electric mouse leaping across ticket booths with a lightning tail lantern.',
   },
   {
     id: '003',
     artKey: 'static-moth',
-    name: 'Static Moth',
-    type: 'Electric / Storm',
+    name: 'Zap-Venomoth',
+    type: 'Electric / Flying',
     color: '#38bdf8',
     accentColor: '#67e8f9',
     symbol: 'ELC',
     hp: 140,
     attacks: [
-      { name: 'Arc Flutter', damage: '50', desc: 'Sends arcs of high-voltage static down the carnival rails.' },
-      { name: 'Thunderstorm Tempest', damage: '110', desc: 'Unleashes a torrential discharge of concentrated rift lightning.' },
+      { name: 'Electro Web', damage: '50', desc: 'Captures incoming hazards in a crackling lightning net.' },
+      { name: 'Thunder Hurricane', damage: '110', desc: 'Summons an overwhelming vortex of storm energy.' },
     ],
     rarity: 'Secret Rare',
     illustrator: 'ELE5BA Studio',
-    lore: 'Attracted to high-voltage carnival generators and flashing arcade signs.',
+    lore: 'A spiky electric moth flitting along carnival high-voltage power lines.',
   },
   {
     id: '004',
     artKey: 'velvet-wisp',
-    name: 'Velvet Wisp',
-    type: 'Psychic / Fog',
+    name: 'Gengar-Wisp',
+    type: 'Ghost / Poison',
     color: '#c084fc',
     accentColor: '#d8b4fe',
     symbol: 'PSI',
-    hp: 130,
+    hp: 140,
     attacks: [
-      { name: 'Hypnotic Gaze', damage: '40', desc: 'Mesmerizes pursuers into temporary sluggishness.' },
-      { name: 'Dimensional Warp', damage: '100', desc: 'Bends carnival space to slip through impossible blockades.' },
+      { name: 'Shadow Ball', damage: '55', desc: 'Hurls a shadowy blob of concentrated spirit power.' },
+      { name: 'Dream Eater', damage: '105', desc: 'Absorbs nightmarish fairground illusions to restore vitality.' },
     ],
     rarity: 'Holo Rare',
     illustrator: 'ELE5BA Studio',
-    lore: 'Drifts silently among the Ferris wheel spokes, weaving illusions from carnival memories.',
+    lore: 'A grinning shadow phantom drifting between Ferris wheel spokes with floating soul-orbs.',
   },
   {
     id: '005',
     artKey: 'clockwork-crow',
-    name: 'Clockwork Crow',
-    type: 'Steel / Dark',
+    name: 'Corvi-Gear',
+    type: 'Steel / Flying',
     color: '#94a3b8',
     accentColor: '#cbd5e1',
     symbol: 'STL',
     hp: 150,
     attacks: [
-      { name: 'Gear Peck', damage: '60', desc: 'Strips armor plating with precision brass cogs.' },
-      { name: 'Midnight Clockwork', damage: '120', desc: 'Stops local temporal flow for a devastating phantom strike.' },
+      { name: 'Steel Wing', damage: '60', desc: 'Strikes with razor-sharp hardened steel feathers.' },
+      { name: 'Klinklang Crush', damage: '120', desc: 'Rotates interlocking brass saw-cogs to smash barriers.' },
     ],
     rarity: 'Ultra Rare',
     illustrator: 'ELE5BA Studio',
-    lore: 'Perched on the carousel roof, its internal gears ticking down the seconds until midnight.',
+    lore: 'An armored raven with clockwork cogs perched atop the haunted carousel.',
   },
   {
     id: '006',
     artKey: 'grinfin',
-    name: 'Grinfin',
-    type: 'Water / Abyssal',
+    name: 'Gyarados-Fin',
+    type: 'Water / Dark',
     color: '#06b6d4',
     accentColor: '#22d3ee',
     symbol: 'WAT',
     hp: 160,
     attacks: [
-      { name: 'Abyssal Chomp', damage: '70', desc: 'Snaps with bioluminescent jaws that glow in deep water.' },
-      { name: 'Deadlights Tsunami', damage: '140', desc: 'Summons an overwhelming surge of haunted carnival waters.' },
+      { name: 'Aqua Tail', damage: '70', desc: 'Swings an armored serpentine tail like a tidal wave.' },
+      { name: 'Hyper Fang Tsunami', damage: '140', desc: 'Unleashes devastating neon fangs amidst a roaring deluge.' },
     ],
     rarity: 'Apex Legendary',
     illustrator: 'ELE5BA Studio',
-    lore: 'The apex phantom lurking beneath the submerged fairground channels.',
+    lore: 'A fearsome serpentine sea dragon thrashing through the flooded carnival flume.',
+  },
+  {
+    id: '007',
+    artKey: 'moonjaw',
+    name: 'Tyran-Jaw',
+    type: 'Rock / Dark',
+    color: '#eab308',
+    accentColor: '#fde047',
+    symbol: 'RCK',
+    hp: 170,
+    attacks: [
+      { name: 'Crunch', damage: '80', desc: 'Crushes solid obsidian barriers with its armored jaw.' },
+      { name: 'Lunar Hyper Beam', damage: '150', desc: 'Shatters space with a devastating cosmic beam beneath the moon.' },
+    ],
+    rarity: 'Cosmic Secret',
+    illustrator: 'ELE5BA Studio',
+    lore: 'An obsidian-plated kaiju beast awakening when moonlight strikes the carnival crater.',
+  },
+  {
+    id: '008',
+    artKey: 'the-tethered',
+    name: 'Penny-Mime EX',
+    type: 'Psychic / Void',
+    color: '#ef4444',
+    accentColor: '#f97316',
+    symbol: 'MYTH',
+    hp: 200,
+    attacks: [
+      { name: 'Deadlights Beam', damage: '100', desc: 'The horrifying glowing lights from beyond the stars.' },
+      { name: 'Funhouse Barrier', damage: '160', desc: 'Traps pursuers in an infinite hexagonal clown dimension.' },
+    ],
+    rarity: 'Apex Mythic',
+    illustrator: 'ELE5BA Studio',
+    lore: 'The sinister pantomime entity wielding three floating Poké-Balloons from the Deadlights core.',
   },
 ];
 
@@ -150,17 +186,18 @@ export function getCardPickupInfo(stageCardsCollected, stageIndex = 0) {
 const laneKey = ['left', 'center', 'right'];
 
 export class GameEngine {
-  constructor({ canvas, onStateChange, onRunEnd, onFrameTick }) {
+  constructor({ canvas, onStateChange, onRunEnd, onFrameTick, runnerId = 'pika-georgie' }) {
     this.canvas = canvas;
     this.onStateChange = onStateChange;
     this.onRunEnd = onRunEnd;
     this.onFrameTick = onFrameTick;
+    this.runnerId = runnerId;
 
     this.world = createScene(canvas);
     this.clock = new THREE.Clock(false);
 
     // Player & Pursuer Voxel Rigs
-    this.playerEntity = new PlayerCharacter();
+    this.playerEntity = new PlayerCharacter(runnerId);
     this.world.scene.add(this.playerEntity.root);
 
     this.pursuerEntity = new PursuerEntity();
@@ -172,6 +209,8 @@ export class GameEngine {
     this.cameraTiltZ = 0;
     this.lastHudSyncMs = 0;
     this.objects = [];
+    this.pickupAnimations = [];
+    this.upcomingCardLane = null;
     this.running = false;
     this.paused = false;
 
@@ -181,6 +220,11 @@ export class GameEngine {
 
     window.addEventListener('resize', this.resize);
     window.addEventListener('keydown', this.keydown);
+  }
+
+  setRunnerType(runnerId) {
+    this.runnerId = runnerId;
+    this.playerEntity?.setRunnerType?.(runnerId);
   }
 
   emit(eventType, entityKey, amount = 0, laneIndex = null) {
@@ -269,6 +313,7 @@ export class GameEngine {
       events: [],
       distanceM: 0,
       cameraTiltZ: 0,
+      upcomingCardLane: null,
     });
 
     this.pursuerEntity?.resetJumpscare?.();
@@ -288,6 +333,7 @@ export class GameEngine {
     this.world.applyAtmosphere(null, 1);
     this.updateHudImmediate();
     this.clock.start();
+    startBackgroundMusic(1);
     this.frame();
   }
 
@@ -297,6 +343,9 @@ export class GameEngine {
     this.lossReason = endReason;
     this.lossElapsedMs = 0;
     this.lossDurationMs = 1350;
+
+    // Stop background music during jumpscare
+    stopBackgroundMusic();
 
     // Trigger action-reactive Web Audio jumpscare SFX
     playJumpscareSfx();
@@ -344,56 +393,24 @@ export class GameEngine {
     }
   }
 
-  getSafeLaneForScheduledCard(spawnZ) {
-    // 1. Scan this.objects for any active hazard where Math.abs(obj.mesh.position.z - spawnZ) < 9.5
-    const nearbyHazards = this.objects.filter(
-      (obj) => obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5
-    );
-
-    // If any hazard within ±6.5 Z-units is a double_blockade or swaying_specter, remove it immediately
-    nearbyHazards.forEach((hazard) => {
-      if (Math.abs(hazard.mesh.position.z - spawnZ) < 6.5) {
-        if (hazard.entityKey === ENTITY_KEYS.DOUBLE_BLOCKADE || hazard.isSway) {
-          hazard.consumed = true;
-          this.world.scene.remove(hazard.mesh);
-        }
-      }
-    });
-
-    // Collect the lanes of any remaining single-lane hazards within ±9.5 Z-units
-    const occupiedLanes = new Set();
-    this.objects.forEach((obj) => {
-      if (obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5) {
-        occupiedLanes.add(obj.lane);
-      }
-    });
-
-    // Pick a lane for the card that is 100% free of hazards
-    const freeLanes = [0, 1, 2].filter((l) => !occupiedLanes.has(l));
-    let chosenLane;
-    if (freeLanes.length > 0) {
-      chosenLane = freeLanes[Math.floor(Math.random() * freeLanes.length)];
-    } else {
-      // If all 3 lanes have a hazard in that range, remove the hazard in the chosen card lane
-      chosenLane = Math.floor(Math.random() * 3);
-      this.objects.forEach((obj) => {
-        if (obj.isHazard && !obj.consumed && obj.lane === chosenLane && Math.abs(obj.mesh.position.z - spawnZ) < 9.5) {
-          obj.consumed = true;
-          this.world.scene.remove(obj.mesh);
-        }
-      });
+  spawnScheduledCard(cardIndex, targetLane = null) {
+    const spawnZ = -GAME_CONFIG.spawnDistance;
+    let lane = targetLane;
+    if (lane === null || lane === undefined) {
+      const occupiedLanes = new Set(
+        this.objects
+          .filter((obj) => obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 6.0)
+          .map((obj) => obj.lane)
+      );
+      const freeLanes = [0, 1, 2].filter((l) => !occupiedLanes.has(l));
+      lane = freeLanes.length > 0 ? freeLanes[Math.floor(Math.random() * freeLanes.length)] : 1;
     }
 
-    this.cardSpawnSafeGuardMs = 900;
-    return chosenLane;
-  }
-
-  spawnScheduledCard(cardIndex) {
-    const spawnZ = -GAME_CONFIG.spawnDistance;
-    const lane = this.getSafeLaneForScheduledCard(spawnZ);
     const mesh = createCardFragment();
     mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.15, spawnZ);
     this.world.scene.add(mesh);
+
+    this.cardSpawnSafeGuardMs = 900;
 
     this.objects.push({
       mesh,
@@ -416,6 +433,8 @@ export class GameEngine {
     const allowedHazards = stage.hazardTypes || ['blocker_crate', 'shadow_wave'];
     const spawnZ = -GAME_CONFIG.spawnDistance;
 
+    const isPredictiveCardWindow = this.upcomingCardLane !== null;
+
     const hazardChance = stage.hazardChance ?? 0.65;
     const isHazard = Math.random() < hazardChance;
 
@@ -435,10 +454,13 @@ export class GameEngine {
           .filter((obj) => (obj.isCard || obj.isFragment) && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5)
           .map((obj) => obj.lane)
       );
+      if (isPredictiveCardWindow) {
+        cardLanesOccupied.add(this.upcomingCardLane);
+      }
 
-      // If a card is nearby, forbid double_blockade and swaying_specter
-      const canDoDouble = !cardNearby && allowedHazards.includes('double_blockade') && Math.random() < 0.28;
-      const canDoSway = !cardNearby && allowedHazards.includes('swaying_specter') && Math.random() < 0.35;
+      // If a card is nearby or in predictive card window, forbid double_blockade and swaying_specter
+      const canDoDouble = !isPredictiveCardWindow && !cardNearby && allowedHazards.includes('double_blockade') && Math.random() < 0.28;
+      const canDoSway = !isPredictiveCardWindow && !cardNearby && allowedHazards.includes('swaying_specter') && Math.random() < 0.35;
       const canDoWave = allowedHazards.includes('shadow_wave') && Math.random() < 0.40;
 
       if (canDoDouble) {
@@ -463,9 +485,9 @@ export class GameEngine {
         return;
       }
 
-      // Choose a lane that excludes any nearby card's lane
-      let availableLanes = [0, 1, 2].filter((l) => !cardLanesOccupied.has(l));
-      if (availableLanes.length === 0) availableLanes = [0, 1, 2];
+      // Choose a lane that excludes any nearby card's lane and the reserved upcoming card lane
+      const availableLanes = [0, 1, 2].filter((l) => !cardLanesOccupied.has(l));
+      if (availableLanes.length === 0) return;
       const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
 
       if (canDoSway) {
@@ -506,7 +528,7 @@ export class GameEngine {
 
       // In Stages 3 to 6, when spawning a single-lane blocker_crate (and no card is nearby),
       // allow a (25% + stageIndex * 6%) chance to simultaneously spawn a jumpable shadow_wave in an adjacent safe lane
-      if (!isWave && !cardNearby && this.currentStageIndex >= 2 && allowedHazards.includes('shadow_wave')) {
+      if (!isWave && !cardNearby && !isPredictiveCardWindow && this.currentStageIndex >= 2 && allowedHazards.includes('shadow_wave')) {
         const comboChance = 0.25 + this.currentStageIndex * 0.06;
         if (Math.random() < comboChance) {
           const adjCandidates = lane === 1 ? [0, 2] : [1];
@@ -530,7 +552,24 @@ export class GameEngine {
         }
       }
     } else {
-      const lane = Math.floor(Math.random() * 3);
+      // Shards / Amber Orbs
+      // Check for any existing object within Math.abs(obj.mesh.position.z - spawnZ) < 4.5
+      const occupiedAtZ = new Set(
+        this.objects
+          .filter((obj) => !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 4.5)
+          .map((obj) => obj.lane)
+      );
+      if (isPredictiveCardWindow) {
+        occupiedAtZ.add(this.upcomingCardLane);
+      }
+
+      const availableShardLanes = [0, 1, 2].filter((l) => !occupiedAtZ.has(l));
+      if (availableShardLanes.length === 0) {
+        // Skip spawning shard if all 3 lanes are occupied at that exact Z
+        return;
+      }
+
+      const lane = availableShardLanes[Math.floor(Math.random() * availableShardLanes.length)];
       const isRare = Math.random() < 0.28;
 
       const mesh = isRare ? createAmberOrb() : createRiftShard();
@@ -557,6 +596,33 @@ export class GameEngine {
   updateObjects(deltaMs, speed) {
     const dt = deltaMs / 1000;
 
+    // 1. Update active 3D pickup animations (Ascend & Golden Burst)
+    if (this.pickupAnimations && this.pickupAnimations.length > 0) {
+      this.pickupAnimations = this.pickupAnimations.filter((anim) => {
+        anim.elapsedMs += deltaMs;
+        const progress = Math.min(1, anim.elapsedMs / anim.maxMs);
+        anim.mesh.position.y = anim.startY + (3.6 - anim.startY) * progress;
+        anim.mesh.position.x += (this.currentX - anim.mesh.position.x) * Math.min(1, deltaMs / 70);
+        anim.mesh.rotation.y += dt * 18;
+
+        let scale = 1;
+        if (progress < 0.35) {
+          scale = 1 + (progress / 0.35) * 0.45; // pulses to 1.45x
+        } else {
+          scale = 1.45 * (1 - (progress - 0.35) / 0.65); // shrinks to 0.05
+          scale = Math.max(0.05, scale);
+        }
+        anim.mesh.scale.set(scale, scale, scale);
+
+        if (anim.elapsedMs >= anim.maxMs) {
+          this.world.scene.remove(anim.mesh);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // 2. Update track objects
     for (const object of this.objects) {
       object.mesh.position.z += speed * dt;
 
@@ -619,6 +685,16 @@ export class GameEngine {
             playCardFragmentSfx(isFullCard);
             this.emit(EVENT_TYPES.FRAGMENT_PICKUP, ENTITY_KEYS.CARD_FRAGMENT, 1, object.lane);
             const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.currentStageIndex);
+
+            // 3D Card Ascend & Golden Burst animation
+            this.pickupAnimations.push({
+              mesh: object.mesh,
+              elapsedMs: 0,
+              maxMs: 450,
+              startX: object.mesh.position.x,
+              startY: object.mesh.position.y || 1.15,
+            });
+
             this.updateHudImmediate({
               fragmentGot: true,
               cardPickup,
@@ -647,9 +723,15 @@ export class GameEngine {
       }
     }
 
-    // Zero-GC Removal: Simply remove mesh from scene without mid-frame GPU disposal!
+    // Zero-GC Removal: Remove mesh from scene when behind camera (> 12.5) or non-card consumed
     this.objects = this.objects.filter((object) => {
-      if (object.mesh.position.z > 8 || object.consumed) {
+      if (object.consumed) {
+        if (!object.isFragment && !object.isCard) {
+          this.world.scene.remove(object.mesh);
+        }
+        return false;
+      }
+      if (object.mesh.position.z > 12.5) {
         this.world.scene.remove(object.mesh);
         return false;
       }
@@ -671,9 +753,11 @@ export class GameEngine {
       totalRequired: GAME_CONFIG.cardsRequiredPerStage || 5,
     };
 
-    // Reset per-stage card counters
+    // Reset per-stage card counters and predictive lane reservation
     this.stageCardsCollected = 0;
     this.scheduledCardIndex = 0;
+    this.upcomingCardLane = null;
+    startBackgroundMusic(completedStageNum + 1);
 
     // Checkpoint heal
     if (this.health < (GAME_CONFIG.maxHealth ?? 3)) {
@@ -854,14 +938,24 @@ export class GameEngine {
         }
       }
 
-      // Scheduled card spawning (deterministic 5 cards per 60s stage)
+      // Scheduled card spawning with Predictive Lane Reservation (1.6s window)
       const stageSeconds = this.stageElapsedMs / 1000;
       const schedule = GAME_CONFIG.cardSpawnSchedule || [8, 20, 32, 44, 54];
+      const nextCardSec = schedule[this.scheduledCardIndex];
+
+      if (nextCardSec !== undefined && (nextCardSec - stageSeconds) <= 1.25 && (nextCardSec - stageSeconds) >= -0.35) {
+        if (this.upcomingCardLane === null) {
+          this.upcomingCardLane = Math.floor(Math.random() * 3);
+        }
+      }
+
       if (
         this.scheduledCardIndex < schedule.length &&
         stageSeconds >= schedule[this.scheduledCardIndex]
       ) {
-        this.spawnScheduledCard(this.scheduledCardIndex);
+        const laneToUse = this.upcomingCardLane !== null ? this.upcomingCardLane : undefined;
+        this.spawnScheduledCard(this.scheduledCardIndex, laneToUse);
+        this.upcomingCardLane = null;
         this.scheduledCardIndex += 1;
       }
 
@@ -920,6 +1014,7 @@ export class GameEngine {
     if (!this.running) return;
     this.running = false;
     cancelAnimationFrame(this.animationFrame);
+    stopBackgroundMusic();
     this.onRunEnd?.({
       durationMs: Math.round(Math.min(this.elapsedMs, GAME_CONFIG.roundCapSeconds * 1000)),
       distanceM: Math.round(this.distanceM * 100) / 100,
@@ -931,6 +1026,7 @@ export class GameEngine {
   pause() {
     if (this.running) {
       this.paused = true;
+      stopBackgroundMusic();
       this.updateHudImmediate();
     }
   }
@@ -939,6 +1035,7 @@ export class GameEngine {
     if (this.running) {
       this.paused = false;
       this.clock.getDelta();
+      startBackgroundMusic(this.currentStageIndex + 1);
       this.updateHudImmediate();
     }
   }
@@ -961,6 +1058,7 @@ export class GameEngine {
   dispose() {
     this.running = false;
     cancelAnimationFrame(this.animationFrame);
+    stopBackgroundMusic();
     window.removeEventListener('resize', this.resize);
     window.removeEventListener('keydown', this.keydown);
 

@@ -23,6 +23,12 @@ function getAudioContext() {
   return audioCtx;
 }
 
+let bgmTimer = null;
+let bgmGainNode = null;
+let bgmStep = 0;
+let bgmStage = 1;
+let bgmActive = false;
+
 export function isMuted() {
   return muted;
 }
@@ -31,6 +37,9 @@ export function setMuted(val) {
   muted = Boolean(val);
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(STORAGE_KEY, muted ? 'true' : 'false');
+  }
+  if (bgmGainNode && audioCtx) {
+    bgmGainNode.gain.setValueAtTime(muted ? 0 : 0.22, audioCtx.currentTime);
   }
   listeners.forEach(cb => {
     try { cb(muted); } catch (e) { /* ignore */ }
@@ -448,4 +457,195 @@ export function playButtonClickSfx() {
   gain.connect(ctx.destination);
   osc.start(now);
   osc.stop(now + 0.06);
+}
+
+// ── 8-BIT CHIPTUNE MUSIC SEQUENCER (POKÉMON BATTLE X CARNIVAL) ──────────
+
+// 64-step melody pattern in C Minor / Phrygian Dominant with carnival chromaticism
+const LEAD_MELODY_64 = [
+  // Phrase 1 (0-15)
+  261.6, 311.1, 392.0, 523.3,  493.9, 392.0, 311.1, 293.7,
+  261.6, 311.1, 392.0, 415.3,  392.0, 349.2, 311.1, 293.7,
+  // Phrase 2 (16-31)
+  261.6, 392.0, 523.3, 622.3,  587.3, 523.3, 493.9, 392.0,
+  415.3, 523.3, 493.9, 415.3,  392.0, 370.0, 392.0, 493.9,
+  // Phrase 3 (32-47)
+  523.3, 392.0, 311.1, 392.0,  415.3, 523.3, 587.3, 622.3,
+  587.3, 523.3, 493.9, 523.3,  587.3, 493.9, 392.0, 349.2,
+  // Phrase 4 (48-63) - Eerie carnival turnaround
+  311.1, 349.2, 370.0, 392.0,  415.3, 392.0, 370.0, 349.2,
+  311.1, 293.7, 246.9, 293.7,  261.6, 196.0, 261.6, 0,
+];
+
+// 32-step bassline (played on 8th notes, steps 0, 2, 4...)
+const BASS_LINE_32 = [
+  // Bar 1
+  65.4, 130.8, 65.4, 130.8,  77.8, 155.6, 98.0, 196.0,
+  // Bar 2
+  65.4, 130.8, 65.4, 130.8,  103.8, 207.6, 98.0, 196.0,
+  // Bar 3
+  87.3, 174.6, 87.3, 174.6,  98.0, 196.0, 123.5, 246.9,
+  // Bar 4
+  65.4, 130.8, 77.8, 98.0,   103.8, 98.0, 65.4, 130.8,
+];
+
+export function startBackgroundMusic(stageNumber = 1) {
+  bgmStage = Math.max(1, stageNumber);
+  bgmActive = true;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  if (bgmTimer) {
+    clearInterval(bgmTimer);
+    bgmTimer = null;
+  }
+
+  if (!bgmGainNode) {
+    bgmGainNode = ctx.createGain();
+    bgmGainNode.connect(ctx.destination);
+  }
+  bgmGainNode.gain.setValueAtTime(muted ? 0 : 0.22, ctx.currentTime);
+
+  // Speed: 160 BPM base + 4 BPM per stage
+  const bpm = 160 + (bgmStage - 1) * 4;
+  const stepDurationMs = ((60 / bpm) / 4) * 1000;
+  let nextNoteTime = ctx.currentTime + 0.05;
+
+  bgmTimer = setInterval(() => {
+    if (!bgmActive) return;
+    const now = ctx.currentTime;
+
+    while (nextNoteTime < now + 0.15) {
+      const step = bgmStep % 64;
+      const stepTime = nextNoteTime;
+      const stepDurationSec = stepDurationMs / 1000;
+
+      // 1. Lead Channel (Square Wave)
+      const leadFreq = LEAD_MELODY_64[step];
+      if (leadFreq > 0) {
+        const leadOsc = ctx.createOscillator();
+        const leadGain = ctx.createGain();
+        const leadFilter = ctx.createBiquadFilter();
+
+        leadOsc.type = 'square';
+        leadOsc.frequency.setValueAtTime(leadFreq, stepTime);
+
+        leadFilter.type = 'lowpass';
+        leadFilter.frequency.setValueAtTime(2600, stepTime);
+
+        leadGain.gain.setValueAtTime(0.09, stepTime);
+        leadGain.gain.exponentialRampToValueAtTime(0.001, stepTime + stepDurationSec * 0.88);
+
+        leadOsc.connect(leadFilter);
+        leadFilter.connect(leadGain);
+        leadGain.connect(bgmGainNode);
+
+        leadOsc.start(stepTime);
+        leadOsc.stop(stepTime + stepDurationSec * 0.9);
+      }
+
+      // 2. Bass Channel (Triangle Wave, 8th notes on even steps)
+      if (step % 2 === 0) {
+        const bassIndex = (step / 2) % 32;
+        const bassFreq = BASS_LINE_32[bassIndex];
+        if (bassFreq > 0) {
+          const bassOsc = ctx.createOscillator();
+          const bassGain = ctx.createGain();
+
+          bassOsc.type = 'triangle';
+          bassOsc.frequency.setValueAtTime(bassFreq, stepTime);
+
+          bassGain.gain.setValueAtTime(0.24, stepTime);
+          bassGain.gain.exponentialRampToValueAtTime(0.01, stepTime + stepDurationSec * 1.8);
+
+          bassOsc.connect(bassGain);
+          bassGain.connect(bgmGainNode);
+
+          bassOsc.start(stepTime);
+          bassOsc.stop(stepTime + stepDurationSec * 1.9);
+        }
+      }
+
+      // 3. Percussion Channel
+      // Hi-Hat on every 8th note (even steps)
+      if (step % 2 === 0) {
+        const noiseBuf = createNoiseBuffer(ctx, 0.03);
+        const hatSource = ctx.createBufferSource();
+        hatSource.buffer = noiseBuf;
+
+        const hatFilter = ctx.createBiquadFilter();
+        hatFilter.type = 'highpass';
+        hatFilter.frequency.setValueAtTime(7000, stepTime);
+
+        const hatGain = ctx.createGain();
+        hatGain.gain.setValueAtTime(0.035, stepTime);
+        hatGain.gain.exponentialRampToValueAtTime(0.001, stepTime + 0.025);
+
+        hatSource.connect(hatFilter);
+        hatFilter.connect(hatGain);
+        hatGain.connect(bgmGainNode);
+
+        hatSource.start(stepTime);
+        hatSource.stop(stepTime + 0.03);
+      }
+
+      // Snappy Snare on beats 2 and 4 (steps 4, 12, 20, 28, 36, 44, 52, 60)
+      if (step % 8 === 4) {
+        const snareBuf = createNoiseBuffer(ctx, 0.08);
+        const snareSource = ctx.createBufferSource();
+        snareSource.buffer = snareBuf;
+
+        const snareFilter = ctx.createBiquadFilter();
+        snareFilter.type = 'bandpass';
+        snareFilter.frequency.setValueAtTime(1400, stepTime);
+        snareFilter.Q.setValueAtTime(1.2, stepTime);
+
+        const snareGain = ctx.createGain();
+        snareGain.gain.setValueAtTime(0.12, stepTime);
+        snareGain.gain.exponentialRampToValueAtTime(0.001, stepTime + 0.07);
+
+        snareSource.connect(snareFilter);
+        snareFilter.connect(snareGain);
+        snareGain.connect(bgmGainNode);
+
+        snareSource.start(stepTime);
+        snareSource.stop(stepTime + 0.08);
+
+        // Body pop
+        const popOsc = ctx.createOscillator();
+        const popGain = ctx.createGain();
+        popOsc.type = 'triangle';
+        popOsc.frequency.setValueAtTime(180, stepTime);
+        popOsc.frequency.exponentialRampToValueAtTime(45, stepTime + 0.06);
+
+        popGain.gain.setValueAtTime(0.14, stepTime);
+        popGain.gain.exponentialRampToValueAtTime(0.001, stepTime + 0.06);
+
+        popOsc.connect(popGain);
+        popGain.connect(bgmGainNode);
+        popOsc.start(stepTime);
+        popOsc.stop(stepTime + 0.07);
+      }
+
+      nextNoteTime += stepDurationSec;
+      bgmStep += 1;
+    }
+  }, 25);
+}
+
+export function stopBackgroundMusic() {
+  bgmActive = false;
+  if (bgmTimer) {
+    clearInterval(bgmTimer);
+    bgmTimer = null;
+  }
+  if (bgmGainNode && audioCtx) {
+    try {
+      bgmGainNode.gain.setValueAtTime(bgmGainNode.gain.value, audioCtx.currentTime);
+      bgmGainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+    } catch {
+      // ignore
+    }
+  }
 }

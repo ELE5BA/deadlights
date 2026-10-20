@@ -132,7 +132,7 @@ export const GAME_CONFIG = Object.freeze({
   stageCount: 6,
   stageDurationSeconds: 60,
   roundCapSeconds: 360,
-  startingHealth: 2,
+  startingHealth: 3,
   maxHealth: 3,
   cardsRequiredPerStage: 5,
   cardSpawnSchedule: [8, 20, 32, 44, 54],

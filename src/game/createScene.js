@@ -304,58 +304,54 @@ export function createScene(canvas) {
     chunk0.position.z = 14;
     buildFenceSegment(chunk0, 0);
 
-    // Archway spanning over the path
-    const archway = new THREE.Group();
+    // Roadside Litwick Streetlamps & Pokéball Pennant Flags strictly outside the fences (X = -7.2 and X = +7.2)
+    const roadsideDecor = new THREE.Group();
     const stonePillarMat = new THREE.MeshStandardMaterial({ color: '#1e293b', roughness: 0.75, flatShading: true });
-    const archGoldMat = new THREE.MeshStandardMaterial({ color: '#f59e0b', metalness: 0.6, roughness: 0.3 });
-    const archCrimsonMat = new THREE.MeshStandardMaterial({ color: '#991b1b', roughness: 0.6, flatShading: true });
+    const flagRedMat = new THREE.MeshStandardMaterial({ color: '#ef4444', roughness: 0.5, flatShading: true });
+    const flagWhiteMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.5, flatShading: true });
 
-    [-6.2, 6.2].forEach((px) => {
-      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.9, 6.2, 0.9), stonePillarMat);
-      pillar.position.set(px, 3.1, 0);
-      addBoxOutline(pillar);
-      archway.add(pillar);
-
-      const cap = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 1.2), archGoldMat);
-      cap.position.set(px, 6.2, 0);
-      addBoxOutline(cap);
-      archway.add(cap);
-
-      // Litwick Streetlamps
-      const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.3, 1.2, 6), stonePillarMat);
-      lampBase.position.set(px > 0 ? px + 1.2 : px - 1.2, 0.6, 1.5);
+    [-7.2, 7.2].forEach((px) => {
+      // Litwick Streetlamp Base & Wax Pillar
+      const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.4, 6), stonePillarMat);
+      lampBase.position.set(px, 0.7, 0);
       addBoxOutline(lampBase);
-      archway.add(lampBase);
+      roadsideDecor.add(lampBase);
 
       const litwickWax = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.22, 0.24, 0.7, 8),
+        new THREE.CylinderGeometry(0.26, 0.28, 0.9, 8),
         new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.3, flatShading: true })
       );
-      litwickWax.position.set(px > 0 ? px + 1.2 : px - 1.2, 1.5, 1.5);
+      litwickWax.position.set(px, 1.85, 0);
       addHullOutline(litwickWax, 1.1);
-      archway.add(litwickWax);
+      roadsideDecor.add(litwickWax);
 
       const flame = new THREE.Mesh(
-        new THREE.ConeGeometry(0.12, 0.35, 6),
-        new THREE.MeshStandardMaterial({ color: '#c084fc', emissive: '#a855f7', emissiveIntensity: 2.8 })
+        new THREE.ConeGeometry(0.14, 0.42, 6),
+        new THREE.MeshStandardMaterial({ color: '#c084fc', emissive: '#a855f7', emissiveIntensity: 3.2 })
       );
-      flame.position.set(px > 0 ? px + 1.2 : px - 1.2, 2.0, 1.5);
+      flame.position.set(px, 2.45, 0);
       addHullOutline(flame, 1.15);
-      archway.add(flame);
+      roadsideDecor.add(flame);
+
+      // Pokéball Pennant Flagstaff
+      const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.2, 6), lampPostMat);
+      flagPole.position.set(px > 0 ? px + 1.2 : px - 1.2, 2.1, -1.8);
+      addBoxOutline(flagPole);
+      roadsideDecor.add(flagPole);
+
+      // Dual-color triangular pennant flag (Red top, white bottom)
+      const flagTop = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.0, 3), flagRedMat);
+      flagTop.position.set(px > 0 ? px + 1.6 : px - 1.6, 3.6, -1.8);
+      flagTop.rotation.z = px > 0 ? -Math.PI / 2 : Math.PI / 2;
+      roadsideDecor.add(flagTop);
+
+      const flagBtm = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.9, 3), flagWhiteMat);
+      flagBtm.position.set(px > 0 ? px + 1.6 : px - 1.6, 3.0, -1.8);
+      flagBtm.rotation.z = px > 0 ? -Math.PI / 2 : Math.PI / 2;
+      roadsideDecor.add(flagBtm);
     });
 
-    // Archway crossbeam & decorative crest banner
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(13.4, 0.8, 0.9), archCrimsonMat);
-    beam.position.set(0, 5.8, 0);
-    addBoxOutline(beam);
-    archway.add(beam);
-
-    const archSign = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.2, 0.2), archGoldMat);
-    archSign.position.set(0, 6.7, 0.35);
-    addBoxOutline(archSign);
-    archway.add(archSign);
-
-    chunk0.add(archway);
+    chunk0.add(roadsideDecor);
 
     // Route Signpost
     const routeSign = new THREE.Group();
@@ -647,18 +643,23 @@ export function createScene(canvas) {
     scrollingProps.push(chunk3);
   }
 
-  // Chunk 4: Gengar Funhouse Facade (Z = -66)
+  // Chunk 4: Open-Air Giant Cartoon Gengar Balloon-Totem & Ghost Lantern Shrine (Z = -66, X = -13.5)
   {
     const chunk4 = new THREE.Group();
     chunk4.position.z = -66;
     buildFenceSegment(chunk4, 0);
 
-    const gengarManor = new THREE.Group();
-    gengarManor.position.set(-16.5, 0, 0);
+    const gengarShrine = new THREE.Group();
+    gengarShrine.position.set(-13.5, 0, 0);
 
+    const stoneShrineMat = new THREE.MeshStandardMaterial({
+      color: '#1e293b',
+      roughness: 0.8,
+      flatShading: true,
+    });
     const gengarPurpleMat = new THREE.MeshStandardMaterial({
-      color: '#3b0764',
-      roughness: 0.6,
+      color: '#4c1d95',
+      roughness: 0.45,
       flatShading: true,
     });
     const gengarEyeMat = new THREE.MeshStandardMaterial({
@@ -666,64 +667,98 @@ export function createScene(canvas) {
       emissive: '#ff1e42',
       emissiveIntensity: 3.8,
     });
-    const toothMat = new THREE.MeshStandardMaterial({
+    const gengarGrinMat = new THREE.MeshStandardMaterial({
       color: '#f8fafc',
       roughness: 0.2,
       flatShading: true,
     });
-
-    const mainFacade = new THREE.Mesh(new THREE.BoxGeometry(9.5, 7.5, 5.0), gengarPurpleMat);
-    mainFacade.position.y = 3.75;
-    addBoxOutline(mainFacade);
-    gengarManor.add(mainFacade);
-
-    // Gengar pointed 3D ears
-    [-3.8, 3.8].forEach((ex) => {
-      const ear = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.8, 5), gengarPurpleMat);
-      ear.position.set(ex, 8.5, 0);
-      ear.rotation.z = ex > 0 ? -0.35 : 0.35;
-      addHullOutline(ear, 1.08);
-      gengarManor.add(ear);
+    const soulFlameMat = new THREE.MeshStandardMaterial({
+      color: '#c084fc',
+      emissive: '#a855f7',
+      emissiveIntensity: 3.2,
     });
 
-    // Spiky roof crown
-    for (let c = -2.5; c <= 2.5; c += 1.25) {
-      const crownSpike = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.5, 4), gengarPurpleMat);
-      crownSpike.position.set(c, 7.9, 0);
-      gengarManor.add(crownSpike);
-    }
+    // 1. Ancient Stone Altar Base (Open-air, zero tunnel)
+    const altar = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.9, 3.8), stoneShrineMat);
+    altar.position.y = 0.45;
+    addBoxOutline(altar);
+    gengarShrine.add(altar);
 
-    // Glowing slanted crimson Gengar eyes
-    [-1.8, 1.8].forEach((ex) => {
-      const eye = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.55, 0.2), gengarEyeMat);
-      eye.position.set(ex, 5.2, 2.6);
-      eye.rotation.z = ex > 0 ? 0.35 : -0.35;
+    // 4 Ghost Lantern Pedestals surrounding the shrine
+    [[-1.8, -1.4], [1.8, -1.4], [-1.8, 1.4], [1.8, 1.4]].forEach(([px, pz]) => {
+      const ped = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.4, 0.45), stoneShrineMat);
+      ped.position.set(px, 1.15, pz);
+      addBoxOutline(ped);
+      gengarShrine.add(ped);
+
+      const lampWax = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.18, 0.5, 6),
+        new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.3 })
+      );
+      lampWax.position.set(px, 2.05, pz);
+      addHullOutline(lampWax, 1.1);
+      gengarShrine.add(lampWax);
+
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.35, 5), soulFlameMat);
+      flame.position.set(px, 2.45, pz);
+      addHullOutline(flame, 1.15);
+      gengarShrine.add(flame);
+    });
+
+    // 2. Giant Floating Cartoon Gengar Balloon-Totem (Open-air at Y = 4.6)
+    const totem = new THREE.Group();
+    totem.position.set(0, 4.6, 0);
+
+    const totemBody = new THREE.Mesh(new THREE.SphereGeometry(1.65, 8, 8), gengarPurpleMat);
+    totemBody.scale.set(1.15, 1.05, 1.1);
+    addHullOutline(totemBody, 1.08);
+    totem.add(totemBody);
+
+    // Pointed 3D Gengar Ears
+    [-1.2, 1.2].forEach((ex) => {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.4, 5), gengarPurpleMat);
+      ear.position.set(ex, 1.45, 0);
+      ear.rotation.z = ex > 0 ? -0.42 : 0.42;
+      addHullOutline(ear, 1.1);
+      totem.add(ear);
+    });
+
+    // Spiky Dorsal Crest
+    [-0.55, 0, 0.55].forEach((sy) => {
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.9, 4), gengarPurpleMat);
+      spike.position.set(0, sy + 0.6, 1.4);
+      spike.rotation.x = Math.PI / 2;
+      totem.add(spike);
+    });
+
+    // Slanted Crimson Gengar Eyes
+    [-0.62, 0.62].forEach((ex) => {
+      const eye = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.28, 0.15), gengarEyeMat);
+      eye.position.set(ex, 0.35, -1.62);
+      eye.rotation.z = ex > 0 ? -0.32 : 0.32;
       addBoxOutline(eye);
-      gengarManor.add(eye);
+      totem.add(eye);
     });
 
-    // Wide tooth-lined tunnel mouth
-    const tunnel = new THREE.Mesh(
-      new THREE.BoxGeometry(4.6, 3.4, 3.5),
-      new THREE.MeshBasicMaterial({ color: '#030206' })
-    );
-    tunnel.position.set(0, 1.7, 1.5);
-    addBoxOutline(tunnel);
-    gengarManor.add(tunnel);
+    // Wide Mischievous Cartoon Grin
+    const grin = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.38, 0.12), gengarGrinMat);
+    grin.position.set(0, -0.45, -1.62);
+    addBoxOutline(grin);
+    totem.add(grin);
 
-    // Tooth row (upper and lower fangs)
-    for (let t = -1.8; t <= 1.8; t += 0.6) {
-      const topFang = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.45, 4), toothMat);
-      topFang.position.set(t, 3.1, 3.3);
-      topFang.rotation.x = Math.PI;
-      gengarManor.add(topFang);
+    // Tethers tying the totem to the stone altar
+    [-1.2, 1.2].forEach((tx) => {
+      const tether = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 3.8, 4),
+        new THREE.MeshBasicMaterial({ color: '#120b1d' })
+      );
+      tether.position.set(tx, -1.9, 0);
+      totem.add(tether);
+    });
 
-      const btmFang = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.45, 4), toothMat);
-      btmFang.position.set(t, 0.25, 3.3);
-      gengarManor.add(btmFang);
-    }
+    gengarShrine.add(totem);
 
-    chunk4.add(gengarManor);
+    chunk4.add(gengarShrine);
     scene.add(chunk4);
     scrollingProps.push(chunk4);
   }

@@ -2002,3 +2002,376 @@ h1 span {
   color: var(--secondary-text);
   font-size: 0.78rem;
 }
+
+/* ── 3D LIVE HOME BACKGROUND CANVAS & SHELL OVERLAYS ── */
+.app-root-wrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.home-background-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.arcade-title-shell {
+  position: relative;
+  z-index: 1;
+  background: radial-gradient(circle at 50% 35%, rgba(24, 18, 38, 0.55) 0%, rgba(10, 6, 18, 0.85) 85%) !important;
+}
+
+.arcade-title-panel {
+  max-width: min(580px, 94vw) !important;
+  padding: 1.35rem 1.75rem !important;
+  background-color: rgba(22, 14, 38, 0.88) !important;
+  backdrop-filter: blur(8px);
+  margin-top: -3.2rem !important; /* Put the card higher above so it doesn't feel congested */
+}
+
+/* Float the Pokeball mascot picture slightly higher above */
+.arcade-title-panel .poke-balloon-emblem-wrap {
+  margin-top: -2.8rem;
+  margin-bottom: 0.15rem;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65));
+}
+
+.arcade-title-panel .summary {
+  margin: 0.15rem 0 0.5rem !important;
+  font-size: 0.84rem !important;
+  line-height: 1.4 !important;
+  color: var(--secondary-text);
+  max-width: 25rem;
+}
+
+.floating-title {
+  animation: floatTitle 3.2s ease-in-out infinite;
+}
+
+@keyframes floatTitle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.title-sound-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 20;
+}
+
+/* ── RUNNER SELECTOR STRIP ── */
+.runner-selector-strip {
+  width: 100%;
+  margin: 0.6rem 0 0.95rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem; /* Generous breathing room between SELECT RUNNER and the runner cards */
+}
+
+.runner-selector-label {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: var(--inner-gold, #f3c86b);
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0px #120b1d;
+  margin-bottom: 0.2rem;
+}
+
+.runner-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.runner-card-btn {
+  background: #181126;
+  border: 2.5px solid #120b1d;
+  border-radius: 9px;
+  padding: 0.75rem 0.35rem 0.55rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 3px 3px 0px #120b1d;
+}
+
+.runner-card-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--runner-theme, #ffd000);
+  box-shadow: 4px 4px 0px #120b1d;
+}
+
+.runner-card-btn.runner-card-selected {
+  background: #25183d;
+  border-color: var(--runner-theme, #ffd000);
+  outline: 2px solid var(--runner-theme, #ffd000);
+  box-shadow: 4px 4px 0px #120b1d, 0 0 12px rgba(250, 204, 21, 0.35);
+  transform: translateY(-2px);
+}
+
+.active-runner-badge {
+  position: absolute;
+  top: -11px;
+  background: var(--inner-gold, #f3c86b);
+  color: #120b1d;
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  border: 1.5px solid #120b1d;
+  box-shadow: 1.5px 1.5px 0px #120b1d;
+  white-space: nowrap;
+}
+
+.runner-avatar-frame {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.15rem 0 0.1rem;
+}
+
+.runner-card-name {
+  font-family: var(--font-display, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-shadow: 1px 1px 0px #120b1d;
+}
+
+.runner-card-title {
+  font-size: 0.55rem;
+  color: var(--secondary-text, #cbd5e1);
+  line-height: 1.1;
+  text-align: center;
+}
+
+.runner-card-badge {
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: var(--runner-theme, #f3c86b);
+  background: rgba(18, 11, 29, 0.6);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: 0.1rem;
+}
+
+/* ── PENNYWISE CARTOON DIALOGUE SPEECH BUBBLE ── */
+.pennywise-speech-bubble {
+  position: fixed;
+  top: 4.5rem;
+  left: calc(50% + 145px);
+  z-index: 55;
+  background: #fffbeb;
+  border: 3px solid #120b1d;
+  border-radius: 12px;
+  padding: 0.65rem 0.95rem;
+  max-width: 280px;
+  box-shadow: 4px 4px 0px #120b1d;
+  pointer-events: none;
+  transform-origin: left center;
+}
+
+.pennywise-speech-bubble.bubble-entering {
+  animation: speechBubblePopIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.pennywise-speech-bubble.bubble-exiting {
+  animation: speechBubblePopOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.speech-bubble-tail {
+  position: absolute;
+  top: 35%;
+  left: -12px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 12px solid #120b1d;
+}
+
+.speech-bubble-tail::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 3px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-right: 9px solid #fffbeb;
+}
+
+.speech-bubble-text {
+  margin: 0;
+  font-family: var(--font-display, 'Arial Black', sans-serif);
+  font-size: 0.76rem;
+  font-weight: 900;
+  color: #120b1d;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+.bubble-accent {
+  color: #dc2626;
+  font-weight: 900;
+  text-shadow: 0 0 1px rgba(220, 38, 38, 0.4);
+}
+
+@keyframes speechBubblePopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(8px);
+  }
+  70% {
+    transform: scale(1.08) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes speechBubblePopOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  25% {
+    transform: scale(1.06) translateY(-2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.55) translateY(8px);
+  }
+}
+
+/* ── 2D CARTOON FLYING CARD-TO-DOCK ANIMATION ── */
+.flying-card-overlay {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  animation: flyCardToDock 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.flying-card-pop-banner {
+  background: var(--inner-gold, #f3c86b);
+  color: #120b1d;
+  font-family: var(--font-display, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.85rem;
+  border-radius: 9999px;
+  border: 2.5px solid #120b1d;
+  box-shadow: 3px 3px 0px #120b1d;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+  white-space: nowrap;
+}
+
+.flying-card-mini {
+  width: 80px;
+  height: 110px;
+  background: #181126;
+  border: 3px solid #120b1d;
+  border-radius: 8px;
+  box-shadow: 5px 5px 0px #120b1d, 0 0 20px var(--card-pickup-color, #fbbf24);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  text-align: center;
+}
+
+.mini-card-sparkle {
+  color: var(--card-pickup-color, #fbbf24);
+  font-size: 1.6rem;
+  line-height: 1;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.mini-card-name {
+  color: #ffffff;
+  font-family: var(--font-display, sans-serif);
+  font-size: 0.65rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-shadow: 1px 1px 0px #120b1d;
+}
+
+@keyframes flyCardToDock {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotateY(0deg);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.25) rotateY(180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15) rotateY(360deg);
+  }
+  80% {
+    opacity: 0.9;
+    transform: translate(-50%, 25vh) scale(0.65);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 42vh) scale(0.2);
+  }
+}
+
+/* Golden bounce glow on docked card slot */
+.slot-bounce-glow {
+  animation: slotGlowBounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slotGlowBounce {
+  0% {
+    transform: rotate(var(--card-fan-rot, 0deg)) translateY(var(--card-fan-y, 0px)) scale(1);
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0);
+  }
+  35% {
+    transform: rotate(var(--card-fan-rot, 0deg)) translateY(calc(var(--card-fan-y, 0px) - 16px)) scale(1.35);
+    box-shadow: 0 0 25px #fbbf24, 0 0 10px #f59e0b;
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: rotate(var(--card-fan-rot, 0deg)) translateY(var(--card-fan-y, 0px)) scale(1);
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0);
+    filter: brightness(1);
+  }
+}
