@@ -1,44 +1,46 @@
 :root {
   color-scheme: dark;
 
-  /* Cohesive dark carnival & occult cabinet palette */
-  --void-navy: #090c13;
-  --midnight-panel: #111622;
-  --panel-elevated: #172030;
-  --panel-sunken: #0c1018;
+  /* ── WARM TACTILE PIGMENTS: DARK CARNIVAL × OCCULT CODEX ──── */
+  --void-navy: #07060b;             /* Deepest theater pitch */
+  --midnight-panel: #13101c;        /* Warm obsidian plum cardstock */
+  --panel-elevated: #1c1729;        /* Velvet cabinet interior */
+  --panel-sunken: #0a0810;          /* Engraved dark recess */
 
-  /* Restrained antique gold & wax crimson accents */
-  --reward-gold: #c59b3f;
-  --gold-accent: #e5b958;
-  --gold-subtle: rgba(197, 155, 63, 0.12);
+  /* Tarnished carnival brass & illuminated marquee gold */
+  --reward-gold: #d4a349;           /* Tarnished carnival brass */
+  --gold-accent: #f3c86b;           /* Illuminated marquee gold */
+  --gold-subtle: rgba(212, 163, 73, 0.14);
 
-  --rift-crimson: #b91c1c;
-  --crimson-hover: #dc2626;
-  --crimson-subtle: rgba(185, 28, 28, 0.14);
+  /* Carnival wax seal crimson */
+  --rift-crimson: #b81d2c;          /* Carnival wax seal red */
+  --crimson-hover: #df293b;
+  --crimson-subtle: rgba(184, 29, 44, 0.16);
 
-  /* Shards & game indicators */
-  --shard-cyan: #38bdf8;
-  --cyan-subtle: rgba(56, 189, 248, 0.12);
+  /* Bioluminescent rift crystal & spectral indicators */
+  --shard-cyan: #3ce3e8;            /* Bioluminescent rift crystal */
+  --cyan-subtle: rgba(60, 227, 232, 0.14);
   --success-green: #10b981;
-  --success-subtle: rgba(16, 185, 129, 0.12);
+  --success-subtle: rgba(16, 185, 129, 0.14);
 
-  /* Typographic hierarchy */
-  --primary-text: #f1f5f9;
-  --secondary-text: #94a3b8;
-  --muted-text: #64748b;
+  /* Tactile Parchment Typography Hierarchy (NO sterile corporate slate) */
+  --primary-text: #f6efe2;          /* Warm bone parchment */
+  --secondary-text: #b8ab99;        /* Weathered vellum */
+  --muted-text: #7d7065;            /* Antique pewter */
 
-  /* Architectural hairlines */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --border-carnival: rgba(197, 155, 63, 0.32);
-  --border-crimson: rgba(185, 28, 28, 0.45);
+  /* Architectural hairlines & brass engravings */
+  --border-subtle: rgba(246, 239, 226, 0.08);
+  --border-strong: rgba(246, 239, 226, 0.16);
+  --border-carnival: rgba(212, 163, 73, 0.35);
+  --border-crimson: rgba(184, 29, 44, 0.48);
 
-  /* Tactile shadows (ambient geometric depth, no neon glow) */
-  --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.55);
-  --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.85);
+  /* Tactile shadows (deep atmospheric theatrical depth) */
+  --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.65);
+  --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.88);
+  --shadow-ticket: 0 4px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 
-  /* Typography tokens */
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-  --font-display: Impact, "Arial Narrow", -apple-system, sans-serif;
+  /* Expressive Typography Stack */
+  --font-display: "Palatino Linotype", "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-sans: "Trebuchet MS", "Gill Sans", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", "Courier New", monospace;
 }

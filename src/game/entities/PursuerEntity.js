@@ -4,13 +4,6 @@ import { addBoxOutline, addHullOutline } from '../utils/outline.js';
 
 /**
  * Creates authentic pixel-art face texture for the Pennywise Deadlights villain.
- * Features:
- * - Cracked chalk-white porcelain face with high bare forehead dome
- * - Iconic twin blood-red paint lines slicing through the eyes down to mouth
- * - Sinister raised arched brows and sunken dark eye sockets
- * - Predatory sulfur-yellow / amber glowing Deadlights pupils
- * - Bulbous red clown nose
- * - Exaggerated wide razor-toothed Glasgow grin with visible teeth rows
  */
 function createPennywiseFaceTexture() {
   return createPixelTexture((ctx, w, h) => {
@@ -129,16 +122,59 @@ function createPennywiseFaceTexture() {
   }, 128, 128);
 }
 
+/**
+ * Creates authentic procedural Victorian doublet fabric texture
+ * with woven linen weave, crimson pinstripes, and gold lace embroidery.
+ */
+function createVictorianDoubletTexture() {
+  return createPixelTexture((ctx, w, h) => {
+    // Pale ashen doublet slate base
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle fabric grain
+    for (let y = 0; y < h; y += 2) {
+      for (let x = 0; x < w; x += 2) {
+        if ((x + y) % 4 === 0) {
+          ctx.fillStyle = '#b0bec5';
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+
+    // Crimson vertical pinstripes with lace stitching
+    for (let x = 8; x < w; x += 16) {
+      // Crimson pinstripe
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillRect(x, 0, 2, h);
+
+      // Gold embroidery dots flanking the stripe
+      ctx.fillStyle = '#d4a349';
+      for (let y = 2; y < h; y += 4) {
+        ctx.fillRect(x - 2, y, 1, 1);
+        ctx.fillRect(x + 3, y, 1, 1);
+      }
+    }
+
+    // Bottom shadow AO gradient
+    for (let y = 0; y < h; y++) {
+      const ao = Math.pow(y / h, 2.0) * 0.35;
+      ctx.fillStyle = `rgba(15, 23, 42, ${ao.toFixed(3)})`;
+      ctx.fillRect(0, y, w, 1);
+    }
+  }, 64, 64);
+}
+
 export class PursuerEntity {
   constructor() {
     this.root = new THREE.Group();
     this.time = 0;
     this.disposables = [];
 
-    // Hovering high above the track silhouette beneath the top HUD (matching camera height Y=5.2)
+    // Hovering framed at Y = 4.35 (clear of top HUD)
     this.targetZ = -19;
     this.currentZ = -19;
-    this.baseHoverY = 4.85;
+    this.baseHoverY = 4.35;
 
     // Uncanny Bill Skarsgård erratic twitch state
     this.headTwitchTimer = 0;
@@ -162,7 +198,6 @@ export class PursuerEntity {
   }
 
   buildPennywiseRig() {
-    // Palette matching reference image media_1792420664736.png
     const doubletGrey = '#cbd5e1';
     const doubletShadow = '#64748b';
     const stripeCrimson = '#b91c1c';
@@ -176,70 +211,90 @@ export class PursuerEntity {
     const gloveWhite = '#f1f5f9';
     const clawDark = '#0f172a';
 
-    // Materials
+    // Doublet fabric texture
+    const doubletTex = this.trackDisposable(createVictorianDoubletTexture());
+    doubletTex.wrapS = THREE.RepeatWrapping;
+    doubletTex.wrapT = THREE.RepeatWrapping;
+    doubletTex.repeat.set(2, 2);
+
+    // Faceted low-poly materials (flatShading: true)
     const doubletMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      map: doubletTex,
       color: doubletGrey,
       roughness: 0.65,
       metalness: 0.1,
+      flatShading: true,
     }));
     const doubletShadowMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: doubletShadow,
       roughness: 0.7,
+      flatShading: true,
     }));
     const stripeMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: stripeCrimson,
       roughness: 0.55,
+      flatShading: true,
     }));
     const collarMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: collarLace,
       roughness: 0.5,
+      flatShading: true,
     }));
     const collarTrimMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: collarTrim,
       roughness: 0.5,
+      flatShading: true,
     }));
     const hairDarkMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: hairDark,
       roughness: 0.75,
+      flatShading: true,
     }));
     const hairMidMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: hairMid,
       roughness: 0.7,
+      flatShading: true,
     }));
     const hairBrightMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: hairBright,
       emissive: 0x441100,
       emissiveIntensity: 0.45,
       roughness: 0.65,
+      flatShading: true,
     }));
     const hairFlameMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: hairFlame,
       emissive: 0x552200,
       emissiveIntensity: 0.6,
       roughness: 0.6,
+      flatShading: true,
     }));
     const pomMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: '#dc2626',
       emissive: '#991b1b',
       emissiveIntensity: 0.8,
       roughness: 0.4,
+      flatShading: true,
     }));
     const balloonMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: balloonGloss,
       emissive: 0x550015,
       emissiveIntensity: 0.55,
-      roughness: 0.2,
-      metalness: 0.25,
+      roughness: 0.25,
+      metalness: 0.2,
+      flatShading: true,
     }));
     const stringMat = this.trackDisposable(new THREE.MeshBasicMaterial({ color: '#f8fafc' }));
     const gloveMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: gloveWhite,
       roughness: 0.6,
+      flatShading: true,
     }));
     const clawMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: clawDark,
       roughness: 0.35,
       metalness: 0.4,
+      flatShading: true,
     }));
 
     // Face Material with glowing deadlights eyes
@@ -249,49 +304,39 @@ export class PursuerEntity {
       roughness: 0.45,
       emissive: '#f59e0b',
       emissiveIntensity: 1.8,
+      flatShading: true,
     }));
 
     // ── MAIN FLOATING BODY GROUP ───────────────────────────────────
     this.bodyGroup = new THREE.Group();
 
-    // Rotund rounded Victorian clown doublet (rotund sphere-torso from reference picture!)
-    const torsoGeo = this.trackDisposable(new THREE.SphereGeometry(0.85, 12, 10));
+    // Rotund Victorian clown doublet (8-segment faceted sphere)
+    const torsoGeo = this.trackDisposable(new THREE.SphereGeometry(0.85, 8, 8));
     const torso = new THREE.Mesh(torsoGeo, doubletMat);
     torso.scale.set(1.15, 1.15, 0.95);
     torso.position.y = 0.75;
     addHullOutline(torso, 1.07);
     this.bodyGroup.add(torso);
 
-    // Curved Crimson Vertical Pinstripes wrapping the belly
-    [-0.52, -0.26, 0.26, 0.52].forEach((sx) => {
-      const stripe = new THREE.Mesh(
-        this.trackDisposable(new THREE.CylinderGeometry(0.06, 0.08, 1.45, 6)),
-        stripeMat
-      );
-      stripe.position.set(sx, 0.75, 0.52 - Math.abs(sx) * 0.25);
-      stripe.rotation.z = -sx * 0.25;
-      this.bodyGroup.add(stripe);
-    });
-
-    // 3 Large Fuzzy Crimson Pom-Poms down the center belly
+    // 3 Fuzzy Crimson Pom-Poms down the center belly
     [1.18, 0.75, 0.32].forEach((py) => {
-      const pom = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 10, 10)), pomMat);
+      const pom = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 6, 6)), pomMat);
       pom.position.set(0, py, 0.78);
       addHullOutline(pom, 1.15);
       this.bodyGroup.add(pom);
     });
 
     // Flared Peplum Skirt at waist
-    const peplumGeo = this.trackDisposable(new THREE.CylinderGeometry(0.95, 1.30, 0.38, 12));
+    const peplumGeo = this.trackDisposable(new THREE.CylinderGeometry(0.95, 1.30, 0.38, 8));
     const peplum = new THREE.Mesh(peplumGeo, doubletShadowMat);
     peplum.position.set(0, -0.05, 0);
     addHullOutline(peplum, 1.07);
     this.bodyGroup.add(peplum);
 
-    // Puffy Striped Bloomer Pantaloons & Pointed Clown Shoes hanging beneath
+    // Puffy Striped Bloomer Pantaloons & Pointed Clown Shoes
     [-0.38, 0.38].forEach((lx) => {
       const bloomer = new THREE.Mesh(
-        this.trackDisposable(new THREE.SphereGeometry(0.36, 8, 8)),
+        this.trackDisposable(new THREE.SphereGeometry(0.36, 6, 6)),
         stripeMat
       );
       bloomer.scale.set(1.0, 1.25, 1.0);
@@ -299,7 +344,6 @@ export class PursuerEntity {
       addHullOutline(bloomer, 1.08);
       this.bodyGroup.add(bloomer);
 
-      // Pointed curved clown shoe
       const shoeGroup = new THREE.Group();
       shoeGroup.position.set(lx, -0.85, 0);
 
@@ -331,8 +375,21 @@ export class PursuerEntity {
       this.bodyGroup.add(shoeGroup);
     });
 
+    // ── DEADLIGHTS OCCULT AURA HALO BEHIND COLLAR ─────────────────
+    const auraHaloGeo = this.trackDisposable(new THREE.RingGeometry(0.9, 1.6, 12));
+    this.auraHaloMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#f59e0b',
+      emissive: '#dc2626',
+      emissiveIntensity: 2.5,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.65,
+    }));
+    this.auraHalo = new THREE.Mesh(auraHaloGeo, this.auraHaloMat);
+    this.auraHalo.position.set(0, 1.85, -0.28);
+    this.bodyGroup.add(this.auraHalo);
+
     // ── MULTI-TIERED PLEATED ELIZABETHAN CLOWN COLLAR ─────────────
-    // Wide flared scalloped collar from reference picture!
     this.collarGroup = new THREE.Group();
     this.collarGroup.position.set(0, 1.58, 0);
 
@@ -358,29 +415,28 @@ export class PursuerEntity {
     });
     this.bodyGroup.add(this.collarGroup);
 
-    // ── HEAD: INVERTED PEAR CRANIUM & GLORIOUS FIERY MANE ──────────
+    // ── HEAD: INVERTED PEAR CRANIUM & FIERY MANE ──────────────────
     this.headGroup = new THREE.Group();
     this.headGroup.position.set(0, 2.40, 0);
 
-    // Rounded bulbous cranium (organic curved head)
-    const craniumGeo = this.trackDisposable(new THREE.SphereGeometry(0.68, 12, 10));
+    const craniumGeo = this.trackDisposable(new THREE.SphereGeometry(0.68, 8, 8));
     const cranium = new THREE.Mesh(craniumGeo, doubletMat);
     cranium.scale.set(1.0, 1.15, 0.95);
     addHullOutline(cranium, 1.07);
     this.headGroup.add(cranium);
 
-    // Unhinging Lower Jaw Group (drops open during jumpscare attack!)
+    // Unhinging Lower Jaw Group
     this.jawGroup = new THREE.Group();
     this.jawGroup.position.set(0, -0.28, 0.22);
 
-    const chinGeo = this.trackDisposable(new THREE.ConeGeometry(0.55, 0.55, 8));
+    const chinGeo = this.trackDisposable(new THREE.ConeGeometry(0.55, 0.55, 6));
     const chin = new THREE.Mesh(chinGeo, doubletMat);
     chin.position.set(0, -0.28, -0.14);
     chin.rotation.x = Math.PI;
     addHullOutline(chin, 1.07);
     this.jawGroup.add(chin);
 
-    // Upper Razor Teeth Row attached to head
+    // Upper Razor Teeth
     const upperTeethMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: '#ffffff',
       roughness: 0.2,
@@ -397,24 +453,18 @@ export class PursuerEntity {
       this.headGroup.add(tooth);
     }
 
-    // Lower Razor Teeth Row attached to moving jaw
-    const lowerTeethMat = this.trackDisposable(new THREE.MeshStandardMaterial({
-      color: '#ffffff',
-      roughness: 0.2,
-      emissive: '#ffffff',
-      emissiveIntensity: 0.85,
-    }));
+    // Lower Razor Teeth
     for (let t = -0.32; t <= 0.32; t += 0.08) {
       const tooth = new THREE.Mesh(
         this.trackDisposable(new THREE.ConeGeometry(0.04, 0.18, 4)),
-        lowerTeethMat
+        upperTeethMat
       );
       tooth.position.set(t, 0.02, 0.18 - Math.abs(t) * 0.2);
       this.jawGroup.add(tooth);
     }
     this.headGroup.add(this.jawGroup);
 
-    // Inner Glowing Deadlights Core inside mouth
+    // Inner Glowing Deadlights Core
     this.deadlightsCore = new THREE.Group();
     this.deadlightsCore.position.set(0, -0.24, 0.16);
 
@@ -424,7 +474,7 @@ export class PursuerEntity {
       emissiveIntensity: 3.5,
       roughness: 0.1,
     }));
-    const core1 = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 8, 8)), this.deadlightsMat);
+    const core1 = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 6, 6)), this.deadlightsMat);
     this.deadlightsCore.add(core1);
 
     const core2Mat = this.trackDisposable(new THREE.MeshStandardMaterial({
@@ -434,37 +484,36 @@ export class PursuerEntity {
       roughness: 0.1,
     }));
     [-0.14, 0.14].forEach((cx) => {
-      const subCore = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.11, 8, 8)), core2Mat);
+      const subCore = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.11, 6, 6)), core2Mat);
       subCore.position.set(cx, -0.05, -0.05);
       this.deadlightsCore.add(subCore);
     });
     this.headGroup.add(this.deadlightsCore);
 
-    // Front Face Plate (Displays high-res Pennywise face texture)
-    const facePlateGeo = this.trackDisposable(new THREE.CylinderGeometry(0.62, 0.62, 1.05, 12, 1, false, -Math.PI / 2.5, Math.PI / 1.25));
+    // Front Face Plate
+    const facePlateGeo = this.trackDisposable(new THREE.CylinderGeometry(0.62, 0.62, 1.05, 8, 1, false, -Math.PI / 2.5, Math.PI / 1.25));
     const facePlate = new THREE.Mesh(facePlateGeo, this.faceMat);
     facePlate.position.set(0, -0.02, 0.08);
     this.headGroup.add(facePlate);
 
-    // 3D Bulbous Red Clown Nose
-    const nose = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.16, 10, 10)), pomMat);
+    // 3D Red Clown Nose
+    const nose = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.16, 8, 8)), pomMat);
     nose.position.set(0, -0.02, 0.72);
     addHullOutline(nose, 1.15);
     this.headGroup.add(nose);
 
-    // ── GLORIOUS FIERY ORANGE HAIR MANE (From reference picture!) ─
-    // 5 Ascending Flame Crown Spikes on top
+    // ── GLORIOUS FIERY ORANGE HAIR MANE ────────────────────────────
     const crownSpikes = [
       { x: -0.36, y: 0.95, z: -0.08, scale: 0.9, rotZ: 0.28, color: hairDarkMat },
       { x: -0.18, y: 1.18, z: -0.05, scale: 1.1, rotZ: 0.12, color: hairMidMat },
-      { x: 0.0, y: 1.35, z: 0.0, scale: 1.25, rotZ: 0.0, color: hairFlameMat }, // Apex center flame
+      { x: 0.0, y: 1.35, z: 0.0, scale: 1.25, rotZ: 0.0, color: hairFlameMat },
       { x: 0.18, y: 1.18, z: -0.05, scale: 1.1, rotZ: -0.12, color: hairMidMat },
       { x: 0.36, y: 0.95, z: -0.08, scale: 0.9, rotZ: -0.28, color: hairDarkMat },
     ];
 
     crownSpikes.forEach((cs) => {
       const spike = new THREE.Mesh(
-        this.trackDisposable(new THREE.ConeGeometry(0.38 * cs.scale, 1.1 * cs.scale, 5)),
+        this.trackDisposable(new THREE.ConeGeometry(0.38 * cs.scale, 1.1 * cs.scale, 4)),
         cs.color
       );
       spike.position.set(cs.x, cs.y, cs.z);
@@ -474,11 +523,9 @@ export class PursuerEntity {
       this.headGroup.add(spike);
     });
 
-    // 4 Dynamic Winged Flame Horns flaring out left and right
     [-0.72, 0.72].forEach((hx) => {
-      // High temple flare
       const flareHigh = new THREE.Mesh(
-        this.trackDisposable(new THREE.ConeGeometry(0.44, 1.25, 5)),
+        this.trackDisposable(new THREE.ConeGeometry(0.44, 1.25, 4)),
         hairBrightMat
       );
       flareHigh.position.set(hx > 0 ? hx + 0.18 : hx - 0.18, 0.58, -0.06);
@@ -487,9 +534,8 @@ export class PursuerEntity {
       addHullOutline(flareHigh, 1.08);
       this.headGroup.add(flareHigh);
 
-      // Mid dramatic lion flare
       const flareMid = new THREE.Mesh(
-        this.trackDisposable(new THREE.ConeGeometry(0.50, 1.45, 5)),
+        this.trackDisposable(new THREE.ConeGeometry(0.50, 1.45, 4)),
         hairFlameMat
       );
       flareMid.position.set(hx > 0 ? hx + 0.34 : hx - 0.34, 0.18, -0.12);
@@ -497,7 +543,6 @@ export class PursuerEntity {
       addHullOutline(flareMid, 1.08);
       this.headGroup.add(flareMid);
 
-      // Lower cheek flare
       const flareLow = new THREE.Mesh(
         this.trackDisposable(new THREE.ConeGeometry(0.42, 1.15, 4)),
         hairDarkMat
@@ -507,9 +552,8 @@ export class PursuerEntity {
       addHullOutline(flareLow, 1.08);
       this.headGroup.add(flareLow);
 
-      // Back mane volume
       const maneBack = new THREE.Mesh(
-        this.trackDisposable(new THREE.SphereGeometry(0.55, 8, 8)),
+        this.trackDisposable(new THREE.SphereGeometry(0.55, 6, 6)),
         hairDarkMat
       );
       maneBack.position.set(hx * 0.75, 0.25, -0.55);
@@ -520,24 +564,23 @@ export class PursuerEntity {
     this.bodyGroup.add(this.headGroup);
 
     // ── PUFFED SLEEVES & MENACING REACHING CLAW ARMS ──────────────
-    // Puffed Mutton Shoulders with red ribbon rings
     [-1.02, 1.02].forEach((shX) => {
-      const puff = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.46, 10, 10)), doubletMat);
+      const puff = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.46, 6, 6)), doubletMat);
       puff.position.set(shX, 1.35, 0);
       addHullOutline(puff, 1.08);
       this.bodyGroup.add(puff);
 
-      const ribbonRing = new THREE.Mesh(this.trackDisposable(new THREE.TorusGeometry(0.47, 0.05, 6, 12)), stripeMat);
+      const ribbonRing = new THREE.Mesh(this.trackDisposable(new THREE.TorusGeometry(0.47, 0.05, 6, 10)), stripeMat);
       ribbonRing.position.set(shX, 1.35, 0);
       this.bodyGroup.add(ribbonRing);
     });
 
-    // Left Arm: Reaching menacingly forward towards runner
+    // Left Arm
     this.leftArm = new THREE.Group();
     this.leftArm.position.set(-1.12, 1.25, 0);
 
     const upperArmL = new THREE.Mesh(
-      this.trackDisposable(new THREE.CylinderGeometry(0.18, 0.24, 0.85, 8)),
+      this.trackDisposable(new THREE.CylinderGeometry(0.18, 0.24, 0.85, 6)),
       doubletMat
     );
     upperArmL.position.set(0, -0.35, 0.38);
@@ -545,21 +588,19 @@ export class PursuerEntity {
     addHullOutline(upperArmL, 1.08);
     this.leftArm.add(upperArmL);
 
-    // Ruffled wrist cuff
     const cuffL = new THREE.Mesh(
-      this.trackDisposable(new THREE.TorusGeometry(0.24, 0.08, 6, 12)),
+      this.trackDisposable(new THREE.TorusGeometry(0.24, 0.08, 6, 10)),
       collarMat
     );
     cuffL.position.set(0, -0.68, 0.68);
     cuffL.rotation.x = -0.75;
     this.leftArm.add(cuffL);
 
-    // Left Spindly Clawed Hand
     const clawGroupL = new THREE.Group();
     clawGroupL.position.set(0, -0.80, 0.78);
     clawGroupL.rotation.x = -0.55;
 
-    const palmL = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 8, 8)), gloveMat);
+    const palmL = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 6, 6)), gloveMat);
     addHullOutline(palmL, 1.08);
     clawGroupL.add(palmL);
 
@@ -577,12 +618,12 @@ export class PursuerEntity {
     this.leftArm.add(clawGroupL);
     this.bodyGroup.add(this.leftArm);
 
-    // Right Arm: Reaching forward holding the iconic balloon string
+    // Right Arm
     this.rightArm = new THREE.Group();
     this.rightArm.position.set(1.12, 1.25, 0);
 
     const upperArmR = new THREE.Mesh(
-      this.trackDisposable(new THREE.CylinderGeometry(0.18, 0.24, 0.85, 8)),
+      this.trackDisposable(new THREE.CylinderGeometry(0.18, 0.24, 0.85, 6)),
       doubletMat
     );
     upperArmR.position.set(0, -0.35, 0.38);
@@ -591,7 +632,7 @@ export class PursuerEntity {
     this.rightArm.add(upperArmR);
 
     const cuffR = new THREE.Mesh(
-      this.trackDisposable(new THREE.TorusGeometry(0.24, 0.08, 6, 12)),
+      this.trackDisposable(new THREE.TorusGeometry(0.24, 0.08, 6, 10)),
       collarMat
     );
     cuffR.position.set(0, -0.68, 0.68);
@@ -602,7 +643,7 @@ export class PursuerEntity {
     clawGroupR.position.set(0, -0.80, 0.78);
     clawGroupR.rotation.x = -0.45;
 
-    const palmR = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 8, 8)), gloveMat);
+    const palmR = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 6, 6)), gloveMat);
     addHullOutline(palmR, 1.08);
     clawGroupR.add(palmR);
 
@@ -625,18 +666,17 @@ export class PursuerEntity {
     // ── 3 FLOATING ICONIC CRIMSON BALLOONS ────────────────────────
     this.balloons = [];
     const balloonOffsets = [
-      { x: 1.8, y: 3.8, z: 0.3, phase: 0 },    // Handheld right balloon
-      { x: -2.3, y: 4.2, z: -0.4, phase: 1.8 }, // Drifting left
-      { x: 0.3, y: 5.0, z: -1.0, phase: 3.4 },  // Overhead looming
+      { x: 1.8, y: 3.8, z: 0.3, phase: 0 },
+      { x: -2.3, y: 4.2, z: -0.4, phase: 1.8 },
+      { x: 0.3, y: 5.0, z: -1.0, phase: 3.4 },
     ];
 
     balloonOffsets.forEach((b) => {
       const balloonGroup = new THREE.Group();
       balloonGroup.position.set(b.x, b.y, b.z);
 
-      // Oval/egg shaped balloon
       const mainSphere = new THREE.Mesh(
-        this.trackDisposable(new THREE.SphereGeometry(0.78, 14, 14)),
+        this.trackDisposable(new THREE.SphereGeometry(0.78, 8, 8)),
         balloonMat
       );
       mainSphere.scale.set(1.0, 1.28, 1.0);
@@ -648,8 +688,10 @@ export class PursuerEntity {
       knot.rotation.x = Math.PI;
       balloonGroup.add(knot);
 
-      const stringGeo = this.trackDisposable(new THREE.CylinderGeometry(0.016, 0.016, 2.6, 4));
-      const str = new THREE.Mesh(stringGeo, stringMat);
+      const str = new THREE.Mesh(
+        this.trackDisposable(new THREE.CylinderGeometry(0.016, 0.016, 2.6, 4)),
+        stringMat
+      );
       str.position.set(0, -2.3, 0);
       balloonGroup.add(str);
 
@@ -657,7 +699,7 @@ export class PursuerEntity {
       this.balloons.push({ group: balloonGroup, base: b, phase: b.phase });
     });
 
-    // High-visibility attack key light (illuminates Pennywise's face and teeth directly during jumpscare)
+    // High-visibility attack key light
     this.faceLight = this.trackDisposable(new THREE.PointLight(0xfff6ec, 0, 12));
     this.faceLight.position.set(0, 2.5, 1.8);
     this.root.add(this.faceLight);
@@ -704,20 +746,15 @@ export class PursuerEntity {
     this.shoeGroups?.forEach((sg) => sg.rotation.set(0, 0, 0));
   }
 
-  /**
-   * Floating sinusoidal hover motion, head tilt twitches, balloon swaying, and distance reactivity.
-   * In jumpscare mode: multi-phase cinematic rush straight into the camera lens FACE FIRST with violent bite!
-   */
   update(deltaMs, playerHearts, targetLaneX = 0) {
     const dt = deltaMs / 1000;
     this.time += dt * 3.2;
 
-    // ── CINEMATIC LOSS JUMPSCARE ANIMATION (FACE FIRST ATTACK!) ──
+    // ── CINEMATIC LOSS JUMPSCARE ANIMATION ─────────────────────────
     if (this.isJumpscare) {
       this.jumpscareElapsed += dt;
       const progress = Math.min(1, this.jumpscareElapsed / this.jumpscareDuration);
 
-      // Phase 1 (0.00 - 0.16s): Sudden sinister neck-snap, stare lock, and flaring Deadlights
       if (progress < 0.16) {
         const p1 = progress / 0.16;
         if (this.headGroup) {
@@ -728,17 +765,13 @@ export class PursuerEntity {
         if (this.faceMat) this.faceMat.emissiveIntensity = 2.0 + p1 * 5.0;
         if (this.deadlightsMat) this.deadlightsMat.emissiveIntensity = 3.5 + p1 * 8.0;
 
-        // Tension shudder
         this.root.position.x = this.startFaceX + (Math.random() - 0.5) * 0.08;
         return;
       }
 
-      // Phase 2, 3, 4: High-velocity predatory dive straight into camera lens FACE FIRST!
       const flightProgress = (progress - 0.16) / 0.84;
       const ease = Math.pow(flightProgress, 2.7);
 
-      // Target face world position in front of camera (Y=5.2, Z=8.5):
-      // Exact center of camera viewport at Z=6.6 is Y=4.65!
       const endFaceX = 0;
       const endFaceY = 4.65;
       const endFaceZ = 6.60;
@@ -747,15 +780,12 @@ export class PursuerEntity {
       const currentFaceY = this.startFaceY + (endFaceY - this.startFaceY) * ease;
       const currentFaceZ = this.startFaceZ + (endFaceZ - this.startFaceZ) * ease;
 
-      // 1. Dynamic Face-First Pose:
-      // Torso dives forward, head thrusts out front leading the attack!
       this.bodyGroup.rotation.x = -ease * 0.45;
       this.bodyGroup.position.y = 1.0;
       this.headGroup.position.z = ease * 0.60;
       this.headGroup.position.y = 2.40 - ease * 0.10;
       this.headGroup.rotation.x = ease * 0.65;
 
-      // 2. Reaching claw arms flanking and lunging past face
       this.leftArm.position.z = ease * 0.50;
       this.leftArm.rotation.x = -0.75 - ease * 1.55;
       this.leftArm.rotation.y = -0.25 - ease * 0.70;
@@ -766,7 +796,6 @@ export class PursuerEntity {
       this.rightArm.rotation.y = 0.25 + ease * 0.70;
       this.rightArm.rotation.z = -Math.sin(this.jumpscareElapsed * 40) * 0.12;
 
-      // Splaying razor claws twitching
       this.fingersL?.forEach((f, idx) => {
         f.rotation.z = Math.sin(this.jumpscareElapsed * 38 + idx) * 0.32;
       });
@@ -774,16 +803,13 @@ export class PursuerEntity {
         f.rotation.z = -Math.sin(this.jumpscareElapsed * 38 + idx) * 0.32;
       });
 
-      // 3. Legs trail far behind in the diving slipstream (feet hidden off-screen!)
       this.shoeGroups?.forEach((sg, idx) => {
         sg.rotation.x = ease * 1.25 + Math.sin(this.jumpscareElapsed * 24 + idx) * 0.15;
       });
 
-      // 4. Scale up dynamically to engulf screen
       const currentScale = 1.36 + ease * 1.65;
       this.root.scale.set(currentScale, currentScale, currentScale);
 
-      // 5. Position root so HEAD/FACE IS EXACTLY AT (currentFaceX, currentFaceY, currentFaceZ)
       const localFaceY = this.bodyGroup.position.y + this.headGroup.position.y;
       const localFaceZ = this.headGroup.position.z + 0.45;
 
@@ -791,30 +817,24 @@ export class PursuerEntity {
       this.root.position.y = currentFaceY - localFaceY * currentScale;
       this.root.position.z = currentFaceZ - localFaceZ * currentScale;
 
-      // 6. Brilliant attack keylight attached right in front of his face
       if (this.faceLight) {
         this.faceLight.intensity = 8.0 + ease * 4.0;
         this.faceLight.position.set(0, 2.5, 1.8 + ease * 0.6);
       }
 
-      // 7. Unhinging & Biting Jaw Sequence:
       if (this.jawGroup) {
         if (flightProgress < 0.76) {
-          // Unhinges wide open in a monstrous gaping roar
           const openFrac = flightProgress / 0.76;
           this.jawGroup.rotation.x = -openFrac * 1.38;
         } else if (flightProgress < 0.89) {
-          // POINT-BLANK CHOMP BITE SNAP AT THE CAMERA!
           const biteFrac = (flightProgress - 0.76) / 0.13;
           this.jawGroup.rotation.x = -1.38 * (1 - biteFrac) + (-0.10 * biteFrac);
         } else {
-          // Rips back open in triumphant fury
           const ripFrac = (flightProgress - 0.89) / 0.11;
           this.jawGroup.rotation.x = -0.10 - ripFrac * 1.25;
         }
       }
 
-      // Deadlights glowing to blinding maximum intensity
       if (this.deadlightsMat) {
         this.deadlightsMat.emissiveIntensity = 5.0 + ease * 25.0;
       }
@@ -822,14 +842,12 @@ export class PursuerEntity {
         this.faceMat.emissiveIntensity = 3.5 + ease * 10.0;
       }
 
-      // Violent demonic strobe shudder on head
       if (this.headGroup) {
         const shudderAmp = 0.08 + ease * 0.35;
         this.headGroup.rotation.z = 0.44 * (1 - ease) + Math.sin(this.jumpscareElapsed * 48) * shudderAmp;
         this.headGroup.rotation.y = Math.cos(this.jumpscareElapsed * 42) * shudderAmp;
       }
 
-      // Balloons stream backward violently in slipstream
       this.balloons.forEach((b) => {
         b.group.position.z = b.base.z - ease * 5.2;
         b.group.position.y = (this.bodyGroup.position.y + 0.2) + b.base.y * 0.45 - ease * 1.6;
@@ -839,8 +857,6 @@ export class PursuerEntity {
     }
 
     // ── IN-GAME AMBIENT STALKING ANIMATION ─────────────────────────
-
-    // Uncanny Bill Skarsgård sudden jerky head tilt snap
     this.headTwitchTimer += dt;
     if (this.headTwitchTimer > 2.6) {
       this.headTwitchTimer = 0;
@@ -848,7 +864,6 @@ export class PursuerEntity {
       this.targetHeadRotY = (Math.random() - 0.5) * 0.38;
     }
 
-    // Snappy snap-in, followed by creepy slow relaxation
     this.currentHeadTilt += (this.targetHeadTilt - this.currentHeadTilt) * Math.min(1, dt * 7.5);
     this.targetHeadTilt *= Math.max(0, 1 - dt * 1.9);
 
@@ -859,16 +874,21 @@ export class PursuerEntity {
       this.headGroup.rotation.x = Math.sin(this.time * 1.1) * 0.05;
     }
 
-    // Sinusoidal hover bobbing floating high above the track
-    const targetHoverY = playerHearts <= 1 ? 4.45 : 4.85;
+    // Sinusoidal hover bobbing framed at Y = 4.35 (cleanly below top HUD)
+    const targetHoverY = playerHearts <= 1 ? 4.05 : 4.35;
     this.baseHoverY += (targetHoverY - this.baseHoverY) * Math.min(1, dt * 2.5);
 
-    const hoverY = this.baseHoverY + Math.sin(this.time) * 0.36;
+    const hoverY = this.baseHoverY + Math.sin(this.time) * 0.32;
     this.bodyGroup.position.y = hoverY;
     this.bodyGroup.rotation.z = Math.sin(this.time * 0.6) * 0.05;
     this.bodyGroup.rotation.y = Math.sin(this.time * 0.4) * 0.06;
 
-    // Menacing rhythmic claw reach & beckoning finger crawl
+    // Slowly rotate occult Deadlights Aura Halo
+    if (this.auraHalo) {
+      this.auraHalo.rotation.z += dt * 0.6;
+    }
+
+    // Menacing rhythmic claw reach & finger twitch
     this.leftArm.rotation.x = -0.55 + Math.sin(this.time * 1.4) * 0.15;
     this.leftArm.rotation.z = -0.15 + Math.cos(this.time * 0.8) * 0.08;
 
@@ -876,7 +896,6 @@ export class PursuerEntity {
     this.rightArm.rotation.y = 0.12 + Math.cos(this.time * 1.1) * 0.14;
     this.rightArm.rotation.z = 0.10 + Math.sin(this.time * 0.7) * 0.06;
 
-    // Spindly razor claws twitching and beckoning
     this.fingersL?.forEach((f, idx) => {
       f.rotation.z = Math.sin(this.time * 2.5 + idx * 0.7) * 0.18;
     });
@@ -884,21 +903,21 @@ export class PursuerEntity {
       f.rotation.z = Math.cos(this.time * 3.2 + idx * 0.8) * 0.24;
     });
 
-    // Hanging clown legs & pointed shoes marionette dangle
+    // Marionette leg dangle
     this.shoeGroups?.forEach((sg, idx) => {
       const legPhase = idx === 0 ? 0 : Math.PI * 0.75;
       sg.rotation.x = Math.sin(this.time * 1.2 + legPhase) * 0.18;
       sg.rotation.z = (idx === 0 ? -1 : 1) * 0.08 + Math.cos(this.time * 0.8 + legPhase) * 0.08;
     });
 
-    // Breathing Elizabethan Collar & Doublet
+    // Breathing Elizabethan Collar
     this.breathePhase += dt * 2.2;
     const breathe = 1 + Math.sin(this.breathePhase) * 0.025;
     if (this.collarGroup) {
       this.collarGroup.scale.set(breathe, 1, breathe);
     }
 
-    // Balloons organic floating with spring-like tether lag
+    // Floating balloons
     this.balloons.forEach((b) => {
       b.group.position.y = (hoverY + 0.2) + b.base.y * 0.45 + Math.sin(this.time * 1.3 + b.phase) * 0.32;
       b.group.position.x = b.base.x + Math.cos(this.time * 0.85 + b.phase) * 0.22;
@@ -907,23 +926,21 @@ export class PursuerEntity {
       b.group.rotation.x = Math.cos(this.time * 0.75 + b.phase) * 0.10;
     });
 
-    // Distance reactivity:
-    // 2+ hearts: cruises floating above the track at Z = -19.0 (clear silhouette above horizon)
-    // 1 heart: swoops closer to Z = -13.2 with blazing Deadlights eyes!
+    // Distance reactivity
     this.targetZ = playerHearts <= 1 ? -13.2 : -19.0;
     this.currentZ += (this.targetZ - this.currentZ) * Math.min(1, dt * 2.5);
     this.root.position.z = this.currentZ;
 
-    // Soft lateral tracking of player lane
+    // Soft lateral tracking
     this.root.position.x += (targetLaneX * 0.78 - this.root.position.x) * Math.min(1, dt * 2.4);
 
-    // Dynamic jaw drop when hungry / player damaged
+    // Dynamic jaw drop
     if (this.jawGroup) {
       const targetJawOpen = playerHearts <= 1 ? -0.28 : -0.05;
       this.jawGroup.rotation.x += (targetJawOpen - this.jawGroup.rotation.x) * Math.min(1, dt * 3.0);
     }
 
-    // Deadlights sulfur-yellow & amber eye/mouth emissive intensity breathing
+    // Deadlights sulfur-yellow & amber emissive pulsing
     const baseEmissive = playerHearts <= 1 ? 3.8 : 1.8;
     const pulse = Math.abs(Math.sin(this.time * 3.5)) * 0.9;
     if (this.faceMat) {
@@ -931,6 +948,9 @@ export class PursuerEntity {
     }
     if (this.deadlightsMat) {
       this.deadlightsMat.emissiveIntensity = 3.0 + pulse * 2.0;
+    }
+    if (this.auraHaloMat) {
+      this.auraHaloMat.emissiveIntensity = 2.0 + pulse * 1.5;
     }
   }
 

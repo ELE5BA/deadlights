@@ -51,7 +51,7 @@ function playPennywiseJumpscareStinger() {
     subOsc.start(now);
     subOsc.stop(now + 1.25);
 
-    // 2. Dissonant screeching horror cluster (detuned sawtooth frequencies)
+    // 2. Dissonant horror cluster
     [720, 784, 880, 932].forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -66,7 +66,7 @@ function playPennywiseJumpscareStinger() {
       osc.stop(now + 1.2);
     });
 
-    // 3. Blinding Deadlights static noise burst
+    // 3. Deadlights static burst
     const bufferSize = Math.floor(ctx.sampleRate * 0.45);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -86,8 +86,89 @@ function playPennywiseJumpscareStinger() {
   }
 }
 
+/**
+ * Custom Bespoke Inline SVG Soul-Lantern Heart
+ */
+function SoulLanternHeart({ active, isCritical }) {
+  if (!active) {
+    return (
+      <svg
+        className="soul-heart soul-heart--depleted"
+        viewBox="0 0 24 24"
+        width="26"
+        height="26"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M12 2L4 7v10l8 5 8-5V7L12 2z"
+          stroke="#4a3e30"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+          fill="#0a0810"
+        />
+        <path d="M7 9l4 4-2 3 5 2" stroke="#6b5e52" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M16 8l-3 4 2 2" stroke="#6b5e52" strokeWidth="1.0" strokeLinecap="round" />
+        <circle cx="12" cy="14" r="1.5" fill="#2b231c" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      className={`soul-heart soul-heart--active ${isCritical ? 'soul-heart--pulse' : ''}`}
+      viewBox="0 0 24 24"
+      width="26"
+      height="26"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 2L4 7v10l8 5 8-5V7L12 2z"
+        stroke="#d4a349"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        fill="#26060c"
+      />
+      <path
+        d="M12 5.5c-3 3-4 6-1 9 1 1 3 2 4 0 2-2 1-4-1-6-1-1-1.5-2-2-3z"
+        fill="url(#soulFlameGrad)"
+      />
+      <circle cx="12.5" cy="13.5" r="2" fill="#fff5d6" />
+      <defs>
+        <linearGradient id="soulFlameGrad" x1="12" y1="5.5" x2="12" y2="16.5" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#ff4d6d" />
+          <stop offset="0.6" stopColor="#b81d2c" />
+          <stop offset="1" stopColor="#f3c86b" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+/**
+ * Custom Bespoke Faceted SVG Rift Shard
+ */
+function FacetedRiftShardSvg() {
+  return (
+    <svg className="rift-shard-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+      <path d="M12 2L5 9l7 13 7-13-7-7z" fill="url(#shardGradGame)" stroke="#3ce3e8" strokeWidth="1.2" />
+      <path d="M12 2v20M5 9h14M12 9l-4 7m4-7l4 7" stroke="rgba(255, 255, 255, 0.45)" strokeWidth="0.8" />
+      <defs>
+        <linearGradient id="shardGradGame" x1="5" y1="2" x2="19" y2="22" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#67e8f9" />
+          <stop offset="0.5" stopColor="#0891b2" />
+          <stop offset="1" stopColor="#0c4a6e" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 export default function GameScreen({ player, onFinished }) {
   const engineRef = useRef(null);
+  const stageProgressRef = useRef(null);
+
   const [engineState, setEngineState] = useState({
     lane: 1,
     jumping: false,
@@ -107,6 +188,7 @@ export default function GameScreen({ player, onFinished }) {
     cardsRequiredPerStage: 5,
     fragmentsCollected: 0,
   });
+
   const [stageBanner, setStageBanner] = useState(null);
   const [completedCardModal, setCompletedCardModal] = useState(null);
   const [lossModal, setLossModal] = useState(null);
@@ -118,8 +200,14 @@ export default function GameScreen({ player, onFinished }) {
   const [reducedEffects, setReducedEffects] = useState(() => localStorage.getItem('deadlights.reducedEffects') === 'true');
   const [runToken, setRunToken] = useState(() => crypto.randomUUID());
 
+  // 60FPS DOM Progress Bar Callback hookup
   const onEngine = useCallback((engine) => {
     engineRef.current = engine;
+    engine.onFrameTick = ({ stageProgressRatio }) => {
+      if (stageProgressRef.current) {
+        stageProgressRef.current.style.transform = `scaleX(${stageProgressRatio})`;
+      }
+    };
   }, []);
 
   const onStateChange = useCallback((next) => {
@@ -197,7 +285,6 @@ export default function GameScreen({ player, onFinished }) {
 
     const isLoss = ['card_missed', 'hit_points_zero', 'time_limit'].includes(summary.endReason);
     if (isLoss) {
-      // Transition towards restart game modal after jumpscare completes
       setLossModal({
         reason: summary.endReason,
         stage: engineState.stageNumber,
@@ -228,7 +315,7 @@ export default function GameScreen({ player, onFinished }) {
     }
   }, [completedCardModal]);
 
-  // Global keyboard shortcuts: 'R' or 'Space' or 'Enter' to instantly restart upon loss, 'Space' to proceed from card modal
+  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (lossModal && (e.key === 'r' || e.key === 'R' || e.code === 'Space' || e.key === 'Enter')) {
@@ -250,11 +337,36 @@ export default function GameScreen({ player, onFinished }) {
     return next;
   });
 
+  // Interactive 3D Perspective Tilt for Card Modal
+  function handleModalCardMouseMove(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    e.currentTarget.style.setProperty('--card-rx', `${-y * 22}deg`);
+    e.currentTarget.style.setProperty('--card-ry', `${x * 22}deg`);
+    e.currentTarget.style.setProperty('--glare-x', `${(x + 0.5) * 100}%`);
+    e.currentTarget.style.setProperty('--glare-y', `${(y + 0.5) * 100}%`);
+  }
+
+  function handleModalCardMouseLeave(e) {
+    e.currentTarget.style.setProperty('--card-rx', '0deg');
+    e.currentTarget.style.setProperty('--card-ry', '0deg');
+    e.currentTarget.style.setProperty('--glare-x', '50%');
+    e.currentTarget.style.setProperty('--glare-y', '50%');
+  }
+
   const stageSecondsRemaining = Math.max(0, Math.ceil((engineState.stageDurationSeconds || 60) - (engineState.stageElapsedSeconds || 0)));
   const maxHp = engineState.maxHealth || 3;
   const currentHp = Math.max(0, Math.min(maxHp, engineState.health));
+  const isHeartCritical = currentHp === 1;
   const cardsReq = engineState.cardsRequiredPerStage || 5;
   const cardsGot = Math.min(cardsReq, engineState.stageCardsCollected || 0);
+
+  // Auto-fade bottom tutorial after 6s in Stage 1
+  const isTutorialFaded = sessionState === 'playing' && (engineState.stageNumber > 1 || engineState.stageElapsedSeconds > 6);
+
+  // 6-digit padded score odometer
+  const paddedScore = String(engineState.score || 0).padStart(6, '0');
 
   return (
     <main className="game-screen">
@@ -265,65 +377,87 @@ export default function GameScreen({ player, onFinished }) {
         reducedEffects={reducedEffects}
       />
 
-      {/* ── UNIFIED BESPOKE ARCADE HUD ── */}
-      <header className="game-hud">
-        <div className="hud-left">
-          <div className="hud-hearts" title={`Vitality: ${currentHp} of ${maxHp} Hearts Remaining`}>
-            {Array.from({ length: maxHp }).map((_, i) => (
-              <span key={i} className={`hud-heart-pip ${i < currentHp ? 'active' : 'depleted'}`}>
-                {i < currentHp ? '♥' : '♡'}
-              </span>
-            ))}
-          </div>
-          <div className="hud-shards" title="Collected Rift Shards">
-            <span className="shard-glyph">◈</span>
-            <span className="shard-val">{engineState.shards}</span>
-          </div>
+      {/* ── PERIPHERAL CORNER-ANCHORED IN-GAME HUD ── */}
+      {/* Top-Left Plate: Vitality Lanterns & Shard Pouch */}
+      <aside className="hud-corner-plate hud-plate-left" aria-label="Player Vitality and Shards">
+        <div className="hud-hearts" title={`Soul Vitality: ${currentHp} of ${maxHp} Hearts`}>
+          {Array.from({ length: maxHp }).map((_, i) => (
+            <SoulLanternHeart
+              key={i}
+              active={i < currentHp}
+              isCritical={isHeartCritical && i === 0}
+            />
+          ))}
+        </div>
+        <div className="hud-pouch-divider" />
+        <div className="hud-shards" title="Collected Rift Shards">
+          <FacetedRiftShardSvg />
+          <span className="shard-val">{engineState.shards}</span>
+        </div>
+      </aside>
+
+      {/* Top-Center Compact Marquee & Fanned Card Hand */}
+      <section className="hud-center-marquee" aria-label="Stage Progress and Cards Hand">
+        <div className="marquee-ribbon">
+          <span className="marquee-stage-badge">STAGE {engineState.stageNumber}</span>
+          <span className="marquee-stage-name">{engineState.stageName}</span>
+          <span className="marquee-timer">{stageSecondsRemaining}s</span>
         </div>
 
-        <div className="hud-center">
-          <div className="hud-stage-info">
-            <span className="hud-stage-badge">STAGE {engineState.stageNumber}</span>
-            <span className="hud-stage-name">{engineState.stageName}</span>
-            <span className="hud-stage-clock">{stageSecondsRemaining}s</span>
-          </div>
+        {/* 60FPS GPU Transform Progress Bar */}
+        <div className="marquee-progress-track">
+          <div ref={stageProgressRef} className="marquee-progress-bar" />
+        </div>
 
-          <div className="hud-cards-gauntlet" title="Stage Cards: Collect all 5 across 60s. Zero misses permitted.">
-            <div className="hud-card-slots">
-              {[1, 2, 3, 4, 5].map((slot) => {
-                const isGot = slot <= cardsGot;
-                return (
-                  <div
-                    key={slot}
-                    className={`hud-card-slot ${isGot ? 'collected' : 'pending'}`}
-                    title={`Card ${slot}/5: ${isGot ? 'Secured' : 'Awaiting'}`}
-                  >
-                    <span className="slot-index">{slot}</span>
-                    <span className="slot-mark">{isGot ? '✓' : ''}</span>
+        {/* 5 Physical Mini-Card Slots in Poker-Hand Fan */}
+        <div className="hud-fanned-cards" title="Gather all 5 cards across 60 seconds">
+          {[1, 2, 3, 4, 5].map((slot) => {
+            const isGot = slot <= cardsGot;
+            // Angle spread: -8deg to +8deg
+            const angles = [-8, -4, 0, 4, 8];
+            const angle = angles[slot - 1];
+            return (
+              <div
+                key={slot}
+                className={`fanned-card-slot ${isGot ? 'card-collected' : 'card-pending'}`}
+                style={{
+                  '--card-fan-rot': `${angle}deg`,
+                  '--card-fan-y': `${Math.abs(angle) * 0.8}px`,
+                }}
+                title={`Stage Card ${slot}/5: ${isGot ? 'Secured' : 'Missing'}`}
+              >
+                <div className="card-flipper">
+                  <div className="card-front">
+                    <span className="fanned-card-index">{slot}</span>
+                    <span className="fanned-card-mark">✦</span>
                   </div>
-                );
-              })}
-            </div>
-            <span className="hud-card-counter">
-              <b>{cardsGot}</b><span className="counter-sep">/</span>5
-            </span>
-          </div>
+                  <div className="card-back">
+                    <span className="fanned-back-pattern">◈</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </section>
 
-        <div className="hud-right">
-          <div className="hud-score-display">
-            <span className="score-label">SCORE</span>
-            <span className="score-value">{engineState.score?.toLocaleString() || 0}</span>
-          </div>
-          <button
-            className="hud-pause-btn"
-            onClick={() => (engineState.paused ? engineRef.current?.resume() : engineRef.current?.pause())}
-          >
-            {engineState.paused ? 'RESUME' : 'PAUSE'}
-          </button>
+      {/* Top-Right Plate: Score Odometer & Pause Keycap */}
+      <aside className="hud-corner-plate hud-plate-right" aria-label="Score and Controls">
+        <div className="hud-odometer-box">
+          <span className="score-eyebrow">SCORE</span>
+          <span className="odometer-digits">{paddedScore}</span>
         </div>
-      </header>
+        <button
+          className="hud-pause-keycap"
+          onClick={() => (engineState.paused ? engineRef.current?.resume() : engineRef.current?.pause())}
+          title="Pause Game [ESC]"
+        >
+          <span className="keycap-label">{engineState.paused ? 'RESUME' : 'PAUSE'}</span>
+          <kbd className="keycap-hint">ESC</kbd>
+        </button>
+      </aside>
 
+      {/* Stage Clear Celebration Banner */}
       {stageBanner && (
         <div className="stage-clear-banner">
           <p className="banner-eyebrow">STAGE {stageBanner.clearedNum} PURIFIED</p>
@@ -342,9 +476,11 @@ export default function GameScreen({ player, onFinished }) {
               <p className="modal-sub">Trial concluded within 60 seconds with all 5 cards assembled</p>
             </header>
 
-            {/* Handcrafted Physical Collectible Card */}
+            {/* Handcrafted Physical Collectible Card with 3D Tilt */}
             <article
               className="pokemon-tcg-card"
+              onMouseMove={handleModalCardMouseMove}
+              onMouseLeave={handleModalCardMouseLeave}
               style={{
                 '--card-theme-color': completedCardModal.color,
                 '--card-accent-color': completedCardModal.accentColor || '#38bdf8',
@@ -352,7 +488,6 @@ export default function GameScreen({ player, onFinished }) {
             >
               <div className="card-foil-sheen" />
 
-              {/* Card Header: Stage badge, Name, HP, Type Symbol */}
               <div className="tcg-header">
                 <div className="tcg-header-left">
                   <span className="tcg-stage-badge">STAGE {completedCardModal.stageNumber} · NO. {completedCardModal.id}</span>
@@ -365,7 +500,6 @@ export default function GameScreen({ player, onFinished }) {
                 </div>
               </div>
 
-              {/* Card Illustration Frame with Handcrafted Pixel Art */}
               <div className="tcg-art-frame">
                 <PokedexCardArt
                   artKey={completedCardModal.artKey || completedCardModal.id}
@@ -377,7 +511,6 @@ export default function GameScreen({ player, onFinished }) {
                 </div>
               </div>
 
-              {/* Attacks Section */}
               <div className="tcg-attacks">
                 {(completedCardModal.attacks || []).map((atk, idx) => (
                   <div key={idx} className="tcg-attack-row">
@@ -391,12 +524,10 @@ export default function GameScreen({ player, onFinished }) {
                 ))}
               </div>
 
-              {/* Flavour / Lore bar */}
               <div className="tcg-lore-box">
                 <p>"{completedCardModal.lore}"</p>
               </div>
 
-              {/* Card Footer */}
               <footer className="tcg-footer">
                 <span>Illus. {completedCardModal.illustrator || 'ELE5BA Studio'}</span>
                 <span className="tcg-rarity">{completedCardModal.rarity || 'Holo Rare'}</span>
@@ -404,7 +535,6 @@ export default function GameScreen({ player, onFinished }) {
               </footer>
             </article>
 
-            {/* Action Button */}
             <div className="card-modal-actions">
               <button
                 className="primary-button proceed-stage-btn"
@@ -471,9 +601,10 @@ export default function GameScreen({ player, onFinished }) {
         </div>
       )}
 
-      <aside className="game-help">
+      {/* Auto-fading bottom footnote */}
+      <aside className={`game-help ${isTutorialFaded ? 'game-help--hidden' : ''}`}>
         {sessionState === 'starting' && 'INITIALIZING GAUNTLET RUN…'}
-        {sessionState === 'playing' && 'DODGE OBSTACLES · COLLECT ALL 5 CARDS IN 60s · ZERO MISSES ALLOWED'}
+        {sessionState === 'playing' && 'DODGE OBSTACLES · ASSEMBLE ALL 5 CARDS IN 60s · ZERO MISSES ALLOWED'}
         {sessionState === 'saving' && 'SECURELY PERSISTING SESSION…'}
         {sessionState === 'save_error' && (
           <>

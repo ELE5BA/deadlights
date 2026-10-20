@@ -18,58 +18,67 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
 
   return (
     <main className="overlay-screen">
-      <section className="setup-card results-card">
+      <section className="setup-card results-card ledger-certificate">
+        {/* Diegetic Stamped Ink Seal Badge */}
+        <div className={`ledger-stamp-badge ${isFlawless ? 'stamp-purified' : 'stamp-claimed'}`}>
+          <span className="stamp-inner">
+            {isFlawless ? 'PURIFIED' : 'CLAIMED BY DEADLIGHTS'}
+          </span>
+        </div>
+
         <header className="results-header">
           <p className="eyebrow">
             {isFlawless
-              ? 'TRIAL CERTIFICATE · MAXIMUM PURIFICATION CONCLUDED'
+              ? 'OFFICIAL ARCHIVAL TRIAL CERTIFICATE · MAXIMUM PURIFICATION CONCLUDED'
               : isCardMissed
-              ? 'TRIAL CONCLUDED · STAGE CARD UNMET'
-              : 'TRIAL CONCLUDED · GAUNTLET TERMINATED'}
+              ? 'ARCHIVAL FIELD LEDGER · STAGE CARD UNMET'
+              : 'ARCHIVAL FIELD LEDGER · GAUNTLET TERMINATED'}
           </p>
           <h2 className="results-score">
             {result.score.toLocaleString()} <span className="results-points-label">PTS</span>
           </h2>
         </header>
 
-        <div className="stage-clear-badge-row" aria-label="Stages Progression">
+        {/* Roman Numeral Wax Seals for Stages I–VI */}
+        <div className="stage-clear-badge-row ledger-wax-seals" aria-label="Stages Progression">
           {['I', 'II', 'III', 'IV', 'V', 'VI'].map((roman, idx) => {
             const stg = idx + 1;
             const cleared = stg <= stagesCleared;
             return (
               <span
                 key={stg}
-                className={`stage-badge-pip ${cleared ? 'cleared' : 'incomplete'}`}
+                className={`stage-badge-pip wax-seal-pip ${cleared ? 'cleared' : 'incomplete'}`}
                 title={`Stage ${stg}: ${cleared ? 'Purified' : 'Incomplete'}`}
               >
-                {roman} {cleared ? '✓' : '—'}
+                <span className="seal-roman">{roman}</span>
+                <span className="seal-mark">{cleared ? '✓' : '—'}</span>
               </span>
             );
           })}
         </div>
 
-        <div className="result-grid">
-          <div className="result-item">
+        <div className="result-grid ledger-grid">
+          <div className="result-item ledger-item">
             <span className="result-value">{stagesCleared} / 6</span>
             <span className="result-label">STAGES PURIFIED</span>
           </div>
-          <div className="result-item">
+          <div className="result-item ledger-item">
             <span className="result-value">+{result.fragmentsEarned ?? 0}</span>
             <span className="result-label">CARDS ASSEMBLED</span>
           </div>
-          <div className="result-item">
+          <div className="result-item ledger-item">
             <span className="result-value">{result.survivalSeconds.toFixed(1)}s</span>
             <span className="result-label">TIME SURVIVED</span>
           </div>
-          <div className="result-item">
+          <div className="result-item ledger-item">
             <span className="result-value">+{result.shardsEarned}</span>
             <span className="result-label">SHARDS EXTRACTED</span>
           </div>
-          <div className="result-item">
+          <div className="result-item ledger-item">
             <span className="result-value">{result.wallet?.shardsBalance ?? 0}</span>
             <span className="result-label">SHARD BALANCE</span>
           </div>
-          <div className="result-item">
+          <div className="result-item ledger-item">
             <span className="result-value">{(result.bestScore ?? result.score).toLocaleString()}</span>
             <span className="result-label">PERSONAL BEST</span>
           </div>

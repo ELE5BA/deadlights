@@ -1,27 +1,52 @@
 import * as THREE from 'three';
 
-// Shared cartoon black outline material for high performance
-const blackLineMaterial = new THREE.LineBasicMaterial({
-  color: 0x000000,
-  linewidth: 2,
-  depthTest: true,
-});
+// Deep Occult Ink (#120b1d) - rich purple-black comic outline color
+export const OCCULT_INK_HEX = 0x120b1d;
 
-const blackHullMaterial = new THREE.MeshBasicMaterial({
-  color: 0x000000,
-  side: THREE.BackSide,
-});
+// Cached line and hull materials to avoid redundant WebGL allocations
+const lineMaterialCache = new Map();
+const hullMaterialCache = new Map();
+
+function getLineMaterial(color = OCCULT_INK_HEX, opacity = 0.68) {
+  const key = `${color}_${opacity}`;
+  if (!lineMaterialCache.has(key)) {
+    const mat = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity,
+      depthTest: true,
+    });
+    mat.userData = { shared: true };
+    lineMaterialCache.set(key, mat);
+  }
+  return lineMaterialCache.get(key);
+}
+
+function getHullMaterial(color = OCCULT_INK_HEX, opacity = 0.85) {
+  const key = `${color}_${opacity}`;
+  if (!hullMaterialCache.has(key)) {
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      side: THREE.BackSide,
+      transparent: true,
+      opacity,
+    });
+    mat.userData = { shared: true };
+    hullMaterialCache.set(key, mat);
+  }
+  return hullMaterialCache.get(key);
+}
 
 /**
- * Adds crisp comic-book black edge lines to boxy/voxel geometries.
+ * Adds crisp comic-book occult ink edge lines to boxy/voxel geometries.
+ * Uses a 28° crease threshold angle so coplanar faces never draw internal wireframe lines.
  */
-export function addBoxOutline(mesh, color = 0x000000) {
+export function addBoxOutline(mesh, color = OCCULT_INK_HEX) {
   if (!mesh || !mesh.geometry) return mesh;
-  const edges = new THREE.EdgesGeometry(mesh.geometry);
-  const line = new THREE.LineSegments(
-    edges,
-    color === 0x000000 ? blackLineMaterial : new THREE.LineBasicMaterial({ color, linewidth: 2 })
-  );
+  const edges = new THREE.EdgesGeometry(mesh.geometry, 28);
+  edges.userData = { shared: true };
+  const line = new THREE.LineSegments(edges, getLineMaterial(color, 0.68));
+  line.userData = { shared: true };
   mesh.add(line);
   return mesh;
 }
@@ -29,17 +54,17 @@ export function addBoxOutline(mesh, color = 0x000000) {
 /**
  * Adds inverted-hull cartoon silhouette contour to organic/curved geometries (balloons, heads, spikes).
  */
-export function addHullOutline(mesh, scale = 1.06, color = 0x000000) {
+export function addHullOutline(mesh, scale = 1.06, color = OCCULT_INK_HEX) {
   if (!mesh || !mesh.geometry) return mesh;
-  const outlineMat = color === 0x000000 ? blackHullMaterial : new THREE.MeshBasicMaterial({ color, side: THREE.BackSide });
-  const outlineMesh = new THREE.Mesh(mesh.geometry, outlineMat);
+  const outlineMesh = new THREE.Mesh(mesh.geometry, getHullMaterial(color, 0.85));
   outlineMesh.scale.set(scale, scale, scale);
+  outlineMesh.userData = { shared: true };
   mesh.add(outlineMesh);
   return outlineMesh;
 }
 
 /**
- * Convenience helper to create a Box Mesh with automatic cartoon black edge outline.
+ * Convenience helper to create a Box Mesh with automatic cartoon edge outline.
  */
 export function createCartoonBox(geometry, material, withOutline = true) {
   const mesh = new THREE.Mesh(geometry, material);

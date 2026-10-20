@@ -140,10 +140,11 @@ export function getCardPickupInfo(stageCardsCollected, stageIndex = 0) {
 const laneKey = ['left', 'center', 'right'];
 
 export class GameEngine {
-  constructor({ canvas, onStateChange, onRunEnd }) {
+  constructor({ canvas, onStateChange, onRunEnd, onFrameTick }) {
     this.canvas = canvas;
     this.onStateChange = onStateChange;
     this.onRunEnd = onRunEnd;
+    this.onFrameTick = onFrameTick;
 
     this.world = createScene(canvas);
     this.clock = new THREE.Clock(false);
@@ -158,6 +159,8 @@ export class GameEngine {
     this.laneIndex = 1;
     this.targetX = GAME_CONFIG.laneCenters[1];
     this.currentX = GAME_CONFIG.laneCenters[1];
+    this.cameraTiltZ = 0;
+    this.lastHudSyncMs = 0;
     this.objects = [];
     this.running = false;
     this.paused = false;
@@ -183,32 +186,44 @@ export class GameEngine {
     }
   }
 
+  /**
+   * Immediate HUD update dispatch - called ONLY on discrete events
+   * (lane change, jump, damage hit, pickup, stage clear, pause, loss).
+   */
+  updateHudImmediate(extra = {}) {
+    this.lastHudSyncMs = this.elapsedMs || 0;
+    this.updateHud(extra);
+  }
+
+  /**
+   * Primary HUD state builder dispatched to React onStateChange.
+   */
   updateHud(extra = {}) {
     const currentStage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
     const score = calculateScore({
-      survivalSeconds: this.elapsedMs / 1000,
-      normalShardPickups: this.normalShards,
-      rareBonusPickups: this.rarePickups,
-      milestonesReached: this.milestones.size,
-      stagesCleared: this.stagesCleared,
-      fragmentsCollected: this.fragmentsCollected,
+      survivalSeconds: (this.elapsedMs || 0) / 1000,
+      normalShardPickups: this.normalShards || 0,
+      rareBonusPickups: this.rarePickups || 0,
+      milestonesReached: this.milestones ? this.milestones.size : 0,
+      stagesCleared: this.stagesCleared || 0,
+      fragmentsCollected: this.fragmentsCollected || 0,
     });
 
     this.onStateChange?.({
       health: this.health,
       maxHealth: GAME_CONFIG.maxHealth,
-      shards: this.normalShards + (this.rarePickups * 3) + (this.stagesCleared * (GAME_CONFIG.rewards.stageClearShards ?? 15)),
-      elapsedSeconds: this.elapsedMs / 1000,
+      shards: (this.normalShards || 0) + ((this.rarePickups || 0) * 3) + ((this.stagesCleared || 0) * (GAME_CONFIG.rewards.stageClearShards ?? 15)),
+      elapsedSeconds: (this.elapsedMs || 0) / 1000,
       stageNumber: this.currentStageIndex + 1,
       totalStages: GAME_STAGES.length,
       stageName: currentStage.name,
       stageSubtitle: currentStage.subtitle,
-      stageElapsedSeconds: this.stageElapsedMs / 1000,
+      stageElapsedSeconds: (this.stageElapsedMs || 0) / 1000,
       stageDurationSeconds: currentStage.durationSeconds,
-      stagesCleared: this.stagesCleared,
+      stagesCleared: this.stagesCleared || 0,
       stageCardsCollected: this.stageCardsCollected ?? 0,
       cardsRequiredPerStage: GAME_CONFIG.cardsRequiredPerStage ?? 5,
-      fragmentsCollected: this.fragmentsCollected,
+      fragmentsCollected: this.fragmentsCollected || 0,
       score,
       lane: this.laneIndex,
       jumping: this.jumpElapsedMs > 0,
@@ -227,6 +242,7 @@ export class GameEngine {
       lossReason: null,
       elapsedMs: 0,
       stageElapsedMs: 0,
+      lastHudSyncMs: 0,
       currentStageIndex: 0,
       stagesCleared: 0,
       fragmentsCollected: 0,
@@ -241,11 +257,14 @@ export class GameEngine {
       milestones: new Set(),
       events: [],
       distanceM: 0,
+      cameraTiltZ: 0,
     });
 
     this.pursuerEntity?.resetJumpscare?.();
+    this.world.camera.fov = 53;
     this.world.camera.position.set(0, 5.2, 8.5);
     this.world.camera.lookAt(0, 1.2, -6);
+    this.world.camera.updateProjectionMatrix();
 
     this.laneIndex = 1;
     this.targetX = GAME_CONFIG.laneCenters[1];
@@ -256,7 +275,7 @@ export class GameEngine {
     this.playerEntity.root.position.set(this.currentX, 0, 0);
 
     this.world.applyAtmosphere(null, 1);
-    this.updateHud();
+    this.updateHudImmediate();
     this.clock.start();
     this.frame();
   }
@@ -268,7 +287,7 @@ export class GameEngine {
     this.lossElapsedMs = 0;
     this.lossDurationMs = 1350;
 
-    // Hide player model so Pennywise's flight and attack are 100% visible and unobstructed
+    // Hide player model so Pennywise's flight and unhinged bite are unobstructed
     if (this.playerEntity?.root) {
       this.playerEntity.root.visible = false;
     }
@@ -277,7 +296,7 @@ export class GameEngine {
     this.pursuerEntity?.triggerJumpscare?.();
 
     // Signal UI for sound cue and horror vignette
-    this.updateHud({ jumpscareActive: true, lossReason: endReason });
+    this.updateHudImmediate({ jumpscareActive: true, lossReason: endReason });
   }
 
   keydown(event) {
@@ -297,7 +316,7 @@ export class GameEngine {
       this.laneIndex = next;
       this.targetX = GAME_CONFIG.laneCenters[next];
       this.emit(EVENT_TYPES.LANE_CHANGE, laneKey[next], 0, next);
-      this.updateHud();
+      this.updateHudImmediate();
     }
   }
 
@@ -305,7 +324,7 @@ export class GameEngine {
     if (this.jumpElapsedMs === 0) {
       this.jumpElapsedMs = 1;
       this.emit(EVENT_TYPES.JUMP, ENTITY_KEYS.PLAYER_JUMP);
-      this.updateHud();
+      this.updateHudImmediate();
     }
   }
 
@@ -321,7 +340,6 @@ export class GameEngine {
       const canDoWave = allowedHazards.includes('shadow_wave') && Math.random() < 0.40;
 
       if (canDoDouble) {
-        // Double Blockade: blocks 2 lanes, leaves 1 escape lane
         const openLane = Math.floor(Math.random() * 3);
         const blockedLanes = [0, 1, 2].filter((l) => l !== openLane);
 
@@ -345,7 +363,6 @@ export class GameEngine {
 
       const lane = Math.floor(Math.random() * 3);
       if (canDoSway) {
-        // Swaying Specter Lantern-Wraith
         const mesh = createSwayingSpecter();
         mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.25, -GAME_CONFIG.spawnDistance);
         this.world.scene.add(mesh);
@@ -364,7 +381,6 @@ export class GameEngine {
         return;
       }
 
-      // Blocker Crate or Low Jumpable Shadow Wave
       const isWave = canDoWave;
       const mesh = isWave ? createShadowWave() : createBlockerCrate();
       mesh.position.set(GAME_CONFIG.laneCenters[lane], isWave ? 0.05 : 0.72, -GAME_CONFIG.spawnDistance);
@@ -382,7 +398,6 @@ export class GameEngine {
       });
       this.emit(EVENT_TYPES.OBSTACLE_SPAWN, entityKey, 0, lane);
     } else {
-      // Pickups: Normal Shards or Amber Orbs (Cards spawn exclusively on deterministic 5-card schedule)
       const lane = Math.floor(Math.random() * 3);
       const isRare = Math.random() < 0.28;
 
@@ -434,12 +449,11 @@ export class GameEngine {
     for (const object of this.objects) {
       object.mesh.position.z += speed * dt;
 
-      // Swaying Specter sinusoidal drift across lanes
       if (object.isSway) {
         object.swayTime += deltaMs * 0.003;
         const offset = Math.sin(object.swayTime) * 1.85;
         object.mesh.position.x = Math.max(-3.5, Math.min(3.5, object.baseX + offset));
-        object.mesh.rotation.z = Math.cos(object.swayTime) * 0.25; // Bank into drift
+        object.mesh.rotation.z = Math.cos(object.swayTime) * 0.25;
 
         let closestLane = 1;
         let minDiff = 999;
@@ -453,11 +467,9 @@ export class GameEngine {
         object.lane = closestLane;
       }
 
-      // Pickup animations
       if (!object.isHazard) {
         object.mesh.rotation.y += deltaMs * 0.006;
 
-        // Custom prefab animations
         if (object.mesh.userData.haloRing) {
           object.mesh.userData.haloRing.rotation.z += deltaMs * 0.008;
         }
@@ -479,7 +491,7 @@ export class GameEngine {
           this.health -= 1;
           this.invulnerableMs = 900;
           this.emit(EVENT_TYPES.COLLISION, object.entityKey, 0, object.lane);
-          this.updateHud({ hit: true });
+          this.updateHudImmediate({ hit: true });
           if (this.health <= 0) {
             this.triggerLossSequence('hit_points_zero');
             return;
@@ -493,7 +505,7 @@ export class GameEngine {
             this.fragmentsCollected += 1;
             this.emit(EVENT_TYPES.FRAGMENT_PICKUP, ENTITY_KEYS.CARD_FRAGMENT, 1, object.lane);
             const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.currentStageIndex);
-            this.updateHud({
+            this.updateHudImmediate({
               fragmentGot: true,
               cardPickup,
               stageCardsCollected: this.stageCardsCollected,
@@ -501,11 +513,12 @@ export class GameEngine {
           } else if (object.isRare) {
             this.rarePickups += 1;
             this.emit(EVENT_TYPES.RARE_PICKUP, ENTITY_KEYS.AMBER_ORB, 3, object.lane);
+            this.updateHudImmediate();
           } else {
             this.normalShards += 1;
             this.emit(EVENT_TYPES.SHARD_PICKUP, ENTITY_KEYS.RIFT_SHARD, 1, object.lane);
+            this.updateHudImmediate();
           }
-          this.updateHud();
         }
       }
 
@@ -518,16 +531,10 @@ export class GameEngine {
       }
     }
 
+    // Zero-GC Removal: Simply remove mesh from scene without mid-frame GPU disposal!
     this.objects = this.objects.filter((object) => {
       if (object.mesh.position.z > 8 || object.consumed) {
         this.world.scene.remove(object.mesh);
-        object.mesh.traverse((child) => {
-          if (child.geometry) child.geometry.dispose();
-          if (child.material) {
-            const mats = Array.isArray(child.material) ? child.material : [child.material];
-            mats.forEach((m) => m.dispose());
-          }
-        });
         return false;
       }
       return true;
@@ -561,10 +568,9 @@ export class GameEngine {
       this.stageElapsedMs = 0;
       const nextStage = GAME_STAGES[this.currentStageIndex];
 
-      // Update 6-stage atmosphere
       this.world.applyAtmosphere(null, this.currentStageIndex + 1);
 
-      this.updateHud({
+      this.updateHudImmediate({
         stageClearedBanner: true,
         clearedStageNum: completedStageNum,
         nextStageNum: this.currentStageIndex + 1,
@@ -572,7 +578,7 @@ export class GameEngine {
         stageCompletedCard: completedCard,
       });
     } else {
-      this.updateHud({
+      this.updateHudImmediate({
         stageCompletedCard: completedCard,
       });
       this.finish('all_stages_cleared');
@@ -582,15 +588,14 @@ export class GameEngine {
   frame() {
     if (!this.running) return;
     const deltaMs = Math.min(this.clock.getDelta() * 1000, 50);
+    const dt = deltaMs / 1000;
 
     // Pennywise jumpscare cinematic loss sequence
     if (this.isLossSequenceActive) {
       this.lossElapsedMs += deltaMs;
 
-      // Update Pennywise flying towards the camera with unhinged jaw & Deadlights
       this.pursuerEntity?.update(deltaMs, 0, this.currentX);
 
-      // Camera shudder and tremor intensifying as Pennywise draws near
       const progress = Math.min(1, this.lossElapsedMs / this.lossDurationMs);
       const shakeAmp = 0.05 + Math.pow(progress, 2.4) * 0.32;
       this.world.camera.position.x = (Math.random() - 0.5) * shakeAmp;
@@ -598,7 +603,6 @@ export class GameEngine {
       this.world.camera.position.z = 8.5 + (Math.random() - 0.5) * (shakeAmp * 0.4);
       this.world.camera.lookAt(0, 1.2, -6);
 
-      // Render the frame to screen so the jumpscare flight is visible
       this.world.renderer.render(this.world.scene, this.world.camera);
 
       if (this.lossElapsedMs >= this.lossDurationMs) {
@@ -618,27 +622,41 @@ export class GameEngine {
 
       const currentStage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
       const stageProgress = this.stageElapsedMs / 1000;
+      const stageDuration = currentStage.durationSeconds || 60;
 
       const speed = Math.min(
         currentStage.speed.maximum,
         currentStage.speed.base + currentStage.speed.perSecond * stageProgress
       );
 
-      this.distanceM += speed * (deltaMs / 1000);
+      this.distanceM += speed * dt;
       this.spawnElapsedMs += deltaMs;
       this.invulnerableMs -= deltaMs;
 
-      // Road cobblestone texture scrolling
-      if (this.world.cobbleTex) {
-        this.world.cobbleTex.offset.y -= speed * (deltaMs / 1000) * 0.055;
+      // 1. True Optic Flow: Infinite scrolling trackside chunks (140-unit loop)
+      if (this.world.scrollingProps) {
+        for (const chunk of this.world.scrollingProps) {
+          chunk.position.z += speed * dt;
+          if (chunk.position.z > 18) {
+            chunk.position.z -= 140;
+          }
+        }
       }
 
-      // Ferris Wheel rotation
+      // Ground fog drift ribbon scrolling
+      if (this.world.groundFogTex) {
+        this.world.groundFogTex.offset.y -= speed * dt * 0.055;
+      }
+
+      // Road cobblestone texture scrolling
+      if (this.world.cobbleTex) {
+        this.world.cobbleTex.offset.y -= speed * dt * 0.055;
+      }
+
+      // Distant landmarks subtle animation
       if (this.world.ferrisWheelGroup) {
         this.world.ferrisWheelGroup.rotation.z += deltaMs * 0.00035;
       }
-
-      // Carousel rotation
       if (this.world.carouselGroup) {
         this.world.carouselGroup.rotation.y += deltaMs * 0.00045;
       }
@@ -647,7 +665,7 @@ export class GameEngine {
       if (this.world.particles) {
         const positions = this.world.particles.geometry.attributes.position.array;
         for (let i = 2; i < positions.length; i += 3) {
-          positions[i] += speed * (deltaMs / 1000) * 0.45;
+          positions[i] += speed * dt * 0.45;
           if (positions[i] > 6) {
             positions[i] = -85;
           }
@@ -660,7 +678,6 @@ export class GameEngine {
       this.currentX += (this.targetX - this.currentX) * Math.min(1, deltaMs / 130);
       this.playerEntity.root.position.x = this.currentX;
 
-      // Sync dedicated player rim light to follow player X position
       if (this.world.playerRimLight) {
         this.world.playerRimLight.position.x = this.currentX;
       }
@@ -689,6 +706,21 @@ export class GameEngine {
       // Update Pursuer Villain Entity
       this.pursuerEntity.update(deltaMs, this.health, this.currentX);
 
+      // Spring-Damper Camera Follow, Dutch Banking & FOV Speed Ramp
+      const { camera } = this.world;
+      camera.position.x = THREE.MathUtils.damp(camera.position.x, this.currentX * 0.32, 6.5, dt);
+      this.cameraTiltZ = THREE.MathUtils.damp(this.cameraTiltZ || 0, (this.currentX - this.targetX) * 0.022, 8.0, dt);
+
+      camera.lookAt(this.currentX * 0.15, 1.35, -7);
+      camera.rotation.z += this.cameraTiltZ;
+
+      const speedRatio = Math.min(1, Math.max(0, (speed - 12) / (32 - 12)));
+      const targetFov = 53 + speedRatio * 8.0;
+      if (Math.abs(camera.fov - targetFov) > 0.05) {
+        camera.fov = THREE.MathUtils.damp(camera.fov, targetFov, 4.0, dt);
+        camera.updateProjectionMatrix();
+      }
+
       // Milestones
       const totalSeconds = this.elapsedMs / 1000;
       for (const milestone of [
@@ -702,7 +734,7 @@ export class GameEngine {
         }
       }
 
-      // Scheduled card spawning (exactly 5 cards per 60-second stage)
+      // Scheduled card spawning (deterministic 5 cards per 60s stage)
       const stageSeconds = this.stageElapsedMs / 1000;
       const schedule = GAME_CONFIG.cardSpawnSchedule || [8, 20, 32, 44, 54];
       if (
@@ -714,7 +746,7 @@ export class GameEngine {
       }
 
       // Stage progression (60 seconds per level - requires all 5 cards)
-      if (this.stageElapsedMs >= currentStage.durationSeconds * 1000) {
+      if (this.stageElapsedMs >= stageDuration * 1000) {
         if (this.stageCardsCollected < (GAME_CONFIG.cardsRequiredPerStage || 5)) {
           this.emit(EVENT_TYPES.CARD_MISSED, ENTITY_KEYS.CARD_FRAGMENT, 1, this.laneIndex);
           this.triggerLossSequence('card_missed');
@@ -724,7 +756,7 @@ export class GameEngine {
         if (!this.running) return;
       }
 
-      // Spawning interval
+      // Obstacle & Shard spawning
       const intervalMs = Math.max(
         currentStage.spawnInterval.minimum,
         currentStage.spawnInterval.base - currentStage.spawnInterval.perSecond * stageProgress
@@ -738,7 +770,20 @@ export class GameEngine {
       this.updateObjects(deltaMs, speed);
       if (!this.running) return;
 
-      this.updateHud();
+      // 60FPS Direct DOM callback for smooth progress bar transform without React re-renders!
+      const stageProgressRatio = Math.min(1, this.stageElapsedMs / (stageDuration * 1000));
+      this.onFrameTick?.({
+        stageProgressRatio,
+        speed,
+        stageElapsedSeconds: this.stageElapsedMs / 1000,
+        stageDurationSeconds: stageDuration,
+      });
+
+      // Throttled Telemetry Sync: Dispatch to React at 8.3Hz (~120ms) instead of 60Hz thrashing
+      if (this.elapsedMs - this.lastHudSyncMs >= 120) {
+        this.lastHudSyncMs = this.elapsedMs;
+        this.updateHud();
+      }
 
       if (this.elapsedMs >= GAME_CONFIG.roundCapSeconds * 1000) {
         this.triggerLossSequence('time_limit');
@@ -766,7 +811,7 @@ export class GameEngine {
   pause() {
     if (this.running) {
       this.paused = true;
-      this.updateHud();
+      this.updateHudImmediate();
     }
   }
 
@@ -774,7 +819,7 @@ export class GameEngine {
     if (this.running) {
       this.paused = false;
       this.clock.getDelta();
-      this.updateHud();
+      this.updateHudImmediate();
     }
   }
 
@@ -802,18 +847,24 @@ export class GameEngine {
     this.playerEntity?.dispose();
     this.pursuerEntity?.dispose();
 
+    // Clean up scene objects
     this.objects.forEach(({ mesh }) => {
       this.world.scene.remove(mesh);
       mesh.traverse((child) => {
-        if (child.geometry) child.geometry.dispose();
+        if (child.geometry && !child.geometry.userData?.shared) {
+          child.geometry.dispose();
+        }
         if (child.material) {
           const mats = Array.isArray(child.material) ? child.material : [child.material];
-          mats.forEach((m) => m.dispose());
+          mats.forEach((m) => {
+            if (!m.userData?.shared) m.dispose();
+          });
         }
       });
     });
 
     this.world.cobbleTex?.dispose();
+    this.world.groundFogTex?.dispose();
     this.world.renderer?.dispose();
   }
 }

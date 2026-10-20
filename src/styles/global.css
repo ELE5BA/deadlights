@@ -20,7 +20,7 @@ body {
   display: grid;
   place-items: center;
   padding: 2rem;
-  background: radial-gradient(circle at 50% 35%, #141c2c 0%, var(--void-navy) 75%);
+  background: radial-gradient(circle at 50% 35%, #181226 0%, var(--void-navy) 78%);
 }
 
 .attract-screen,
@@ -33,7 +33,7 @@ body {
   display: grid;
   place-items: center;
   padding: 2rem;
-  background: radial-gradient(circle at 50% 30%, #121826 0%, var(--void-navy) 80%);
+  background: radial-gradient(circle at 50% 30%, #171124 0%, var(--void-navy) 82%);
 }
 
 .attract-screen {
@@ -41,19 +41,43 @@ body {
   place-items: center;
   text-align: center;
   padding: 2rem;
-  background: radial-gradient(circle at 50% 30%, #161e30 0%, var(--void-navy) 80%);
+  background: radial-gradient(circle at 50% 30%, #1a1329 0%, var(--void-navy) 82%);
 }
 
-/* ── HERO & OVERLAY PANELS (BESPOKE EDITORIAL MATTE CARDSTOCK) ── */
+/* ── HERO & OVERLAY PANELS (BESPOKE TACTILE CARDSTOCK & BRASS FRAMING) ── */
 .hero-panel,
 .setup-card {
   width: min(520px, 100%);
   padding: clamp(2rem, 5vw, 3rem);
   border: 1px solid var(--border-carnival);
-  border-radius: 8px;
-  background: var(--midnight-panel);
-  box-shadow: var(--shadow-modal);
+  background-color: var(--midnight-panel);
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(212, 163, 73, 0.08) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  box-shadow: var(--shadow-modal), inset 0 0 0 1px rgba(212, 163, 73, 0.15);
   position: relative;
+  /* Notched carnival ticket corners */
+  clip-path: polygon(
+    0 12px, 12px 0,
+    calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%,
+    12px 100%, 0 calc(100% - 12px)
+  );
+}
+
+.hero-panel::before,
+.setup-card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(212, 163, 73, 0.28);
+  pointer-events: none;
+  clip-path: polygon(
+    0 8px, 8px 0,
+    calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 0 calc(100% - 8px)
+  );
 }
 
 .hero-panel {
@@ -65,84 +89,120 @@ body {
   max-width: 540px;
 }
 
-/* Typographic Hierarchy */
+/* Typographic Hierarchy (Occult & Carnival Serif Accents) */
 .eyebrow {
   color: var(--gold-accent);
+  font-family: var(--font-sans);
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.65rem;
 }
 
 h1 {
   margin: 0.25rem 0 0;
   font-family: var(--font-display);
-  font-size: clamp(2.8rem, 8vw, 4.8rem);
-  letter-spacing: 0.06em;
+  font-size: clamp(2.8rem, 8vw, 4.6rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
   line-height: 1;
-  color: #ffffff;
+  color: var(--primary-text);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 18px rgba(212, 163, 73, 0.25);
+  text-transform: uppercase;
 }
 
 h1 span {
   color: var(--rift-crimson);
+  text-shadow: 0 0 12px rgba(184, 29, 44, 0.6);
 }
 
 .subtitle {
-  margin: 0.6rem 0 0;
+  margin: 0.65rem 0 0;
   color: var(--reward-gold);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  font-family: var(--font-sans);
+  letter-spacing: 0.08em;
+  font-family: var(--font-display);
+  text-transform: uppercase;
 }
 
 .summary,
 .setup-sub {
   margin: 1.25rem auto 1.75rem;
-  max-width: 28rem;
+  max-width: 29rem;
   color: var(--secondary-text);
-  line-height: 1.6;
-  font-size: 0.92rem;
+  line-height: 1.65;
+  font-size: 0.94rem;
 }
 
 .setup-card h2 {
   margin: 0.25rem 0 0.5rem;
-  color: #ffffff;
-  font-size: 1.5rem;
+  color: var(--primary-text);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-/* ── INTERACTIVE CONTROLS (TACTILE, POLISHED) ──────────────── */
+/* ── DIEGETIC "ADMIT ONE" CARNIVAL TICKET BUTTONS ──────────── */
 .primary-button {
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  padding: 0.85rem 1.75rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.95rem 2.0rem;
   background: var(--rift-crimson);
-  color: #ffffff;
+  color: var(--primary-text);
   font-family: var(--font-sans);
   font-weight: 800;
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  transition: transform 0.15s ease, background 0.15s ease;
+  font-size: 0.88rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--border-crimson);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
   user-select: none;
+  transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+
+  /* Notched ticket perforations on side corners */
+  clip-path: polygon(
+    0 8px, 8px 0,
+    calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 0 calc(100% - 8px)
+  );
+}
+
+.primary-button::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px dashed rgba(243, 200, 107, 0.55);
+  pointer-events: none;
+  clip-path: polygon(
+    0 5px, 5px 0,
+    calc(100% - 5px) 0, 100% 5px,
+    100% calc(100% - 5px), calc(100% - 5px) 100%,
+    5px 100%, 0 calc(100% - 5px)
+  );
 }
 
 .primary-button:hover:not(:disabled) {
   background: var(--crimson-hover);
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(184, 29, 44, 0.45);
 }
 
 .primary-button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
 }
 
 .primary-button:disabled {
   cursor: not-allowed;
-  opacity: 0.4;
+  opacity: 0.38;
 }
 
 .text-button {
@@ -150,31 +210,33 @@ h1 span {
   align-items: center;
   gap: 0.35rem;
   border: 0;
-  padding: 0.25rem 0.5rem;
+  padding: 0.35rem 0.65rem;
   color: var(--secondary-text);
   background: transparent;
   cursor: pointer;
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
-  transition: color 0.15s ease;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
   user-select: none;
 }
 
 .text-button:hover {
-  color: #ffffff;
+  color: var(--gold-accent);
+  text-shadow: 0 0 10px rgba(243, 200, 107, 0.45);
 }
 
 .hero-start-btn {
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1.1rem 1.8rem;
   font-size: 0.95rem;
   margin-top: 0.5rem;
 }
 
 .attract-play-btn {
-  padding: 0.95rem 2.25rem;
+  padding: 1.05rem 2.4rem;
   font-size: 0.95rem;
 }
 
@@ -182,8 +244,9 @@ h1 span {
   color: var(--muted-text);
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   margin-top: 1.75rem;
+  text-transform: uppercase;
 }
 
 .home-links {
@@ -191,15 +254,15 @@ h1 span {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.25rem 0.6rem;
-  margin: 1.5rem 0 0;
+  gap: 0.35rem 0.75rem;
+  margin: 1.6rem 0 0;
 }
 
 .home-link-divider,
 .nav-divider {
-  color: var(--muted-text);
-  opacity: 0.5;
-  font-size: 0.8rem;
+  color: var(--reward-gold);
+  opacity: 0.45;
+  font-size: 0.85rem;
 }
 
 /* System Health Indicator */
@@ -208,14 +271,14 @@ h1 span {
   align-items: center;
   gap: 0.5rem;
   margin-top: 1.75rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 4px;
+  padding: 0.45rem 0.95rem;
   background: var(--panel-sunken);
   border: 1px solid var(--border-subtle);
   color: var(--muted-text);
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
 }
 
 .health-dot {
@@ -237,7 +300,7 @@ h1 span {
   color: var(--gold-accent);
 }
 
-/* ── FORM ELEMENTS (REFINED ARCHITECTURAL INPUTS) ─────────── */
+/* ── FORM ELEMENTS (ARCHITECTURAL & ENGRAVED) ──────────────── */
 .input-group {
   margin-bottom: 1.25rem;
   text-align: left;
@@ -247,89 +310,92 @@ h1 span {
   display: block;
   margin-bottom: 0.4rem;
   color: var(--secondary-text);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .setup-card input {
   width: 100%;
-  padding: 0.75rem 0.9rem;
+  padding: 0.8rem 1rem;
   border: 1px solid var(--border-strong);
   border-radius: 4px;
   background: var(--panel-sunken);
   color: var(--primary-text);
   font-family: var(--font-sans);
-  font-size: 0.95rem;
-  transition: border-color 0.15s ease;
+  font-size: 0.96rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .setup-card input:focus {
   outline: none;
   border-color: var(--gold-accent);
+  box-shadow: 0 0 10px rgba(243, 200, 107, 0.25);
 }
 
 .setup-card input::placeholder {
-  color: #475569;
+  color: var(--muted-text);
 }
 
 .setup-submit-btn {
   width: 100%;
-  margin-top: 0.75rem;
-  padding: 0.85rem;
+  margin-top: 0.85rem;
+  padding: 0.95rem;
 }
 
 .setup-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-top: 1rem;
+  gap: 0.4rem;
+  margin-top: 1.1rem;
   align-items: center;
 }
 
 .form-error {
-  color: #f87171;
-  background: rgba(220, 38, 38, 0.12);
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  padding: 0.5rem 0.75rem;
+  color: #fca5a5;
+  background: rgba(184, 29, 44, 0.16);
+  border: 1px solid rgba(184, 29, 44, 0.4);
+  padding: 0.55rem 0.85rem;
   border-radius: 4px;
-  font-size: 0.8rem;
-  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  margin-bottom: 1.1rem;
 }
 
 /* Secret Recovery Credentials Box */
 .code-display-wrap {
   margin: 1.5rem 0;
-  padding: 1rem;
+  padding: 1.1rem;
   background: var(--panel-sunken);
   border: 1px solid var(--border-carnival);
-  border-radius: 6px;
+  border-radius: 4px;
   text-align: center;
 }
 
 .code-label {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   color: var(--gold-accent);
   margin-bottom: 0.4rem;
+  text-transform: uppercase;
 }
 
 .recovery-code {
   display: block;
   font-family: var(--font-mono);
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  color: #ffffff;
+  letter-spacing: 0.14em;
+  color: var(--primary-text);
 }
 
 .code-continue-btn {
   width: 100%;
 }
 
-/* ── UNIFIED BESPOKE ARCADE HUD ────────────────────────────── */
+/* ── PERIPHERAL CORNER-ANCHORED IN-GAME HUD ────────────────── */
 .game-screen {
   position: relative;
   overflow: hidden;
@@ -342,248 +408,335 @@ h1 span {
   display: block;
 }
 
-.game-hud {
+/* Common Corner Plate Framing */
+.hud-corner-plate {
   position: absolute;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(1040px, calc(100% - 2rem));
+  top: 1.25rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: #0d121ddf;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 0.55rem 1.15rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  background: rgba(10, 8, 16, 0.88);
+  border: 1px solid var(--border-carnival);
+  padding: 0.5rem 0.9rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(212, 163, 73, 0.12);
   color: var(--primary-text);
-  pointer-events: none;
   z-index: 10;
+  /* Notched corners */
+  clip-path: polygon(
+    0 6px, 6px 0,
+    calc(100% - 6px) 0, 100% 6px,
+    100% calc(100% - 6px), calc(100% - 6px) 100%,
+    6px 100%, 0 calc(100% - 6px)
+  );
 }
 
-.game-hud * {
-  pointer-events: auto;
-}
-
-/* HUD Left: Vitality & Shards */
-.hud-left {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
+/* HUD Top-Left Plate: Vitality Hearts & Shard Pouch */
+.hud-plate-left {
+  left: 1.5rem;
+  gap: 0.85rem;
 }
 
 .hud-hearts {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
-.hud-heart-pip {
-  font-size: 1.25rem;
-  line-height: 1;
-  transition: opacity 0.15s ease;
+.soul-heart {
+  transition: transform 0.18s ease, filter 0.18s ease;
 }
 
-.hud-heart-pip.active {
-  color: #dc2626;
+.soul-heart--pulse {
+  animation: soulHeartbeat 0.85s infinite ease-in-out;
 }
 
-.hud-heart-pip.depleted {
-  color: #475569;
-  opacity: 0.4;
+@keyframes soulHeartbeat {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 3px rgba(220, 38, 38, 0.5));
+  }
+  50% {
+    transform: scale(1.22);
+    filter: drop-shadow(0 0 10px rgba(243, 200, 107, 0.85));
+  }
+}
+
+.hud-pouch-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-carnival);
+  opacity: 0.5;
 }
 
 .hud-shards {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--shard-cyan);
-}
-
-.shard-glyph {
+  gap: 0.45rem;
   font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--shard-cyan);
 }
 
 .shard-val {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
-/* HUD Center: Stage Info & Gauntlet Slots */
-.hud-center {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.hud-stage-info {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.hud-stage-badge {
-  background: var(--gold-subtle);
-  border: 1px solid var(--border-carnival);
-  color: var(--gold-accent);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-}
-
-.hud-stage-name {
-  font-size: 0.88rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: var(--primary-text);
-}
-
-.hud-stage-clock {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #fde68a;
-  background: var(--panel-sunken);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid var(--border-subtle);
-  font-variant-numeric: tabular-nums;
-}
-
-.hud-cards-gauntlet {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  background: var(--panel-sunken);
-  padding: 0.3rem 0.65rem;
-  border-radius: 4px;
-  border: 1px solid var(--border-subtle);
-}
-
-.hud-card-slots {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.hud-card-slot {
-  width: 20px;
-  height: 28px;
-  border-radius: 3px;
+/* HUD Top-Center: Compact Marquee Ribbon & Fanned Cards */
+.hud-center-marquee {
+  position: absolute;
+  top: 1.0rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: 0.62rem;
+  gap: 0.35rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hud-center-marquee * {
+  pointer-events: auto;
+}
+
+.marquee-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(19, 16, 28, 0.92);
+  border: 1px solid var(--border-carnival);
+  padding: 0.35rem 0.95rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+  clip-path: polygon(
+    0 6px, 6px 0,
+    calc(100% - 6px) 0, 100% 6px,
+    100% calc(100% - 6px), calc(100% - 6px) 100%,
+    6px 100%, 0 calc(100% - 6px)
+  );
+}
+
+.marquee-stage-badge {
+  color: var(--gold-accent);
+  font-size: 0.7rem;
   font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+}
+
+.marquee-stage-name {
+  color: var(--primary-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.marquee-timer {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--gold-accent);
+  background: var(--panel-sunken);
+  padding: 0.12rem 0.45rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 60FPS DOM Progress Bar */
+.marquee-progress-track {
+  width: 200px;
+  height: 3px;
+  background: rgba(10, 8, 16, 0.85);
+  border: 1px solid var(--border-carnival);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.marquee-progress-bar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--reward-gold), var(--gold-accent));
+  transform-origin: left;
+  transform: scaleX(0);
+  will-change: transform;
+}
+
+/* 5 Physical Mini-Card Slots in Poker-Hand Fan */
+.hud-fanned-cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+  perspective: 600px;
+}
+
+.fanned-card-slot {
+  width: 22px;
+  height: 32px;
   position: relative;
-  transition: all 0.2s ease;
+  transform-style: preserve-3d;
+  transform: rotate(var(--card-fan-rot, 0deg)) translateY(var(--card-fan-y, 0px));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
 }
 
-.hud-card-slot.pending {
-  background: #111827;
-  border: 1px solid #334155;
-  color: #64748b;
+.fanned-card-slot:hover {
+  transform: rotate(var(--card-fan-rot, 0deg)) translateY(-4px) scale(1.15);
+  z-index: 5;
 }
 
-.hud-card-slot.collected {
-  background: #92400e;
-  border: 1px solid #d97706;
-  color: #ffffff;
+.card-flipper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.hud-card-slot .slot-mark {
+.card-pending .card-flipper {
+  transform: rotateY(0deg);
+}
+
+.card-collected .card-flipper {
+  transform: rotateY(180deg);
+}
+
+.card-back,
+.card-front {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Card Back (Uncollected Slot) */
+.card-back {
+  background: #110e19;
+  border: 1px solid #352c42;
+  color: #5c4d72;
+}
+
+.fanned-back-pattern {
   font-size: 0.65rem;
   line-height: 1;
 }
 
-.hud-card-counter {
-  font-size: 0.8rem;
+/* Card Front (Collected Slot) */
+.card-front {
+  background: linear-gradient(135deg, #a16207 0%, #ca8a04 100%);
+  border: 1px solid #fef08a;
+  color: #ffffff;
+  transform: rotateY(180deg);
+  box-shadow: 0 0 10px rgba(243, 200, 107, 0.7);
+}
+
+.fanned-card-index {
   font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  color: var(--secondary-text);
+  font-size: 0.58rem;
+  font-weight: 800;
+  margin-right: 1px;
 }
 
-.hud-card-counter b {
-  color: var(--gold-accent);
+.fanned-card-mark {
+  font-size: 0.6rem;
+  color: #fffbeb;
 }
 
-.counter-sep {
-  opacity: 0.4;
-  margin: 0 1px;
+/* HUD Top-Right Plate: Score Odometer & Pause Keycap */
+.hud-plate-right {
+  right: 1.5rem;
+  gap: 0.95rem;
 }
 
-/* HUD Right: Score Display & Pause Button */
-.hud-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.hud-score-display {
+.hud-odometer-box {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   line-height: 1.1;
 }
 
-.score-label {
+.score-eyebrow {
   font-size: 0.62rem;
   font-weight: 800;
-  color: var(--muted-text);
-  letter-spacing: 0.1em;
+  color: var(--reward-gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.score-value {
+.odometer-digits {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  color: #ffffff;
-  letter-spacing: 0.04em;
+  color: var(--primary-text);
+  letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgba(243, 200, 107, 0.3);
 }
 
-.hud-pause-btn {
-  background: #161f30;
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+.hud-pause-keycap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--panel-elevated);
+  border: 1px solid var(--border-carnival);
   color: var(--secondary-text);
-  padding: 0.35rem 0.7rem;
+  padding: 0.32rem 0.65rem;
   cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 800;
   letter-spacing: 0.06em;
   transition: all 0.15s ease;
+  clip-path: polygon(0 3px, 3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px));
 }
 
-.hud-pause-btn:hover {
-  background: #1f2c44;
-  color: #ffffff;
-  border-color: var(--border-strong);
+.hud-pause-keycap:hover {
+  background: #272038;
+  color: var(--primary-text);
+  border-color: var(--gold-accent);
 }
 
-/* In-Game Bottom Footnote */
+.keycap-hint {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  padding: 0.08rem 0.28rem;
+  background: var(--panel-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  color: var(--gold-accent);
+}
+
+/* In-Game Bottom Footnote (Auto-Fading) */
 .game-help {
   position: absolute;
   left: 50%;
   bottom: 1.75rem;
   transform: translateX(-50%);
   color: var(--secondary-text);
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  background: #090d15df;
-  padding: 0.4rem 1.25rem;
+  background: rgba(10, 8, 16, 0.92);
+  padding: 0.45rem 1.4rem;
+  border: 1px solid var(--border-carnival);
   border-radius: 4px;
-  border: 1px solid var(--border-subtle);
   text-align: center;
   pointer-events: none;
   z-index: 10;
+  transition: opacity 0.85s ease, transform 0.85s ease;
+}
+
+.game-help--hidden {
+  opacity: 0;
+  transform: translate(-50%, 10px);
+  pointer-events: none;
 }
 
 /* Pause Overlay */
@@ -593,24 +746,25 @@ h1 span {
   display: grid;
   place-content: center;
   text-align: center;
-  background: rgba(9, 12, 19, 0.92);
+  background: rgba(7, 6, 11, 0.94);
   z-index: 30;
 }
 
 .pause-overlay h2 {
-  font-size: 1.8rem;
-  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  color: var(--primary-text);
   margin: 0 0 0.5rem;
 }
 
 .pause-info {
   color: var(--reward-gold);
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
+  margin-bottom: 1.6rem;
+  font-size: 1.0rem;
 }
 
 .pause-overlay .primary-button {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .exit-game {
@@ -621,7 +775,7 @@ h1 span {
   border-radius: 4px;
   background: var(--midnight-panel);
   color: var(--muted-text);
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 0.85rem;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
@@ -630,7 +784,7 @@ h1 span {
 }
 
 .exit-game:hover {
-  color: #ffffff;
+  color: var(--primary-text);
   border-color: var(--border-strong);
 }
 
@@ -640,10 +794,10 @@ h1 span {
   top: 18%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #111724;
+  background: var(--midnight-panel);
   border: 1px solid var(--border-carnival);
-  border-radius: 8px;
-  padding: 1.25rem 2.5rem;
+  border-radius: 6px;
+  padding: 1.35rem 2.8rem;
   text-align: center;
   box-shadow: var(--shadow-modal);
   z-index: 25;
@@ -653,25 +807,26 @@ h1 span {
   margin: 0;
   color: var(--reward-gold);
   font-size: 0.75rem;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   font-weight: 800;
 }
 
 .stage-clear-banner h2 {
   margin: 0.35rem 0;
-  font-size: 1.4rem;
-  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--primary-text);
   letter-spacing: 0.04em;
 }
 
 .banner-sub {
   margin: 0.2rem 0 0;
   color: var(--secondary-text);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 
 .banner-sub strong {
-  color: var(--primary-text);
+  color: var(--gold-accent);
 }
 
 /* Countdown Overlay */
@@ -680,21 +835,22 @@ h1 span {
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(9, 12, 19, 0.4);
-  color: #ffffff;
+  background: rgba(7, 6, 11, 0.45);
+  color: var(--primary-text);
   font-family: var(--font-display);
   font-size: clamp(6rem, 20vw, 12rem);
   line-height: 1;
+  text-shadow: 0 0 30px rgba(243, 200, 107, 0.5);
   pointer-events: none;
   z-index: 20;
 }
 
-/* ── HANDCRAFTED COLLECTIBLE CARD MODAL (STAGE CLEAR) ────────── */
+/* ── INTERACTIVE 3D FOIL & POKÉDEX CARDS ─────────────────────── */
 .pokemon-card-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(7, 10, 16, 0.94);
+  background: rgba(5, 4, 8, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -718,21 +874,22 @@ h1 span {
   display: inline-block;
   font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   color: var(--gold-accent);
   background: var(--gold-subtle);
   border: 1px solid var(--border-carnival);
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 4px;
   text-transform: uppercase;
 }
 
 .modal-title {
   margin: 0.35rem 0 0.1rem;
-  font-size: 1.3rem;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  color: #ffffff;
+  color: var(--primary-text);
 }
 
 .modal-sub {
@@ -741,17 +898,42 @@ h1 span {
   color: var(--secondary-text);
 }
 
-/* Handcrafted Physical Collectible Card */
+/* Handcrafted Physical Collectible Card with 3D Tilt & Foil Sheen */
 .pokemon-tcg-card {
   width: 310px;
   border-radius: 10px;
   padding: 10px;
-  background: #141a26;
+  background: #14101e;
   border: 1px solid var(--border-carnival);
   box-shadow: var(--shadow-modal);
   position: relative;
   color: var(--primary-text);
   user-select: none;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transform: perspective(1000px) rotateX(var(--card-rx, 0deg)) rotateY(var(--card-ry, 0deg));
+  transition: transform 0.12s ease-out, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.pokemon-tcg-card:hover {
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85), 0 0 25px rgba(212, 163, 73, 0.3);
+}
+
+.card-foil-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--glare-x, 50%) var(--glare-y, 50%),
+    rgba(255, 255, 255, 0.26) 0%,
+    rgba(60, 227, 232, 0.22) 25%,
+    rgba(184, 29, 44, 0.18) 50%,
+    transparent 75%
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .card-outer-border {
@@ -769,7 +951,7 @@ h1 span {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #0d121c;
+  background: #0d0a15;
   padding: 6px 8px;
   border-radius: 4px;
   border: 1px solid var(--border-subtle);
@@ -786,17 +968,18 @@ h1 span {
   font-size: 0.58rem;
   font-weight: 800;
   color: var(--reward-gold);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .tcg-card-name,
 .tcg-name {
   margin: 0;
-  font-size: 1.05rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
   font-weight: 800;
-  color: #ffffff;
-  letter-spacing: 0.02em;
+  color: var(--primary-text);
+  letter-spacing: 0.04em;
 }
 
 .tcg-header-right,
@@ -809,20 +992,21 @@ h1 span {
 .tcg-hp-label {
   font-size: 0.6rem;
   font-weight: 800;
-  color: #ef4444;
+  color: var(--rift-crimson);
 }
 
 .tcg-hp-val {
   font-size: 1.05rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--primary-text);
   font-family: var(--font-mono);
 }
 
-.tcg-type-badge {
+.tcg-type-badge,
+.tcg-type-icon {
   font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--gold-accent);
   background: var(--gold-subtle);
   border: 1px solid var(--border-carnival);
@@ -831,13 +1015,13 @@ h1 span {
   margin-left: 2px;
 }
 
-/* Card Illustration Frame (Handcrafted Pixel Canvas) */
+/* Card Illustration Frame */
 .tcg-art-frame,
 .tcg-art-box {
   position: relative;
   height: 140px;
-  border-radius: 6px;
-  background: #080c14;
+  border-radius: 4px;
+  background: #06050a;
   border: 1px solid var(--border-carnival);
   overflow: hidden;
   display: flex;
@@ -862,7 +1046,6 @@ h1 span {
   height: 100%;
   object-fit: cover;
   image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
 .tcg-art-caption,
@@ -870,7 +1053,7 @@ h1 span {
   position: absolute;
   bottom: 0;
   inset-inline: 0;
-  background: rgba(9, 13, 20, 0.9);
+  background: rgba(10, 8, 16, 0.92);
   font-size: 0.62rem;
   text-align: center;
   padding: 3px 0;
@@ -887,7 +1070,7 @@ h1 span {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: #0d121c;
+  background: #0e0b17;
   padding: 8px;
   border-radius: 4px;
   border: 1px solid var(--border-subtle);
@@ -924,8 +1107,8 @@ h1 span {
 .tcg-attack-name,
 .tcg-atk-name {
   font-weight: 800;
-  font-size: 0.8rem;
-  color: #ffffff;
+  font-size: 0.82rem;
+  color: var(--primary-text);
   flex: 1;
 }
 
@@ -942,10 +1125,10 @@ h1 span {
   margin: 2px 0 0;
   font-size: 0.66rem;
   color: var(--secondary-text);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
-/* Flavour Lore Box */
+/* Lore Flavor Box */
 .tcg-lore-box,
 .tcg-flavor-box {
   background: var(--panel-sunken);
@@ -957,10 +1140,10 @@ h1 span {
 .tcg-lore-box p,
 .tcg-flavor-text {
   margin: 0;
-  font-size: 0.64rem;
+  font-size: 0.65rem;
   font-style: italic;
   color: var(--secondary-text);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 /* Card Footer */
@@ -980,21 +1163,20 @@ h1 span {
 }
 
 .card-modal-actions {
-  margin-top: 0.85rem;
+  margin-top: 0.95rem;
   width: 100%;
 }
 
 .proceed-stage-btn {
   width: 100%;
-  padding: 0.85rem;
+  padding: 0.95rem;
   font-size: 0.88rem;
   background: var(--reward-gold);
-  color: #0b0f17;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #07060b;
 }
 
 .proceed-stage-btn:hover {
-  background: #d97706;
+  background: #e5b958;
 }
 
 /* ── PENNYWISE JUMPSCARE HORROR VIGNETTE OVERLAY ─────────────── */
@@ -1003,8 +1185,7 @@ h1 span {
   inset: 0;
   z-index: 9998;
   pointer-events: none;
-  /* Center is 100% transparent so Pennywise 3D model, face, and unhinged jaw are crystal clear */
-  background: radial-gradient(circle at center, transparent 48%, rgba(185, 28, 28, 0.3) 80%, rgba(20, 0, 4, 0.72) 100%);
+  background: radial-gradient(circle at center, transparent 48%, rgba(184, 29, 44, 0.35) 80%, rgba(18, 0, 4, 0.78) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1014,18 +1195,19 @@ h1 span {
 .jumpscare-glitch-border {
   position: absolute;
   inset: 0;
-  border: 2px solid rgba(220, 38, 38, 0.7);
+  border: 2px solid rgba(220, 38, 38, 0.75);
 }
 
 .jumpscare-deadlights-text {
   position: absolute;
   bottom: 5%;
-  font-family: var(--font-sans);
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 900;
   color: #fca5a5;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(184, 29, 44, 0.9);
 }
 
 /* ── LOSS & RETRY MODAL ─────────────────────────────────────── */
@@ -1034,7 +1216,7 @@ h1 span {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(7, 10, 16, 0.94);
+  background: rgba(5, 4, 8, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1047,10 +1229,15 @@ h1 span {
   width: 100%;
   background: var(--midnight-panel);
   border: 1px solid var(--border-crimson);
-  border-radius: 8px;
   box-shadow: var(--shadow-modal);
-  padding: 2rem;
+  padding: 2.2rem;
   text-align: center;
+  clip-path: polygon(
+    0 10px, 10px 0,
+    calc(100% - 10px) 0, 100% 10px,
+    100% calc(100% - 10px), calc(100% - 10px) 100%,
+    10px 100%, 0 calc(100% - 10px)
+  );
 }
 
 .loss-badge {
@@ -1060,26 +1247,27 @@ h1 span {
   color: #f87171;
   font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.16em;
-  padding: 0.2rem 0.65rem;
+  letter-spacing: 0.18em;
+  padding: 0.2rem 0.7rem;
   border-radius: 4px;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.75rem;
   text-transform: uppercase;
 }
 
 .loss-title {
   margin: 0;
-  font-size: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
   font-weight: 800;
-  color: #ffffff;
-  letter-spacing: 0.03em;
+  color: var(--primary-text);
+  letter-spacing: 0.04em;
 }
 
 .loss-sub {
-  margin: 0.65rem 0 1.25rem;
-  font-size: 0.85rem;
+  margin: 0.75rem 0 1.35rem;
+  font-size: 0.88rem;
   color: var(--secondary-text);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .loss-stats {
@@ -1089,8 +1277,8 @@ h1 span {
   background: var(--panel-sunken);
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
-  padding: 0.75rem;
-  margin-bottom: 1.25rem;
+  padding: 0.85rem;
+  margin-bottom: 1.35rem;
 }
 
 .stat-col {
@@ -1103,12 +1291,13 @@ h1 span {
   font-size: 0.62rem;
   font-weight: 800;
   color: var(--muted-text);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .stat-val {
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--gold-accent);
 }
@@ -1121,71 +1310,126 @@ h1 span {
 
 .loss-retry-btn {
   width: 100%;
-  padding: 0.85rem;
+  padding: 0.95rem;
 }
 
-/* ── RESULTS SCREEN (ARCHITECTURAL LEDGER) ───────────────────── */
-.results-card {
-  max-width: 480px;
+/* ── RESULTS SCREEN: ARCHIVAL FIELD LEDGER & TRIAL CERTIFICATE ── */
+.results-card.ledger-certificate {
+  max-width: 500px;
   text-align: center;
+  position: relative;
+  overflow: visible;
+}
+
+/* Slanted Wax Stamp Badge */
+.ledger-stamp-badge {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  transform: rotate(-7deg);
+  border: 2px solid;
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  user-select: none;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.stamp-purified {
+  color: #34d399;
+  border-color: #34d399;
+  background: rgba(16, 185, 129, 0.14);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+}
+
+.stamp-claimed {
+  color: #f87171;
+  border-color: #b81d2c;
+  background: rgba(184, 29, 44, 0.16);
+  box-shadow: 0 0 12px rgba(184, 29, 44, 0.35);
 }
 
 .results-header {
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 .results-score {
   font-family: var(--font-mono);
   font-size: clamp(2.4rem, 6vw, 3.2rem);
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   margin: 0.25rem 0;
-  color: #ffffff;
+  color: var(--primary-text);
+  text-shadow: 0 0 15px rgba(243, 200, 107, 0.35);
 }
 
 .results-points-label {
   font-size: 0.85rem;
   color: var(--reward-gold);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
 }
 
-.stage-clear-badge-row {
+/* Roman Numeral Wax Seal Pips for Stages I–VI */
+.stage-clear-badge-row.ledger-wax-seals {
   display: flex;
   justify-content: center;
-  gap: 0.45rem;
-  margin: 0.85rem 0 1.25rem;
+  gap: 0.55rem;
+  margin: 0.95rem 0 1.35rem;
 }
 
-.stage-badge-pip {
-  padding: 0.25rem 0.55rem;
+.wax-seal-pip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 48px;
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
 }
 
-.stage-badge-pip.cleared {
-  background: var(--success-subtle);
+.wax-seal-pip.cleared {
+  background: rgba(16, 185, 129, 0.15);
   border: 1px solid var(--success-green);
   color: #34d399;
 }
 
-.stage-badge-pip.incomplete {
-  background: rgba(71, 85, 105, 0.15);
-  border: 1px solid #334155;
-  color: #64748b;
+.wax-seal-pip.incomplete {
+  background: rgba(10, 8, 16, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--muted-text);
 }
 
-.result-grid {
+.seal-roman {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.seal-mark {
+  font-size: 0.72rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.result-grid.ledger-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.65rem;
-  margin: 1.25rem 0;
+  gap: 0.75rem;
+  margin: 1.35rem 0;
 }
 
-.result-item {
-  padding: 0.75rem 0.85rem;
+.result-item.ledger-item {
+  padding: 0.8rem 0.95rem;
   background: var(--panel-sunken);
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
@@ -1197,28 +1441,29 @@ h1 span {
   font-family: var(--font-mono);
   font-size: 1.05rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--primary-text);
 }
 
 .result-label {
   display: block;
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
   color: var(--muted-text);
-  font-size: 0.64rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .new-card-alert {
-  margin: 1rem 0;
-  padding: 0.65rem 0.85rem;
+  margin: 1.1rem 0;
+  padding: 0.75rem 0.95rem;
   border-radius: 4px;
   background: var(--gold-subtle);
   border: 1px solid var(--border-carnival);
   color: var(--gold-accent);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .save-status {
@@ -1227,10 +1472,10 @@ h1 span {
   justify-content: center;
   gap: 0.45rem;
   color: var(--secondary-text);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.35rem;
 }
 
 .status-dot {
@@ -1242,16 +1487,16 @@ h1 span {
 
 .results-primary-btn {
   width: 100%;
-  padding: 0.9rem;
-  font-size: 0.92rem;
+  padding: 1.05rem;
+  font-size: 0.95rem;
 }
 
 .results-nav-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 0.65rem;
+  margin-top: 1.1rem;
 }
 
 /* ── POKÉMON TCG CARD BINDER (COLLECTION SCREEN) ─────────────── */
@@ -1270,16 +1515,17 @@ h1 span {
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 1.25rem;
-  margin-bottom: 1.75rem;
-  padding-bottom: 1.25rem;
+  margin-bottom: 1.85rem;
+  padding-bottom: 1.35rem;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .binder-title-block h2 {
   margin: 0.25rem 0 0.5rem;
-  font-size: 1.6rem;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--primary-text);
 }
 
 .binder-counters {
@@ -1290,14 +1536,14 @@ h1 span {
 .balance-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   background: var(--panel-sunken);
-  border: 1px solid var(--border-subtle);
-  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border-carnival);
+  padding: 0.38rem 0.85rem;
   border-radius: 4px;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--secondary-text);
+  color: var(--gold-accent);
 }
 
 .pill-dot {
@@ -1308,23 +1554,23 @@ h1 span {
 }
 
 .binder-return-btn {
-  padding: 0.65rem 1.25rem;
+  padding: 0.75rem 1.45rem;
 }
 
 .pokemon-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.6rem;
 }
 
 .pokemon-tcg-card.locked-card {
-  opacity: 0.75;
-  filter: grayscale(0.4);
+  opacity: 0.72;
+  filter: grayscale(0.5);
 }
 
 /* Binder Card Action Controls */
 .tcg-action-bar {
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .tcg-unlocked-badge {
@@ -1334,9 +1580,9 @@ h1 span {
   color: #34d399;
   background: var(--success-subtle);
   border: 1px solid rgba(16, 185, 129, 0.3);
-  padding: 0.35rem;
+  padding: 0.4rem;
   border-radius: 4px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
 .tcg-craft-controls {
@@ -1349,10 +1595,10 @@ h1 span {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 800;
   color: var(--secondary-text);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .frag-pip-row {
@@ -1361,7 +1607,7 @@ h1 span {
 }
 
 .frag-pip {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   line-height: 1;
 }
 
@@ -1370,19 +1616,19 @@ h1 span {
 }
 
 .frag-pip.empty {
-  color: #475569;
+  color: var(--muted-text);
 }
 
 .craft-button {
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
-  padding: 0.5rem;
+  padding: 0.55rem;
   background: #047857;
   color: #ffffff;
   font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
   transition: background 0.15s ease;
 }
 
@@ -1397,21 +1643,21 @@ h1 span {
 
 .shard-unlock-button {
   cursor: pointer;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-carnival);
   border-radius: 4px;
-  padding: 0.5rem;
-  background: #172030;
+  padding: 0.55rem;
+  background: var(--panel-elevated);
   color: var(--shard-cyan);
   font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
   transition: all 0.15s ease;
 }
 
 .shard-unlock-button:hover:not(:disabled) {
-  background: #1e2b40;
+  background: #272038;
   color: #ffffff;
-  border-color: var(--border-strong);
+  border-color: var(--gold-accent);
 }
 
 .shard-unlock-button:disabled {
@@ -1421,7 +1667,7 @@ h1 span {
 
 /* ── LEADERBOARD SCREEN ──────────────────────────────────────── */
 .leaderboard-card {
-  max-width: 520px;
+  max-width: 540px;
 }
 
 .leaderboard-header {
@@ -1442,27 +1688,27 @@ h1 span {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.65rem 0.5rem;
+  padding: 0.7rem 0.5rem;
   border-bottom: 1px solid var(--border-subtle);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   transition: background 0.15s ease;
 }
 
 .leaderboard-entry:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(212, 163, 73, 0.05);
 }
 
 .entry-left {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.7rem;
 }
 
 .rank-tag {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  padding: 0.15rem 0.45rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 3px;
   background: var(--panel-sunken);
   color: var(--muted-text);
@@ -1471,8 +1717,8 @@ h1 span {
 
 .rank-1 {
   color: #fbbf24;
-  border-color: rgba(251, 191, 36, 0.4);
-  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.15);
 }
 
 .rank-2 {
@@ -1493,7 +1739,7 @@ h1 span {
 .you-tag {
   font-size: 0.6rem;
   font-weight: 800;
-  padding: 0.1rem 0.35rem;
+  padding: 0.1rem 0.4rem;
   border-radius: 3px;
   background: var(--gold-subtle);
   color: var(--gold-accent);
@@ -1503,18 +1749,18 @@ h1 span {
 .entry-right {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.95rem;
 }
 
 .entry-score {
   font-family: var(--font-mono);
   font-weight: 800;
-  color: #ffffff;
+  color: var(--primary-text);
 }
 
 .entry-duration {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--muted-text);
 }
 
@@ -1529,8 +1775,8 @@ h1 span {
 .loading-note,
 .empty-note {
   color: var(--muted-text);
-  font-size: 0.85rem;
-  padding: 1.5rem 0;
+  font-size: 0.88rem;
+  padding: 1.75rem 0;
   text-align: center;
 }
 
@@ -1552,13 +1798,13 @@ h1 span {
 }
 
 .dashboard-header h1 {
-  font-size: 2rem;
+  font-size: 2.2rem;
 }
 
 .filter-panel {
   justify-content: flex-start;
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--midnight-panel);
   border: 1px solid var(--border-subtle);
 }
@@ -1592,7 +1838,7 @@ h1 span {
 .kpi,
 .data-panel {
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--midnight-panel);
   border: 1px solid var(--border-subtle);
 }
@@ -1602,7 +1848,7 @@ h1 span {
   color: var(--muted-text);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -1610,7 +1856,7 @@ h1 span {
   display: block;
   margin-top: 0.4rem;
   color: var(--gold-accent);
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-family: var(--font-mono);
 }
 
@@ -1622,7 +1868,7 @@ h1 span {
 .data-panel h2 {
   margin: 0 0 0.25rem;
   font-size: 0.95rem;
-  color: #ffffff;
+  color: var(--primary-text);
 }
 
 .data-panel table {

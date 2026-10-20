@@ -142,6 +142,24 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
     }
   }
 
+  // Interactive 3D Perspective Tilt for Collector Cards
+  function handleCardMouseMove(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    e.currentTarget.style.setProperty('--card-rx', `${-y * 20}deg`);
+    e.currentTarget.style.setProperty('--card-ry', `${x * 20}deg`);
+    e.currentTarget.style.setProperty('--glare-x', `${(x + 0.5) * 100}%`);
+    e.currentTarget.style.setProperty('--glare-y', `${(y + 0.5) * 100}%`);
+  }
+
+  function handleCardMouseLeave(e) {
+    e.currentTarget.style.setProperty('--card-rx', '0deg');
+    e.currentTarget.style.setProperty('--card-ry', '0deg');
+    e.currentTarget.style.setProperty('--glare-x', '50%');
+    e.currentTarget.style.setProperty('--glare-y', '50%');
+  }
+
   if (!data) {
     return (
       <main className="overlay-screen">
@@ -199,8 +217,15 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
               <article
                 className={`pokemon-tcg-card ${isOwned ? 'owned-card' : 'locked-card'}`}
                 key={creature.id}
-                style={{ '--card-accent': creature.colorHex }}
+                onMouseMove={handleCardMouseMove}
+                onMouseLeave={handleCardMouseLeave}
+                style={{
+                  '--card-theme-color': creature.colorHex,
+                  '--card-accent': creature.colorHex,
+                }}
               >
+                <div className="card-foil-sheen" />
+
                 <div className="card-outer-border">
                   <div className="card-inner-frame">
                     {/* Card Header */}
@@ -216,7 +241,7 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
                       </div>
                     </div>
 
-                    {/* Procedural 32x32 16-bit Pixel Art Canvas Frame */}
+                    {/* Procedural 48x48 Pixel Art Canvas Frame with Micro-Animations */}
                     <div className="tcg-art-box">
                       <PokedexCardArt
                         artKey={creature.artKey || creature.id}
