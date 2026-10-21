@@ -250,6 +250,16 @@ export default function App() {
               )}
               <span className="home-link-divider">·</span>
               <button
+                className="text-button home-dash-link"
+                onClick={() => {
+                  playButtonClickSfx();
+                  setScreen('analytics');
+                }}
+              >
+                📊 DASHBOARD
+              </button>
+              <span className="home-link-divider">·</span>
+              <button
                 className="text-button"
                 onClick={() => {
                   playButtonClickSfx();

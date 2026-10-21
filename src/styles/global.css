@@ -4114,6 +4114,8 @@ h1 span {
 /* ══════════════════════════════════════════════════════════════════ */
 
 .dashboard-overlay {
+  position: relative;
+  z-index: 10;
   min-height: 100vh;
   width: 100%;
   background: radial-gradient(circle at 50% 20%, #171128 0%, #080511 85%);
@@ -4122,6 +4124,13 @@ h1 span {
   justify-content: center;
   align-items: flex-start;
   overflow-y: auto;
+}
+
+.home-dash-link {
+  color: #facc15 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
 }
 
 .dashboard-cabinet-container {
