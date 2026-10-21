@@ -656,7 +656,47 @@ export class PlayerCharacter {
     this.torsoGroup.add(this.rightLegPivot);
   }
 
+  setVictory(active) {
+    this.isVictory = Boolean(active);
+    this.victoryTime = 0;
+  }
+
+  updateVictory(deltaMs) {
+    const dt = deltaMs / 1000;
+    this.victoryTime = (this.victoryTime || 0) + dt;
+    const t = this.victoryTime;
+
+    // Joyful celebratory victory jumps
+    const jumpCycle = Math.sin(t * 6.5);
+    const jumpH = Math.max(0, jumpCycle) * 0.75;
+    this.root.position.y = jumpH;
+
+    // Raised arms in celebration V pose
+    if (this.leftArmPivot) {
+      this.leftArmPivot.rotation.x = -2.5 + Math.sin(t * 8) * 0.2;
+      this.leftArmPivot.rotation.z = -0.45;
+    }
+    if (this.rightArmPivot) {
+      this.rightArmPivot.rotation.x = -2.5 + Math.sin(t * 8) * 0.2;
+      this.rightArmPivot.rotation.z = 0.45;
+    }
+
+    // Legs tuck slightly at jump peak
+    const legAngle = jumpCycle > 0 ? 0.35 : 0;
+    if (this.leftLegPivot) this.leftLegPivot.rotation.x = legAngle;
+    if (this.rightLegPivot) this.rightLegPivot.rotation.x = -legAngle;
+
+    // Turn smoothly to face front-camera
+    this.root.rotation.y = Math.PI + Math.sin(t * 2.5) * 0.2;
+    this.root.rotation.z = 0;
+  }
+
   update(deltaMs, { isRunning = true, isJumping = false, jumpProgress = 0, laneDeltaX = 0, invulnerableMs = 0 } = {}) {
+    if (this.isVictory) {
+      this.updateVictory(deltaMs);
+      return;
+    }
+
     const dt = deltaMs / 1000;
 
     // Damage invulnerability flashing

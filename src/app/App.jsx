@@ -19,6 +19,13 @@ import {
   playButtonClickSfx,
 } from '../game/soundEffects.js';
 
+const RUNNER_TRAITS = {
+  'pika-georgie': '⚡ SPARK DASH',
+  'mimikyu-kid': '🎭 DECOY VEIL',
+  'gengar-hood': '👻 SHADOW STEP',
+  'litwick-runner': '🔥 SOUL FLAME',
+};
+
 export default function App() {
   const [health, setHealth] = useState({ state: 'checking' });
   const [screen, setScreen] = useState('attract');
@@ -34,6 +41,7 @@ export default function App() {
   });
   const [soundMuted, setSoundMuted] = useState(() => isMuted());
   const [result, setResult] = useState(null);
+  const [attractStage, setAttractStage] = useState({ stage: 1, name: 'The Twilight Mist' });
 
   useEffect(() => {
     getHealth()
@@ -79,7 +87,7 @@ export default function App() {
   return (
     <div className="app-root-wrapper">
       {/* 3D Live Scrolling Background Carnival Track (active across all menu & binder screens) */}
-      <HomeBackgroundCanvas runnerId={selectedRunner} />
+      <HomeBackgroundCanvas runnerId={selectedRunner} onStageChange={setAttractStage} />
 
       {screen === 'setup' && (
         <PlayerSetupScreen
@@ -163,6 +171,7 @@ export default function App() {
               <div className="runner-cards-row">
                 {RUNNER_ROSTER.map((runner) => {
                   const isSelected = runner.id === selectedRunner;
+                  const trait = RUNNER_TRAITS[runner.id] || runner.badge;
                   return (
                     <button
                       key={runner.id}
@@ -171,17 +180,22 @@ export default function App() {
                       onClick={() => handleSelectRunner(runner.id)}
                       style={{
                         '--runner-theme': runner.color,
-                        '--runner-accent': runner.accent,
+                        '--runner-accent': runner.accentColor || runner.accent || '#f59e0b',
                       }}
                       title={`${runner.name}: ${runner.desc}`}
                     >
-                      {isSelected && <span className="active-runner-badge">ACTIVE</span>}
+                      {isSelected ? (
+                        <span className="active-runner-badge">★ P1 SELECTED ★</span>
+                      ) : (
+                        <span className="inactive-runner-tag">P1 SELECT</span>
+                      )}
                       <div className="runner-avatar-frame">
+                        <div className="runner-avatar-sunburst" />
                         <RunnerPortraitCanvas runnerId={runner.id} />
                       </div>
                       <strong className="runner-card-name">{runner.name}</strong>
                       <span className="runner-card-title">{runner.title}</span>
-                      <span className="runner-card-badge">{runner.badge}</span>
+                      <span className="runner-arcade-trait-pill">{trait}</span>
                     </button>
                   );
                 })}
@@ -198,6 +212,25 @@ export default function App() {
             >
               {player ? `COMMENCE RUN AS ${player.nickname.toUpperCase()}` : 'ENTER THE GAUNTLET'}
             </button>
+
+            <div className="home-preview-defeat-bar">
+              <button
+                className="home-test-defeat-btn"
+                onClick={() => {
+                  playButtonClickSfx();
+                  if (!player) {
+                    const p = { nickname: 'CHAMPION', wallet: { shardsBalance: 100 } };
+                    localStorage.setItem('deadlights.activePlayer', JSON.stringify(p));
+                    setPlayer(p);
+                  }
+                  sessionStorage.setItem('deadlights.previewDefeat', 'true');
+                  setScreen('game');
+                }}
+                title="Directly trigger and watch Pennywise Defeat Cutscene & Victory Celebration"
+              >
+                🎬 PREVIEW PENNYWISE DEFEAT CUTSCENE
+              </button>
+            </div>
 
             <nav className="home-links">
               <button
@@ -245,6 +278,11 @@ export default function App() {
                 ADMIN
               </button>
             </nav>
+
+            {/* Live Attract Stage Pill */}
+            <div className="attract-stage-pill" aria-live="polite">
+              <span className="attract-dot" /> ATTRACT PREVIEW · STAGE {attractStage.stage}: {attractStage.name.toUpperCase()}
+            </div>
           </section>
         </main>
       )}

@@ -1241,6 +1241,8 @@ export function createScene(canvas) {
     carouselGroup,
     particles,
     cobbleTex,
+    rails,
+    hemiLight,
     applyAtmosphere,
     setLowEffectsMode,
   };

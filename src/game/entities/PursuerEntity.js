@@ -924,6 +924,83 @@ export class PursuerEntity {
     this.shoeGroups?.forEach((sg) => sg.rotation.set(0, 0, 0));
   }
 
+  triggerDefeatCollapse() {
+    this.isDefeated = true;
+    this.defeatElapsed = 0;
+    this.defeatDuration = 3.6;
+    this.yVel = 0;
+    // Set Pennywise into clear, dramatic visual focus in front of the heroic camera
+    this.root.position.set(0, 1.4, -5.2);
+    this.root.rotation.set(0, 0, 0);
+    this.bodyGroup.rotation.set(0, 0, 0);
+    this.root.scale.set(1.36, 1.36, 1.36);
+    this.root.visible = true;
+    if (this.faceLight) this.faceLight.intensity = 5.0;
+  }
+
+  updateDefeat(deltaMs) {
+    if (!this.isDefeated) return;
+    const dt = deltaMs / 1000;
+    this.defeatElapsed += dt;
+    const t = this.defeatElapsed;
+
+    // Phase 1: 0.0s – 1.0s (Balloon Pop & Agony Shudder)
+    if (this.balloons && this.balloons.length > 0) {
+      const popTimes = [0.25, 0.55, 0.85];
+      this.balloons.forEach((b, idx) => {
+        const popT = popTimes[idx];
+        if (t < popT) {
+          const shake = Math.sin(t * 30 + idx) * 0.08;
+          b.group.scale.set(1 + shake, 1 + shake, 1 + shake);
+          b.group.visible = true;
+        } else if (t < popT + 0.12) {
+          const burstFrac = (t - popT) / 0.12;
+          const s = 1.0 + burstFrac * 0.6;
+          b.group.scale.set(s, s, s);
+          b.group.visible = true;
+        } else {
+          b.group.visible = false;
+        }
+      });
+    }
+
+    if (t <= 1.0) {
+      if (this.leftArm) {
+        this.leftArm.rotation.set(-1.8 + Math.sin(t * 30) * 0.2, 0.4, 0.5);
+      }
+      if (this.rightArm) {
+        this.rightArm.rotation.set(-1.8 + Math.cos(t * 30) * 0.2, -0.4, -0.5);
+      }
+      if (this.headGroup) {
+        this.headGroup.rotation.z = Math.sin(t * 45) * 0.4;
+        this.headGroup.rotation.x = -0.3 + Math.sin(t * 35) * 0.2;
+      }
+      if (this.jawGroup) {
+        this.jawGroup.rotation.x = 0.85;
+      }
+      if (this.faceMat) {
+        this.faceMat.emissiveIntensity = Math.random() > 0.4 ? 4.5 : 0.2;
+      }
+      if (this.deadlightsMat) {
+        this.deadlightsMat.emissiveIntensity = Math.random() > 0.4 ? 5.0 : 0.5;
+      }
+    } else {
+      // Phase 2: 1.0s – 2.6s+ (Tumbling Fall into Dark Abyss)
+      this.bodyGroup.rotation.x = Math.max(-1.45, this.bodyGroup.rotation.x - dt * 2.2);
+      this.bodyGroup.rotation.y += dt * 5.0;
+
+      this.yVel = (this.yVel || 0) - 18 * dt;
+      this.root.position.y += this.yVel * dt;
+
+      const currentScale = Math.max(0.05, this.root.scale.x - dt * 0.75);
+      this.root.scale.set(currentScale, currentScale, currentScale);
+
+      if (this.root.position.y < -10) {
+        this.root.visible = false;
+      }
+    }
+  }
+
   update(deltaMs, playerHearts, targetLaneX = 0) {
     const dt = deltaMs / 1000;
     this.time += dt * 3.2;

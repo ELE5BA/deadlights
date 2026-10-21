@@ -23,6 +23,7 @@ import {
   playCollisionHitSfx,
   playStageClearSfx,
   playJumpscareSfx,
+  playVictoryCelebrationSfx,
   startBackgroundMusic,
   stopBackgroundMusic,
 } from './soundEffects.js';
@@ -758,37 +759,80 @@ export class GameEngine {
     this.scheduledCardIndex = 0;
     this.upcomingCardLane = null;
 
-    // Checkpoint heal
-    if (this.health < (GAME_CONFIG.maxHealth ?? 3)) {
-      this.health += 1;
-    }
+    // Persistent health: NO checkpoint heal! Health carries over exactly.
 
     if (this.currentStageIndex < GAME_STAGES.length - 1) {
       this.currentStageIndex += 1;
       this.stageElapsedMs = 0;
-      const nextStage = GAME_STAGES[this.currentStageIndex];
 
       this.world.applyAtmosphere(null, this.currentStageIndex + 1);
 
       this.updateHudImmediate({
-        stageClearedBanner: true,
-        clearedStageNum: completedStageNum,
-        nextStageNum: this.currentStageIndex + 1,
-        nextStageName: nextStage.name,
         stageCompletedCard: completedCard,
       });
     } else {
+      // Stage 6 complete: show card modal, pause, and wait for dismissCardModal to trigger victory cutscene
       this.updateHudImmediate({
         stageCompletedCard: completedCard,
       });
-      this.finish('all_stages_cleared');
     }
+  }
+
+  triggerVictorySequence() {
+    this.isVictorySequenceActive = true;
+    this.victoryElapsedMs = 0;
+    this.victoryDurationMs = 3600;
+
+    stopBackgroundMusic();
+    playVictoryCelebrationSfx();
+
+    // Clear any remaining track hazards
+    for (const obj of this.objects) {
+      if (obj.isHazard && obj.mesh) {
+        this.world.scene.remove(obj.mesh);
+      }
+    }
+    this.objects = this.objects.filter((obj) => !obj.isHazard);
+
+    this.pursuerEntity?.triggerDefeatCollapse();
+    this.playerCharacter?.setVictory(true);
+
+    this.updateHudImmediate({
+      victorySequenceActive: true,
+    });
   }
 
   frame() {
     if (!this.running) return;
     const deltaMs = Math.min(this.clock.getDelta() * 1000, 50);
     const dt = deltaMs / 1000;
+
+    // Grand Victory Sequence (3.6s defeat cutscene & celebration)
+    if (this.isVictorySequenceActive) {
+      this.victoryElapsedMs += deltaMs;
+
+      this.pursuerEntity?.updateDefeat(deltaMs);
+      this.playerCharacter?.updateVictory(deltaMs);
+
+      // Heroic camera low-angle front-three-quarter glide:
+      // camera.position damping toward (1.8, 2.6, 5.2) looking at (0, 1.4, -2)
+      const camDamp = Math.min(1, dt * 2.5);
+      this.world.camera.position.x += (1.8 - this.world.camera.position.x) * camDamp;
+      this.world.camera.position.y += (2.6 - this.world.camera.position.y) * camDamp;
+      this.world.camera.position.z += (5.2 - this.world.camera.position.z) * camDamp;
+      this.world.camera.lookAt(0, 1.4, -2);
+
+      this.world.renderer.render(this.world.scene, this.world.camera);
+
+      if (this.victoryElapsedMs >= this.victoryDurationMs) {
+        this.isVictorySequenceActive = false;
+        this.finish('all_stages_cleared');
+        return;
+      }
+
+      this.animationFrame = requestAnimationFrame(this.frame);
+      return;
+    }
 
     // Pennywise jumpscare cinematic loss sequence
     if (this.isLossSequenceActive) {

@@ -46,8 +46,8 @@
   --comic-shadow-sm: 3px 3px 0px #120b1d;
   --comic-radius: 12px;
 
-  /* Expressive Typography Stack */
-  --font-display: "Palatino Linotype", "Book Antiqua", Georgia, "Times New Roman", serif;
-  --font-sans: "Trebuchet MS", "Gill Sans", "Segoe UI", sans-serif;
+  /* Expressive Typography Stack - Modern Arcade & Kinetic */
+  --font-display: "Outfit", "Arial Black", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", "Consolas", "Courier New", monospace;
 }

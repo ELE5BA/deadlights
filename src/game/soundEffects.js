@@ -799,3 +799,71 @@ export function stopBackgroundMusic() {
     }
   }
 }
+
+/**
+ * Synthesizes dramatic sub-bass banish boom as Pennywise falls (0.0s - 1.2s),
+ * followed by triumphant, upbeat 8-bit Pokémon Hall-of-Fame victory fanfare (1.2s - 3.5s).
+ */
+export function playVictoryCelebrationSfx() {
+  if (muted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 1. Sub-bass banish boom (0.0s - 1.2s)
+  const boomOsc = ctx.createOscillator();
+  const boomFilter = ctx.createBiquadFilter();
+  const boomGain = ctx.createGain();
+
+  boomOsc.type = 'sawtooth';
+  boomOsc.frequency.setValueAtTime(140, now);
+  boomOsc.frequency.exponentialRampToValueAtTime(28, now + 1.2);
+
+  boomFilter.type = 'lowpass';
+  boomFilter.frequency.setValueAtTime(500, now);
+  boomFilter.frequency.exponentialRampToValueAtTime(60, now + 1.2);
+
+  boomGain.gain.setValueAtTime(0.001, now);
+  boomGain.gain.linearRampToValueAtTime(0.35, now + 0.05);
+  boomGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+  boomOsc.connect(boomFilter);
+  boomFilter.connect(boomGain);
+  boomGain.connect(ctx.destination);
+  boomOsc.start(now);
+  boomOsc.stop(now + 1.25);
+
+  // 2. Hall-of-Fame style upbeat 8-bit victory fanfare arpeggios (1.2s - 3.5s)
+  // C Major / G Major triumphant ascending arpeggio notes
+  const notes = [
+    { freq: 261.63, delay: 1.20, dur: 0.16 }, // C4
+    { freq: 329.63, delay: 1.36, dur: 0.16 }, // E4
+    { freq: 392.00, delay: 1.52, dur: 0.16 }, // G4
+    { freq: 523.25, delay: 1.68, dur: 0.28 }, // C5
+    { freq: 392.00, delay: 1.98, dur: 0.14 }, // G4
+    { freq: 523.25, delay: 2.14, dur: 0.16 }, // C5
+    { freq: 659.25, delay: 2.32, dur: 0.18 }, // E5
+    { freq: 783.99, delay: 2.52, dur: 0.32 }, // G5
+    { freq: 880.00, delay: 2.86, dur: 0.22 }, // A5
+    { freq: 1046.50, delay: 3.10, dur: 0.55 }, // C6 (apex hold)
+  ];
+
+  notes.forEach(({ freq, delay, dur }) => {
+    const noteStart = now + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, noteStart);
+
+    gain.gain.setValueAtTime(0.001, noteStart);
+    gain.gain.linearRampToValueAtTime(0.20, noteStart + 0.02);
+    gain.gain.setValueAtTime(0.18, noteStart + dur * 0.7);
+    gain.gain.exponentialRampToValueAtTime(0.001, noteStart + dur);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(noteStart);
+    osc.stop(noteStart + dur + 0.02);
+  });
+}

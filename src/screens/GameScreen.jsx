@@ -197,8 +197,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     lane: 1,
     jumping: false,
     paused: false,
-    health: 3,
-    maxHealth: 3,
+    health: 5,
+    maxHealth: 5,
     shards: 0,
     score: 0,
     elapsedSeconds: 0,
@@ -211,10 +211,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     stageCardsCollected: 0,
     cardsRequiredPerStage: 5,
     fragmentsCollected: 0,
+    victorySequenceActive: false,
   });
 
   const [soundMuted, setSoundMuted] = useState(() => isMuted());
-  const [stageBanner, setStageBanner] = useState(null);
   const [completedCardModal, setCompletedCardModal] = useState(null);
   const [lossModal, setLossModal] = useState(null);
   const [jumpscareActive, setJumpscareActive] = useState(false);
@@ -294,14 +294,6 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         setRecentDockSlot(slot);
         setTimeout(() => setRecentDockSlot(null), 850);
         setTimeout(() => setFlyingCardAnim(null), 850);
-      }
-      if (next.stageClearedBanner) {
-        setStageBanner({
-          clearedNum: next.clearedStageNum,
-          nextNum: next.nextStageNum,
-          nextName: next.nextStageName,
-        });
-        setTimeout(() => setStageBanner(null), 3500);
       }
       if (next.stageCompletedCard) {
         setCompletedCardModal(next.stageCompletedCard);
@@ -394,9 +386,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
 
   const dismissCardModal = useCallback(() => {
     playButtonClickSfx();
+    const stageNum = completedCardModal?.stageNumber || 1;
     setCompletedCardModal(null);
-    if (completedCardModal?.stageNumber >= (GAME_CONFIG.stageCount || 6)) {
-      engineRef.current?.finish('all_stages_cleared');
+    if (stageNum >= (GAME_CONFIG.stageCount || 6)) {
+      engineRef.current?.triggerVictorySequence();
     } else {
       engineRef.current?.resume();
     }
@@ -411,11 +404,29 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       } else if (completedCardModal && (e.code === 'Space' || e.key === 'Enter')) {
         e.preventDefault();
         dismissCardModal();
+      } else if ((e.key === 'v' || e.key === 'V') && !engineState.victorySequenceActive) {
+        e.preventDefault();
+        setCompletedCardModal(null);
+        setLossModal(null);
+        setEngineState((prev) => ({ ...prev, paused: false }));
+        engineRef.current?.resume();
+        engineRef.current?.triggerVictorySequence();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lossModal, completedCardModal, restartRun, dismissCardModal]);
+  }, [lossModal, completedCardModal, restartRun, dismissCardModal, engineState.victorySequenceActive]);
+
+  // Support direct defeat cutscene preview if requested from title screen
+  useEffect(() => {
+    if (sessionState === 'playing' && sessionStorage.getItem('deadlights.previewDefeat') === 'true') {
+      sessionStorage.removeItem('deadlights.previewDefeat');
+      const timer = setTimeout(() => {
+        engineRef.current?.triggerVictorySequence();
+      }, 450);
+      return () => clearTimeout(timer);
+    }
+  }, [sessionState]);
 
   const endRun = () => {
     playButtonClickSfx();
@@ -637,12 +648,28 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         );
       })()}
 
-      {/* Stage Clear Celebration Banner (Positioned well below Pennywise at bottom: 5.5rem) */}
-      {stageBanner && (
-        <div className="stage-clear-banner">
-          <p className="banner-eyebrow">STAGE {stageBanner.clearedNum} PURIFIED</p>
-          <h2 className="banner-title">5/5 CARDS SECURED · VITALITY RESTORED</h2>
-          <p className="banner-sub">Entering Stage {stageBanner.nextNum}: <strong>{stageBanner.nextName}</strong></p>
+      {/* ── CARTOON VICTORY CELEBRATION OVERLAY ── */}
+      {engineState.victorySequenceActive && (
+        <div className="victory-celebration-overlay" aria-live="polite">
+          <div className="victory-confetti-container">
+            {Array.from({ length: 32 }).map((_, i) => (
+              <span
+                key={i}
+                className={`victory-confetti confetti-p-${i % 4}`}
+                style={{
+                  '--confetti-x': `${(i * 3.1) % 100}%`,
+                  '--confetti-delay': `${(i * 0.11) % 1.5}s`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="victory-burst-header">
+            <span className="victory-badge">★ GRAND VICTORY ★</span>
+            <h1 className="victory-title">PENNYWISE BANISHED TO THE VOID!</h1>
+          </div>
+          <div className="victory-ribbon-bar">
+            CHAMPION OF THE HEXEDEX · ALL 6 STAGES PURIFIED!
+          </div>
         </div>
       )}
 
@@ -802,22 +829,84 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         </div>
       )}
 
-      {engineState.paused && !completedCardModal && (
-        <div className="pause-overlay">
-          <h2>GAME PAUSED</h2>
-          <p className="pause-info">Stage {engineState.stageNumber}: {engineState.stageName}</p>
-          <button className="primary-button" onClick={() => {
-            playButtonClickSfx();
-            engineRef.current?.resume();
-          }}>
-            RESUME RUN
-          </button>
-          <button className="text-button" onClick={toggleEffects}>
-            {reducedEffects ? 'NORMAL VISUALS' : 'REDUCED EFFECTS'}
-          </button>
-          <button className="text-button" onClick={endRun}>
-            ABANDON RUN
-          </button>
+      {engineState.paused && !completedCardModal && !engineState.victorySequenceActive && (
+        <div className="pause-overlay" role="dialog" aria-modal="true" aria-label="Game Paused">
+          <section className="pause-cabinet-card">
+            <div className="pause-marquee-header">
+              <span className="pause-intermission-pill">⏸ ARCADE INTERMISSION</span>
+              <h2 className="pause-cabinet-title">GAME PAUSED</h2>
+              <div className="pause-stage-badge">
+                STAGE {engineState.stageNumber} OF 6 · {engineState.stageName.toUpperCase()}
+              </div>
+            </div>
+
+            {/* Live Run Status Telemetry Box */}
+            <div className="pause-telemetry-grid">
+              <div className="pause-telemetry-item">
+                <span className="pause-telem-label">VITALITY</span>
+                <span className="pause-telem-val">{currentHp} / {maxHp} HEARTS</span>
+              </div>
+              <div className="pause-telemetry-item">
+                <span className="pause-telem-label">STAGE CARDS</span>
+                <span className="pause-telem-val">{cardsGot} / 5 SECURED</span>
+              </div>
+              <div className="pause-telemetry-item">
+                <span className="pause-telem-label">SCORE</span>
+                <span className="pause-telem-val">{paddedScore}</span>
+              </div>
+            </div>
+
+            {/* Chunky Arcade Control Buttons */}
+            <div className="pause-actions-stack">
+              <button
+                className="pause-btn-resume"
+                onClick={() => {
+                  playButtonClickSfx();
+                  engineRef.current?.resume();
+                }}
+              >
+                <span className="btn-icon">▶</span> RESUME GAUNTLET <kbd className="pause-kbd">ESC</kbd>
+              </button>
+
+              <button
+                className="pause-btn-test-defeat"
+                onClick={() => {
+                  playButtonClickSfx();
+                  setEngineState((prev) => ({ ...prev, paused: false }));
+                  engineRef.current?.resume();
+                  engineRef.current?.triggerVictorySequence();
+                }}
+                title="Preview Pennywise Defeat Cutscene & Victory Celebration [KEY: V]"
+              >
+                🎬 PREVIEW PENNYWISE DEFEAT CUTSCENE <kbd className="pause-kbd">V</kbd>
+              </button>
+
+              <div className="pause-toggles-row">
+                <button
+                  className="pause-toggle-btn"
+                  onClick={() => {
+                    playButtonClickSfx();
+                    toggleMute();
+                  }}
+                >
+                  🔊 AUDIO: {soundMuted ? 'MUTED' : 'ON'}
+                </button>
+                <button
+                  className="pause-toggle-btn"
+                  onClick={toggleEffects}
+                >
+                  ✨ FX: {reducedEffects ? 'LOW' : 'HIGH'}
+                </button>
+              </div>
+
+              <button
+                className="pause-btn-abandon"
+                onClick={endRun}
+              >
+                ✖ ABANDON RUN & EXIT
+              </button>
+            </div>
+          </section>
         </div>
       )}
 
