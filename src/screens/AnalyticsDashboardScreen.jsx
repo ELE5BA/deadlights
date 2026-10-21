@@ -212,32 +212,45 @@ export default function AnalyticsDashboardScreen({ onExit }) {
               </div>
             </div>
 
-            <div className="sim-controls-grid">
-              <div className="sim-control-item">
-                <label className="sim-label">COHORT RUNS: <b>{cohortSize}</b></label>
+            {/* Structured 4-parameter grid with generous spacing */}
+            <div className="sim-params-cabinet-grid">
+              <div className="cabinet-telemetry-well sim-param-card">
+                <div className="sim-param-header">
+                  <span className="sim-param-label">COHORT RUNS</span>
+                  <span className="sim-param-val-badge">{cohortSize} SESSIONS</span>
+                </div>
                 <div className="sim-chip-options">
                   {[50, 250, 500].map((num) => (
                     <button
                       key={num}
                       type="button"
                       className={`sim-chip-btn ${cohortSize === num ? 'chip-active' : ''}`}
-                      onClick={() => setCohortSize(num)}
+                      onClick={() => {
+                        playButtonClickSfx();
+                        setCohortSize(num);
+                      }}
                     >
-                      {num}
+                      {num} RUNS
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="sim-control-item">
-                <label className="sim-label">SKILL PROFILE: <b>{skillProfile.toUpperCase()}</b></label>
+              <div className="cabinet-telemetry-well sim-param-card">
+                <div className="sim-param-header">
+                  <span className="sim-param-label">SKILL PROFILE</span>
+                  <span className="sim-param-val-badge skill-badge">{skillProfile.toUpperCase()}</span>
+                </div>
                 <div className="sim-chip-options">
                   {['novice', 'balanced', 'veteran'].map((prof) => (
                     <button
                       key={prof}
                       type="button"
                       className={`sim-chip-btn ${skillProfile === prof ? 'chip-active' : ''}`}
-                      onClick={() => setSkillProfile(prof)}
+                      onClick={() => {
+                        playButtonClickSfx();
+                        setSkillProfile(prof);
+                      }}
                     >
                       {prof.toUpperCase()}
                     </button>
@@ -245,53 +258,74 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                 </div>
               </div>
 
-              <div className="sim-control-item">
+              <div className="cabinet-telemetry-well sim-param-card">
                 <div className="sim-slider-head">
-                  <span className="sim-label">HAZARD DENSITY</span>
+                  <span className="sim-param-label">HAZARD DENSITY</span>
                   <span className="sim-slider-val">{Number(hazardDensity).toFixed(2)}x</span>
                 </div>
-                <input
-                  type="range"
-                  min="0.8"
-                  max="1.3"
-                  step="0.05"
-                  value={hazardDensity}
-                  onChange={(e) => setHazardDensity(e.target.value)}
-                  className="sim-range-input"
-                />
+                <div className="sim-slider-wrap">
+                  <input
+                    type="range"
+                    min="0.8"
+                    max="1.3"
+                    step="0.05"
+                    value={hazardDensity}
+                    onChange={(e) => setHazardDensity(e.target.value)}
+                    className="sim-range-input"
+                  />
+                  <div className="sim-slider-ticks">
+                    <span>0.80x (SPARSE)</span>
+                    <span>1.00x</span>
+                    <span>1.30x (DENSE)</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="sim-control-item">
+              <div className="cabinet-telemetry-well sim-param-card">
                 <div className="sim-slider-head">
-                  <span className="sim-label">SPEED SCALING</span>
+                  <span className="sim-param-label">SPEED SCALING</span>
                   <span className="sim-slider-val">{Number(speedMultiplier).toFixed(2)}x</span>
                 </div>
-                <input
-                  type="range"
-                  min="0.85"
-                  max="1.25"
-                  step="0.05"
-                  value={speedMultiplier}
-                  onChange={(e) => setSpeedMultiplier(e.target.value)}
-                  className="sim-range-input"
-                />
+                <div className="sim-slider-wrap">
+                  <input
+                    type="range"
+                    min="0.85"
+                    max="1.25"
+                    step="0.05"
+                    value={speedMultiplier}
+                    onChange={(e) => setSpeedMultiplier(e.target.value)}
+                    className="sim-range-input"
+                  />
+                  <div className="sim-slider-ticks">
+                    <span>0.85x (CALM)</span>
+                    <span>1.00x</span>
+                    <span>1.25x (FRENZIED)</span>
+                  </div>
+                </div>
               </div>
+            </div>
 
-              <div className="sim-run-trigger-wrap">
-                <button className="cabinet-btn-primary sim-execute-btn" onClick={handleRunSim}>
-                  ⚡ RUN MONTE CARLO SIMULATION
-                </button>
+            {/* Dedicated Action Trigger Bar with generous separation */}
+            <div className="sim-action-toolbar">
+              <div className="sim-config-summary">
+                <span className="summary-dot" />
+                <span className="summary-text">
+                  SIMULATION COHORT: <b>{cohortSize} RUNS</b> · <b>{skillProfile.toUpperCase()}</b> · <b>{Number(hazardDensity).toFixed(2)}x HAZARDS</b> · <b>{Number(speedMultiplier).toFixed(2)}x SPEED</b>
+                </span>
               </div>
+              <button className="cabinet-btn-primary sim-execute-btn" onClick={handleRunSim}>
+                ⚡ RUN MONTE CARLO SIMULATION
+              </button>
             </div>
           </section>
         </header>
 
         {/* ── TIER 1: DESCRIPTIVE ANALYTICS ── */}
-        <section className="cabinet-card analytics-tier-card" aria-label="Tier 1 Descriptive Analytics">
+        <section className="cabinet-card analytics-tier-card tier-1-card" aria-label="Tier 1 Descriptive Analytics">
           <div className="tier-header-block">
-            <span className="tier-badge-pill">TIER 1</span>
+            <span className="tier-badge-pill tier-1-badge">TIER 1</span>
             <div>
-              <h2 className="tier-headline">DESCRIPTIVE ANALYTICS · WHAT HAPPENED?</h2>
+              <h2 className="tier-headline">DESCRIPTIVE ANALYTICS · <span className="tier-accent-1">WHAT HAPPENED?</span></h2>
               <p className="tier-subhead">Aggregated historical booth KPI wells, stage survival funnel, and attendance metrics.</p>
             </div>
           </div>
@@ -369,11 +403,11 @@ export default function AnalyticsDashboardScreen({ onExit }) {
         </section>
 
         {/* ── TIER 2: DIAGNOSTIC ANALYTICS ── */}
-        <section className="cabinet-card analytics-tier-card" aria-label="Tier 2 Diagnostic Analytics">
+        <section className="cabinet-card analytics-tier-card tier-2-card" aria-label="Tier 2 Diagnostic Analytics">
           <div className="tier-header-block">
-            <span className="tier-badge-pill">TIER 2</span>
+            <span className="tier-badge-pill tier-2-badge">TIER 2</span>
             <div>
-              <h2 className="tier-headline">DIAGNOSTIC ANALYTICS · WHY DID IT HAPPEN?</h2>
+              <h2 className="tier-headline">DIAGNOSTIC ANALYTICS · <span className="tier-accent-2">WHY DID IT HAPPEN?</span></h2>
               <p className="tier-subhead">Obstacle lethality matrices, hit rates, and run termination root causes.</p>
             </div>
           </div>
@@ -464,11 +498,11 @@ export default function AnalyticsDashboardScreen({ onExit }) {
         </section>
 
         {/* ── TIER 3: PREDICTIVE ANALYTICS ── */}
-        <section className="cabinet-card analytics-tier-card" aria-label="Tier 3 Predictive Analytics">
+        <section className="cabinet-card analytics-tier-card tier-3-card" aria-label="Tier 3 Predictive Analytics">
           <div className="tier-header-block">
-            <span className="tier-badge-pill">TIER 3</span>
+            <span className="tier-badge-pill tier-3-badge">TIER 3</span>
             <div>
-              <h2 className="tier-headline">PREDICTIVE ANALYTICS · WHAT WILL HAPPEN NEXT?</h2>
+              <h2 className="tier-headline">PREDICTIVE ANALYTICS · <span className="tier-accent-3">WHAT WILL HAPPEN NEXT?</span></h2>
               <p className="tier-subhead">Player economy trajectory, arcade booth throughput forecast, and bottleneck probabilities.</p>
             </div>
           </div>
@@ -515,11 +549,11 @@ export default function AnalyticsDashboardScreen({ onExit }) {
         </section>
 
         {/* ── TIER 4: PRESCRIPTIVE ANALYTICS ── */}
-        <section className="cabinet-card analytics-tier-card" aria-label="Tier 4 Prescriptive Analytics">
+        <section className="cabinet-card analytics-tier-card tier-4-card" aria-label="Tier 4 Prescriptive Analytics">
           <div className="tier-header-block">
-            <span className="tier-badge-pill">TIER 4</span>
+            <span className="tier-badge-pill tier-4-badge">TIER 4</span>
             <div>
-              <h2 className="tier-headline">PRESCRIPTIVE ANALYTICS · WHAT SHOULD WE CHANGE?</h2>
+              <h2 className="tier-headline">PRESCRIPTIVE ANALYTICS · <span className="tier-accent-4">WHAT SHOULD WE CHANGE?</span></h2>
               <p className="tier-subhead">Automated balance recommendations, rule triggers, and simulated impact deltas.</p>
             </div>
           </div>
