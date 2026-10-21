@@ -444,10 +444,9 @@ export class PlayerCharacter {
     addHullOutline(hoodRim, 1.08);
     this.headGroup.add(hoodRim);
 
-    // Inner Head with Face
-    const innerHeadGeo = this.trackDisposable(new THREE.BoxGeometry(0.72, 0.72, 0.72));
-    const innerHeadMats = [coatMat, coatMat, coatMat, coatMat, coatMat, faceMat];
-    const innerHead = new THREE.Mesh(innerHeadGeo, innerHeadMats);
+    // Inner Head with Face tucked cleanly inside hoodDome
+    const innerHeadGeo = this.trackDisposable(new THREE.SphereGeometry(0.46, 8, 8));
+    const innerHead = new THREE.Mesh(innerHeadGeo, faceMat);
     innerHead.position.set(0, 0, -0.06);
     this.headGroup.add(innerHead);
 
@@ -520,16 +519,7 @@ export class PlayerCharacter {
       this.headGroup.add(earR);
       this.earGroups.push({ group: earR, baseRotX: -0.15 });
 
-      // Scribbled Crayon Decoy Face on Hood Front
-      const crayonMat = this.trackDisposable(new THREE.MeshBasicMaterial({ color: '#120b1d' }));
-      [-0.14, 0.14].forEach((cx) => {
-        const cEye = new THREE.Mesh(this.trackDisposable(new THREE.BoxGeometry(0.08, 0.08, 0.04)), crayonMat);
-        cEye.position.set(cx, 0.15, -0.56);
-        this.headGroup.add(cEye);
-      });
-      const cSmile = new THREE.Mesh(this.trackDisposable(new THREE.BoxGeometry(0.26, 0.04, 0.04)), crayonMat);
-      cSmile.position.set(0, 0.02, -0.56);
-      this.headGroup.add(cSmile);
+
     } else if (isGengar) {
       // Pointed Gengar Cone Ears
       [-0.34, 0.34].forEach((earX) => {
@@ -686,8 +676,8 @@ export class PlayerCharacter {
     if (this.leftLegPivot) this.leftLegPivot.rotation.x = legAngle;
     if (this.rightLegPivot) this.rightLegPivot.rotation.x = -legAngle;
 
-    // Turn smoothly to face front-camera
-    this.root.rotation.y = Math.PI + Math.sin(t * 2.5) * 0.2;
+    // Keep player facing forward toward the carnival track / portal during victory
+    this.root.rotation.y = Math.sin(t * 3.0) * 0.25;
     this.root.rotation.z = 0;
   }
 

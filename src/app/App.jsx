@@ -213,25 +213,6 @@ export default function App() {
               {player ? `COMMENCE RUN AS ${player.nickname.toUpperCase()}` : 'ENTER THE GAUNTLET'}
             </button>
 
-            <div className="home-preview-defeat-bar">
-              <button
-                className="home-test-defeat-btn"
-                onClick={() => {
-                  playButtonClickSfx();
-                  if (!player) {
-                    const p = { nickname: 'CHAMPION', wallet: { shardsBalance: 100 } };
-                    localStorage.setItem('deadlights.activePlayer', JSON.stringify(p));
-                    setPlayer(p);
-                  }
-                  sessionStorage.setItem('deadlights.previewDefeat', 'true');
-                  setScreen('game');
-                }}
-                title="Directly trigger and watch Pennywise Defeat Cutscene & Victory Celebration"
-              >
-                🎬 PREVIEW PENNYWISE DEFEAT CUTSCENE
-              </button>
-            </div>
-
             <nav className="home-links">
               <button
                 className="text-button"

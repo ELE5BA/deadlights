@@ -237,6 +237,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   const [dialoguePhase, setDialoguePhase] = useState('visible');
   const [flyingCardAnim, setFlyingCardAnim] = useState(null);
   const [recentDockSlot, setRecentDockSlot] = useState(null);
+  const [savedRunResult, setSavedRunResult] = useState(null);
 
   // Demise Cutscene Phase Tracking (0.0s to 5.2s)
   const [demiseCutscene, setDemiseCutscene] = useState({
@@ -349,22 +350,27 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     });
   }, []);
 
+  const playerId = player?.playerId;
+
   const startNewRun = useCallback((token) => {
+    if (!playerId) return;
     setSessionState('starting');
     setLossModal(null);
     setCompletedCardModal(null);
     setJumpscareActive(false);
-    startSession(player.playerId, token, GAME_CONFIG.version)
+    setSavedRunResult(null);
+    startSession(playerId, token, GAME_CONFIG.version)
       .then((data) => {
         setSession(data);
         setSessionState('countdown');
       })
       .catch(() => setSessionState('error'));
-  }, [player.playerId]);
+  }, [playerId]);
 
   useEffect(() => {
+    if (!playerId) return;
     startNewRun(runToken);
-  }, [runToken, startNewRun]);
+  }, [runToken, playerId, startNewRun]);
 
   useEffect(() => {
     if (sessionState !== 'countdown') return undefined;
@@ -399,6 +405,18 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     }
   }, [session, runToken, onFinished]);
 
+  const persistRunQuietly = useCallback(async (summary) => {
+    if (!session) return null;
+    try {
+      const result = await finishSession(session.sessionId, { runToken, ...summary });
+      setSavedRunResult(result);
+      return result;
+    } catch {
+      setSessionState('save_error');
+      return null;
+    }
+  }, [session, runToken]);
+
   const onRunEnd = useCallback((summary) => {
     setPendingSummary(summary);
     setJumpscareActive(false);
@@ -412,11 +430,11 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         required: engineState.cardsRequiredPerStage,
         summary,
       });
-      submitSummary(summary);
+      persistRunQuietly(summary);
     } else {
       submitSummary(summary);
     }
-  }, [engineState.stageNumber, engineState.stageCardsCollected, engineState.cardsRequiredPerStage, submitSummary]);
+  }, [engineState.stageNumber, engineState.stageCardsCollected, engineState.cardsRequiredPerStage, persistRunQuietly, submitSummary]);
 
   const restartRun = useCallback(() => {
     playButtonClickSfx();
@@ -441,35 +459,17 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (lossModal && (e.key === 'r' || e.key === 'R' || e.code === 'Space' || e.key === 'Enter')) {
+      if (lossModal && (e.key === 'r' || e.key === 'R')) {
         e.preventDefault();
         restartRun();
       } else if (completedCardModal && (e.code === 'Space' || e.key === 'Enter')) {
         e.preventDefault();
         dismissCardModal();
-      } else if ((e.key === 'v' || e.key === 'V') && !engineState.victorySequenceActive) {
-        e.preventDefault();
-        setCompletedCardModal(null);
-        setLossModal(null);
-        setEngineState((prev) => ({ ...prev, paused: false }));
-        engineRef.current?.resume();
-        engineRef.current?.triggerVictorySequence();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lossModal, completedCardModal, restartRun, dismissCardModal, engineState.victorySequenceActive]);
-
-  // Support direct defeat cutscene preview if requested from title screen
-  useEffect(() => {
-    if (sessionState === 'playing' && sessionStorage.getItem('deadlights.previewDefeat') === 'true') {
-      sessionStorage.removeItem('deadlights.previewDefeat');
-      const timer = setTimeout(() => {
-        engineRef.current?.triggerVictorySequence();
-      }, 450);
-      return () => clearTimeout(timer);
-    }
-  }, [sessionState]);
+  }, [lossModal, completedCardModal, restartRun, dismissCardModal]);
 
   const endRun = () => {
     playButtonClickSfx();
@@ -516,6 +516,16 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   // 6-digit padded score odometer
   const paddedScore = String(engineState.score || 0).padStart(6, '0');
 
+  // Strict UI layer mutual exclusion so HUD/dialogs never bleed through each other
+  const hasActiveModalOrCutscene = Boolean(
+    completedCardModal ||
+    lossModal ||
+    jumpscareActive ||
+    engineState.victorySequenceActive ||
+    engineState.paused ||
+    sessionState === 'countdown'
+  );
+
   return (
     <main className="game-screen">
       <GameCanvas
@@ -528,77 +538,77 @@ export default function GameScreen({ player, onFinished, runnerId }) {
 
       {/* ── UNOBSTRUCTED PERIPHERAL HUD (PENNYWISE 100% UNBLOCKED IN TOP SKY) ── */}
 
-      {/* 1. TOP-LEFT CARTOON PLATE */}
-      <aside className="hud-corner-plate hud-plate-left" aria-label="Stage Progress and Vitality">
-        {/* Top Row: Stage Badge, Name, Timer, and 60FPS Bar */}
-        <div className="hud-stage-row">
-          <span className="hud-stage-badge">STAGE {engineState.stageNumber}/6</span>
-          <span className="hud-stage-title">{engineState.stageName}</span>
-          <span className="hud-timer-tabular">{stageSecondsRemaining}s</span>
-        </div>
-        <div className="hud-progress-track">
-          <div ref={stageProgressRef} className="hud-progress-fill" />
-        </div>
-
-        {/* Bottom Row: 3 Poké-Heart SVGs & Rift Shard Counter */}
-        <div className="hud-vitality-row">
-          <div className="hud-hearts" title={`Soul Vitality: ${currentHp} of ${maxHp} Hearts`}>
-            {Array.from({ length: maxHp }).map((_, i) => (
-              <PokeHeartSvg
-                key={i}
-                active={i < currentHp}
-                isCritical={isHeartCritical && i === 0}
-              />
-            ))}
+      {/* 1. TOP-LEFT CARTOON PLATE (Hidden during victory sequence & jumpscare) */}
+      {!engineState.victorySequenceActive && !jumpscareActive && (
+        <aside className="hud-corner-plate hud-plate-left" aria-label="Stage Progress and Vitality">
+          {/* Top Row: Stage Badge, Name, Timer, and 60FPS Bar */}
+          <div className="hud-stage-row">
+            <span className="hud-stage-badge">STAGE {engineState.stageNumber}/6</span>
+            <span className="hud-stage-title">{engineState.stageName}</span>
+            <span className="hud-timer-tabular">{stageSecondsRemaining}s</span>
           </div>
-          <div className="hud-pouch-divider" />
-          <div className="hud-shards" title="Collected Rift Shards">
-            <FacetedRiftShardSvg />
-            <span className="shard-val">{engineState.shards}</span>
+          <div className="hud-progress-track">
+            <div ref={stageProgressRef} className="hud-progress-fill" />
           </div>
-        </div>
-      </aside>
 
-      {/* 2. TOP-RIGHT CARTOON PLATE */}
-      <aside className="hud-corner-plate hud-plate-right" aria-label="Score and Audio Controls">
-        <div className="hud-odometer-box">
-          <span className="score-eyebrow">SCORE</span>
-          <span className="odometer-digits">{paddedScore}</span>
-        </div>
+          {/* Bottom Row: 3 Poké-Heart SVGs & Rift Shard Counter */}
+          <div className="hud-vitality-row">
+            <div className="hud-hearts" title={`Soul Vitality: ${currentHp} of ${maxHp} Hearts`}>
+              {Array.from({ length: maxHp }).map((_, i) => (
+                <PokeHeartSvg
+                  key={i}
+                  active={i < currentHp}
+                  isCritical={isHeartCritical && i === 0}
+                />
+              ))}
+            </div>
+            <div className="hud-pouch-divider" />
+            <div className="hud-shards" title="Collected Rift Shards">
+              <FacetedRiftShardSvg />
+              <span className="shard-val">{engineState.shards}</span>
+            </div>
+          </div>
+        </aside>
+      )}
 
-        <button
-          className="hud-sound-toggle-btn"
-          onClick={() => {
-            playButtonClickSfx();
-            toggleMute();
-          }}
-          title={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
-          aria-label={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
-        >
-          {soundMuted ? '🔇' : '🔊'}
-        </button>
+      {/* 2. TOP-RIGHT CARTOON PLATE (Hidden during victory sequence & jumpscare) */}
+      {!engineState.victorySequenceActive && !jumpscareActive && (
+        <aside className="hud-corner-plate hud-plate-right" aria-label="Score and Audio Controls">
+          <div className="hud-odometer-box">
+            <span className="score-eyebrow">SCORE</span>
+            <span className="odometer-digits">{paddedScore}</span>
+          </div>
 
-        <button
-          className="hud-pause-keycap"
-          onClick={() => {
-            playButtonClickSfx();
-            engineState.paused ? engineRef.current?.resume() : engineRef.current?.pause();
-          }}
-          title="Pause Game [ESC]"
-        >
-          <span className="keycap-label">{engineState.paused ? 'RESUME' : 'PAUSE'}</span>
-          <kbd className="keycap-hint">ESC</kbd>
-        </button>
-      </aside>
+          <button
+            className="hud-sound-toggle-btn"
+            onClick={() => {
+              playButtonClickSfx();
+              toggleMute();
+            }}
+            title={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
+            aria-label={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
+          >
+            {soundMuted ? '🔇' : '🔊'}
+          </button>
+
+          <button
+            className="hud-pause-keycap"
+            onClick={() => {
+              playButtonClickSfx();
+              engineState.paused ? engineRef.current?.resume() : engineRef.current?.pause();
+            }}
+            title="Pause Game [ESC]"
+          >
+            <span className="keycap-label">{engineState.paused ? 'RESUME' : 'PAUSE'}</span>
+            <kbd className="keycap-hint">ESC</kbd>
+          </button>
+        </aside>
+      )}
 
       {/* 3. PENNYWISE DYNAMIC 3D-TRACKED CARTOON SPEECH BUBBLE */}
-      {/* 3a. Normal Gameplay Chase Speech Bubble */}
+      {/* 3a. Normal Gameplay Chase Speech Bubble (Hidden when modal or pause is active) */}
       {sessionState === 'playing' &&
-        !engineState.paused &&
-        !jumpscareActive &&
-        !completedCardModal &&
-        !lossModal &&
-        !engineState.victorySequenceActive &&
+        !hasActiveModalOrCutscene &&
         dialoguePhase !== 'hidden' && (
           <aside
             ref={speechBubbleRef}
@@ -614,7 +624,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         )}
 
       {/* 3b. Pennywise Demise Speech Bubble (0.0s to 4.1s in Cutscene) */}
-      {engineState.victorySequenceActive && demiseCutscene.visible && (
+      {engineState.victorySequenceActive && demiseCutscene.visible && !lossModal && !completedCardModal && (
         <aside
           ref={speechBubbleRef}
           className="pennywise-speech-bubble pennywise-speech-bubble--demise"
@@ -636,7 +646,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       )}
 
       {/* 4. SUBTLE PERIPHERAL CARD-ARC & COMPACT TOAST PILL (Never covers the center track!) */}
-      {flyingCardAnim && (
+      {flyingCardAnim && !hasActiveModalOrCutscene && (
         <>
           <div
             className={`peripheral-card-arc slot-target-${flyingCardAnim.slot}`}
@@ -656,8 +666,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         </>
       )}
 
-      {/* 5. STAGE-SPECIFIC POKÉMON BOTTOM 5-CARD DOCK (Hidden during cutscene to allow full spectacle) */}
-      {!engineState.victorySequenceActive && (() => {
+      {/* 5. STAGE-SPECIFIC POKÉMON BOTTOM 5-CARD DOCK */}
+      {!hasActiveModalOrCutscene && (() => {
         const stageTargetCard = POKEMON_CARD_ROSTER[(engineState.stageNumber - 1) % POKEMON_CARD_ROSTER.length];
         return (
           <section
@@ -912,10 +922,19 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               </div>
             </div>
             <div className="loss-actions">
-              <button className="primary-button loss-retry-btn" onClick={restartRun} autoFocus>
+              <button className="primary-button loss-retry-btn" onClick={restartRun}>
                 TRY AGAIN [PRESS R]
               </button>
-              <button className="text-button" onClick={() => submitSummary(lossModal.summary)}>
+              <button
+                className="text-button"
+                onClick={() => {
+                  if (savedRunResult) {
+                    onFinished(savedRunResult);
+                  } else if (lossModal?.summary) {
+                    submitSummary(lossModal.summary);
+                  }
+                }}
+              >
                 VIEW RUN SUMMARY & ARCHIVE
               </button>
             </div>
@@ -924,19 +943,21 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       )}
 
       {/* Auto-fading bottom footnote */}
-      <aside className={`game-help ${isTutorialFaded ? 'game-help--hidden' : ''}`}>
-        {sessionState === 'starting' && 'INITIALIZING GAUNTLET RUN…'}
-        {sessionState === 'playing' && 'DODGE OBSTACLES · ASSEMBLE ALL 5 CARDS IN 60s · ZERO MISSES ALLOWED'}
-        {sessionState === 'saving' && 'SECURELY PERSISTING SESSION…'}
-        {sessionState === 'save_error' && (
-          <>
-            <span>SAVE NOT CONFIRMED</span>
-            <button className="text-button" onClick={() => pendingSummary && submitSummary(pendingSummary)}>
-              RETRY SAVE
-            </button>
-          </>
-        )}
-      </aside>
+      {!hasActiveModalOrCutscene && (
+        <aside className={`game-help ${isTutorialFaded ? 'game-help--hidden' : ''}`}>
+          {sessionState === 'starting' && 'INITIALIZING GAUNTLET RUN…'}
+          {sessionState === 'playing' && 'DODGE OBSTACLES · ASSEMBLE ALL 5 CARDS IN 60s · ZERO MISSES ALLOWED'}
+          {sessionState === 'saving' && 'SECURELY PERSISTING SESSION…'}
+          {sessionState === 'save_error' && (
+            <>
+              <span>SAVE NOT CONFIRMED</span>
+              <button className="text-button" onClick={() => pendingSummary && submitSummary(pendingSummary)}>
+                RETRY SAVE
+              </button>
+            </>
+          )}
+        </aside>
+      )}
 
       {sessionState === 'countdown' && (
         <div className="countdown-overlay">
@@ -983,19 +1004,6 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                 <span className="btn-icon">▶</span> RESUME GAUNTLET <kbd className="pause-kbd">ESC</kbd>
               </button>
 
-              <button
-                className="pause-btn-test-defeat"
-                onClick={() => {
-                  playButtonClickSfx();
-                  setEngineState((prev) => ({ ...prev, paused: false }));
-                  engineRef.current?.resume();
-                  engineRef.current?.triggerVictorySequence();
-                }}
-                title="Preview Pennywise Defeat Cutscene & Victory Celebration [KEY: V]"
-              >
-                🎬 PREVIEW PENNYWISE DEFEAT CUTSCENE <kbd className="pause-kbd">V</kbd>
-              </button>
-
               <div className="pause-toggles-row">
                 <button
                   className="pause-toggle-btn"
@@ -1024,10 +1032,6 @@ export default function GameScreen({ player, onFinished, runnerId }) {
           </section>
         </div>
       )}
-
-      <button className="exit-game" onClick={endRun}>
-        ABANDON RUN
-      </button>
     </main>
   );
 }

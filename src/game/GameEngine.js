@@ -288,7 +288,37 @@ export class GameEngine {
   }
 
   start() {
-    if (this.running) return;
+    if (this.animationFrame) {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = null;
+    }
+
+    // Force-clear any leftover meshes from prior run
+    if (this.objects) {
+      for (const obj of this.objects) {
+        if (obj?.mesh) {
+          this.world.scene.remove(obj.mesh);
+        }
+      }
+      this.objects = [];
+    }
+    if (this.pickupAnimations) {
+      for (const anim of this.pickupAnimations) {
+        if (anim?.mesh) {
+          this.world.scene.remove(anim.mesh);
+        }
+      }
+      this.pickupAnimations = [];
+    }
+
+    this.isVictorySequenceActive = false;
+    this.isLossSequenceActive = false;
+    this.playerEntity?.setVictory(false);
+    if (this.playerEntity?.root) {
+      this.playerEntity.root.rotation.set(0, 0, 0);
+    }
+    this.pursuerEntity?.resetJumpscare?.();
+
     Object.assign(this, {
       running: true,
       paused: false,
@@ -316,8 +346,6 @@ export class GameEngine {
       cameraTiltZ: 0,
       upcomingCardLane: null,
     });
-
-    this.pursuerEntity?.resetJumpscare?.();
     this.world.camera.fov = 53;
     this.world.camera.position.set(0, 5.2, 8.5);
     this.world.camera.lookAt(0, 1.2, -6);
@@ -344,6 +372,24 @@ export class GameEngine {
     this.lossReason = endReason;
     this.lossElapsedMs = 0;
     this.lossDurationMs = 1350;
+
+    // Immediately remove all track objects and pickup animations so giant cards don't block the camera lens
+    if (this.objects) {
+      for (const obj of this.objects) {
+        if (obj?.mesh) {
+          this.world.scene.remove(obj.mesh);
+        }
+      }
+      this.objects = [];
+    }
+    if (this.pickupAnimations) {
+      for (const anim of this.pickupAnimations) {
+        if (anim?.mesh) {
+          this.world.scene.remove(anim.mesh);
+        }
+      }
+      this.pickupAnimations = [];
+    }
 
     // Stop background music during jumpscare
     stopBackgroundMusic();
@@ -785,11 +831,11 @@ export class GameEngine {
     this.victoryElapsedMs = 0;
     this.victoryDurationMs = 5200;
 
-    // Smoothly center the player in middle lane
+    // Smoothly center the player in middle lane at Z = 1.5
     this.targetX = 0;
     this.currentX = 0;
     if (this.playerEntity?.root) {
-      this.playerEntity.root.position.set(0, 0, 0);
+      this.playerEntity.root.position.set(0, 0, 1.5);
       this.playerEntity.root.rotation.set(0, 0, 0);
     }
 
@@ -835,26 +881,26 @@ export class GameEngine {
       });
 
       // Dynamic Camera Choreography:
-      // Phase 1 - 3 (0.0s to 4.0s): Frame celebrating runner in foreground and Pennywise in midground
-      // camera damping toward (1.4, 3.1, 4.8) looking at (0, 1.9, -4.5) with impact shakes
-      // Phase 4 (4.0s to 5.2s): Glide camera into close-up champion angle (0, 2.2, 3.8) looking at (0, 1.3, 0)
+      // Phase 1 - 3 (0.0s to 4.0s): Frame celebrating runner in lower foreground and Pennywise in center-midground
+      // camera damping toward (0, 3.8, 7.2) looking at (0, 1.8, -4.5) with impact shakes
+      // Phase 4 (4.0s to 5.2s): Smoothly transition to hero angle (0, 2.8, 5.2) looking at (0, 1.3, 1.5)
       const tSec = this.victoryElapsedMs / 1000;
 
-      let targetCamX = 1.4;
-      let targetCamY = 3.1;
-      let targetCamZ = 4.8;
+      let targetCamX = 0;
+      let targetCamY = 3.8;
+      let targetCamZ = 7.2;
       let lookX = 0;
-      let lookY = 1.9;
+      let lookY = 1.8;
       let lookZ = -4.5;
       let camDamp = Math.min(1, dt * 2.8);
 
       if (tSec >= 4.0) {
         targetCamX = 0;
-        targetCamY = 2.2;
-        targetCamZ = 3.8;
+        targetCamY = 2.8;
+        targetCamZ = 5.2;
         lookX = 0;
         lookY = 1.3;
-        lookZ = 0;
+        lookZ = 1.5;
         camDamp = Math.min(1, dt * 3.6);
       }
 

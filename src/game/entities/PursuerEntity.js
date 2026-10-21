@@ -887,6 +887,11 @@ export class PursuerEntity {
   }
 
   triggerJumpscare() {
+    if (this.defeatVfxGroup) {
+      this.root.remove(this.defeatVfxGroup);
+      this.defeatVfxGroup = null;
+      this.isDefeated = false;
+    }
     this.isJumpscare = true;
     this.jumpscareElapsed = 0;
     this.jumpscareDuration = 1.35;
@@ -899,6 +904,11 @@ export class PursuerEntity {
   }
 
   resetJumpscare() {
+    if (this.defeatVfxGroup) {
+      this.root.remove(this.defeatVfxGroup);
+      this.defeatVfxGroup = null;
+      this.isDefeated = false;
+    }
     this.isJumpscare = false;
     this.jumpscareElapsed = 0;
     this.root.scale.set(1.36, 1.36, 1.36);
@@ -931,7 +941,7 @@ export class PursuerEntity {
     this.yVel = 0;
 
     // Reset visual visibility and base transforms
-    this.root.position.set(0, 0, -6.2);
+    this.root.position.set(0, 0, -7.5);
     this.root.rotation.set(0, 0, 0);
     this.root.scale.set(1.36, 1.36, 1.36);
     this.root.visible = true;
@@ -970,40 +980,50 @@ export class PursuerEntity {
     this.defeatVfxGroup = group;
     this.root.add(group);
 
-    // 1. The 6 Purified Pokédex Seal Cards
+    // 1. The 6 Purified Pokédex Seal Cards (Sleek Holographic Trading Card Frames)
     const elementColors = ['#10b981', '#f59e0b', '#38bdf8', '#c084fc', '#94a3b8', '#06b6d4'];
     this.sealCards = [];
     elementColors.forEach((colorHex, idx) => {
       const cardGroup = new THREE.Group();
 
-      // Card Slab
-      const slabGeo = this.trackDisposable(new THREE.BoxGeometry(0.52, 0.76, 0.04));
-      const slabMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      // Glowing Elemental Core Slab (BoxGeometry 0.44 x 0.64 x 0.02)
+      const coreGeo = this.trackDisposable(new THREE.BoxGeometry(0.44, 0.64, 0.02));
+      const coreMat = this.trackDisposable(new THREE.MeshStandardMaterial({
         color: colorHex,
         emissive: colorHex,
+        emissiveIntensity: 2.4,
+        roughness: 0.2,
+        metalness: 0.7,
+      }));
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+      cardGroup.add(coreMesh);
+
+      // Sleek Golden Card Border (BoxGeometry 0.48 x 0.68 x 0.022)
+      const borderGeo = this.trackDisposable(new THREE.BoxGeometry(0.48, 0.68, 0.022));
+      const borderMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+        color: '#f59e0b',
+        emissive: '#fbbf24',
         emissiveIntensity: 1.2,
         roughness: 0.3,
-        metalness: 0.2,
+        metalness: 0.9,
       }));
-      const slab = new THREE.Mesh(slabGeo, slabMat);
-      cardGroup.add(slab);
+      const borderMesh = new THREE.Mesh(borderGeo, borderMat);
+      borderMesh.position.z = -0.002;
+      cardGroup.add(borderMesh);
 
-      // Dark Border
-      const borderGeo = this.trackDisposable(new THREE.BoxGeometry(0.56, 0.80, 0.03));
-      const borderMat = this.trackDisposable(new THREE.MeshBasicMaterial({ color: '#120b1d' }));
-      const border = new THREE.Mesh(borderGeo, borderMat);
-      border.position.z = -0.01;
-      cardGroup.add(border);
-
-      // Inner Symbol Emblem Dot
-      const dotGeo = this.trackDisposable(new THREE.SphereGeometry(0.12, 8, 8));
-      const dotMat = this.trackDisposable(new THREE.MeshBasicMaterial({ color: '#ffffff' }));
-      const dot = new THREE.Mesh(dotGeo, dotMat);
-      dot.position.z = 0.03;
-      cardGroup.add(dot);
+      // Inner Rune Core Accent (Diamond Octahedron)
+      const runeGeo = this.trackDisposable(new THREE.OctahedronGeometry(0.11, 0));
+      const runeMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        emissive: colorHex,
+        emissiveIntensity: 3.5,
+      }));
+      const runeMesh = new THREE.Mesh(runeGeo, runeMat);
+      runeMesh.position.z = 0.02;
+      cardGroup.add(runeMesh);
 
       // Laser Beam connecting card to Pennywise chest (0, 1.55, 0)
-      const beamGeo = this.trackDisposable(new THREE.CylinderGeometry(0.035, 0.035, 1, 6));
+      const beamGeo = this.trackDisposable(new THREE.CylinderGeometry(0.03, 0.03, 1, 6));
       const beamMat = this.trackDisposable(new THREE.MeshBasicMaterial({
         color: colorHex,
         transparent: true,
@@ -1178,7 +1198,7 @@ export class PursuerEntity {
       }
 
       const spiralIn = Math.min(1, t / 0.7);
-      const rad = 2.8 + (1 - spiralIn) * 3.5;
+      const rad = 2.6 + (1 - spiralIn) * 3.5;
       const height = 1.55 + (1 - spiralIn) * 2.5;
 
       this.sealCards?.forEach((card) => {
@@ -1281,12 +1301,28 @@ export class PursuerEntity {
         }
       }
 
-      this.sealCards?.forEach((card) => {
-        card.beam.visible = false;
-        const angle = card.baseAngle + t * 3.5;
-        card.group.position.set(Math.cos(angle) * 3.2, 2.0, Math.sin(angle) * 3.2);
-        card.group.rotation.y += dt * 4;
-      });
+      if (t < 4.0) {
+        this.sealCards?.forEach((card) => {
+          card.beam.visible = false;
+          const angle = card.baseAngle + t * 4.5;
+          card.group.position.set(Math.cos(angle) * 2.6, 1.8 + Math.sin(t * 3.0 + card.idx) * 0.15, Math.sin(angle) * 2.6);
+          card.group.rotation.y += dt * 4;
+          card.group.scale.set(1, 1, 1);
+        });
+      } else {
+        // t = 4.0s to 4.2s: converge into a bright golden star-burst as Pennywise sinks into portal
+        const burstFrac = (t - 4.0) / 0.2;
+        const convRad = Math.max(0.05, 2.6 * (1 - burstFrac));
+        const convY = 1.8 * (1 - burstFrac) + 0.3 * burstFrac;
+        this.sealCards?.forEach((card) => {
+          card.beam.visible = false;
+          const angle = card.baseAngle + t * 7.5;
+          card.group.position.set(Math.cos(angle) * convRad, convY, Math.sin(angle) * convRad);
+          const s = Math.max(0.01, 1.0 + burstFrac * 0.7);
+          card.group.scale.set(s, s, s);
+          card.group.rotation.y += dt * 8;
+        });
+      }
 
       this.bodyGroup.rotation.x = Math.max(-1.45, this.bodyGroup.rotation.x - dt * 2.8);
       this.bodyGroup.rotation.y += dt * 6.5;
@@ -1312,11 +1348,13 @@ export class PursuerEntity {
       this.root.visible = false;
 
       const p4 = (t - 4.2) / 1.0;
-      const fwdZ = 6.2 * Math.min(1, p4 * 1.5);
+      // Pennywise root is at Z = -7.5, player is at Z = 1.5 -> distance is 9.0
+      const fwdZ = 9.0 * Math.min(1, p4 * 1.5);
       const orbitRad = 1.8 + Math.sin(t * 3.5) * 0.2;
 
       this.sealCards?.forEach((card) => {
         card.group.visible = true;
+        card.group.scale.set(1, 1, 1);
         const angle = card.baseAngle + t * 3.6;
         const cx = Math.cos(angle) * orbitRad;
         const cz = fwdZ + Math.sin(angle) * orbitRad;
