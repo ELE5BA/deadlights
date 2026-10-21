@@ -172,11 +172,20 @@ const PENNYWISE_LINES = [
   "HEE-HEE! MISS ONE CARD AND YOU'RE MINE!",
 ];
 
+export const PENNYWISE_DEMISE_LINES = [
+  "WHAT?! ALL SIX POKÉDEX CARDS?! MY BALLOONS ARE POPPING!",
+  "NOOO! THE HEXEDEX SEAL IS SHATTERING MY DEADLIGHTS!",
+  "THE ABYSS IS PULLING ME UNDER... I'M FADING INTO DARKNESSSS!",
+];
+
 function formatDialogue(text) {
-  const keywords = ['FLOAT', 'POKÉMON', 'CATCH', 'POKÉ-BALLOON', 'POKÉDEX', 'DEADLIGHTS', 'MINE!'];
-  const parts = text.split(/(\b[A-ZÉ\-'!]+\b)/g);
+  const keywords = [
+    'FLOAT', 'POKÉMON', 'CATCH', 'POKÉ-BALLOON', 'POKÉDEX', 'DEADLIGHTS', 'MINE!',
+    'CARDS?!', 'BALLOONS', 'POPPING!', 'HEXEDEX', 'SEAL', 'SHATTERING', 'ABYSS', 'DARKNESSSS!'
+  ];
+  const parts = text.split(/(\b[A-ZÉ\-'!?]+\b)/g);
   return parts.map((part, idx) => {
-    const clean = part.replace(/[!,]/g, '');
+    const clean = part.replace(/[!,?]/g, '');
     const isSpecial = keywords.some((k) => k.includes(clean) && clean.length > 3);
     return isSpecial ? (
       <strong key={idx} className="bubble-accent">
@@ -229,13 +238,22 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   const [flyingCardAnim, setFlyingCardAnim] = useState(null);
   const [recentDockSlot, setRecentDockSlot] = useState(null);
 
+  // Demise Cutscene Phase Tracking (0.0s to 5.2s)
+  const [demiseCutscene, setDemiseCutscene] = useState({
+    lineIndex: 0,
+    visible: true,
+    isGrandChampion: false,
+  });
+  const demiseCutsceneRef = useRef(demiseCutscene);
+  demiseCutsceneRef.current = demiseCutscene;
+
   useEffect(() => {
     return subscribeMuteChange(setSoundMuted);
   }, []);
 
   // Randomized Pennywise cartoon dialogue with smooth pop-in, pop-out, and periodic silence gaps
   useEffect(() => {
-    if (sessionState !== 'playing' || engineState.paused || jumpscareActive || completedCardModal || lossModal) {
+    if (sessionState !== 'playing' || engineState.paused || jumpscareActive || completedCardModal || lossModal || engineState.victorySequenceActive) {
       setDialoguePhase('hidden');
       return undefined;
     }
@@ -265,18 +283,43 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     }
 
     return () => window.clearTimeout(timer);
-  }, [sessionState, engineState.paused, jumpscareActive, completedCardModal, lossModal, dialoguePhase]);
+  }, [sessionState, engineState.paused, jumpscareActive, completedCardModal, lossModal, dialoguePhase, engineState.victorySequenceActive]);
 
   // 60FPS DOM Progress Bar & 3D Pursuer Speech Bubble tracking
   const onEngine = useCallback((engine) => {
     engineRef.current = engine;
-    engine.onFrameTick = ({ stageProgressRatio, pursuerSpeechPos }) => {
+    engine.onFrameTick = ({ stageProgressRatio, pursuerSpeechPos, victoryElapsedMs }) => {
       if (stageProgressRef.current) {
         stageProgressRef.current.style.transform = `scaleX(${stageProgressRatio})`;
       }
       if (speechBubbleRef.current && pursuerSpeechPos) {
-        speechBubbleRef.current.style.left = `${pursuerSpeechPos.xPercent}%`;
-        speechBubbleRef.current.style.top = `${pursuerSpeechPos.yPercent}%`;
+        const clampedX = Math.max(10, Math.min(84, pursuerSpeechPos.xPercent));
+        const clampedY = Math.max(8, Math.min(76, pursuerSpeechPos.yPercent));
+        speechBubbleRef.current.style.left = `${clampedX}%`;
+        speechBubbleRef.current.style.top = `${clampedY}%`;
+      }
+      if (typeof victoryElapsedMs === 'number') {
+        const curr = demiseCutsceneRef.current;
+        let nextLine = 0;
+        if (victoryElapsedMs >= 2800) {
+          nextLine = 2;
+        } else if (victoryElapsedMs >= 1400) {
+          nextLine = 1;
+        }
+        const nextVisible = victoryElapsedMs < 4100;
+        const nextChampion = victoryElapsedMs >= 4000;
+
+        if (
+          nextLine !== curr.lineIndex ||
+          nextVisible !== curr.visible ||
+          nextChampion !== curr.isGrandChampion
+        ) {
+          setDemiseCutscene({
+            lineIndex: nextLine,
+            visible: nextVisible,
+            isGrandChampion: nextChampion,
+          });
+        }
       }
     };
   }, []);
@@ -549,16 +592,45 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       </aside>
 
       {/* 3. PENNYWISE DYNAMIC 3D-TRACKED CARTOON SPEECH BUBBLE */}
-      {sessionState === 'playing' && !engineState.paused && !jumpscareActive && !completedCardModal && !lossModal && dialoguePhase !== 'hidden' && (
+      {/* 3a. Normal Gameplay Chase Speech Bubble */}
+      {sessionState === 'playing' &&
+        !engineState.paused &&
+        !jumpscareActive &&
+        !completedCardModal &&
+        !lossModal &&
+        !engineState.victorySequenceActive &&
+        dialoguePhase !== 'hidden' && (
+          <aside
+            ref={speechBubbleRef}
+            className={`pennywise-speech-bubble ${dialoguePhase === 'exiting' ? 'bubble-exiting' : 'bubble-entering'}`}
+            key={`chase-${dialogueIndex}-${dialoguePhase === 'exiting' ? 'exit' : 'enter'}`}
+            aria-live="polite"
+          >
+            <div className="speech-bubble-tail" />
+            <p className="speech-bubble-text">
+              {formatDialogue(PENNYWISE_LINES[dialogueIndex])}
+            </p>
+          </aside>
+        )}
+
+      {/* 3b. Pennywise Demise Speech Bubble (0.0s to 4.1s in Cutscene) */}
+      {engineState.victorySequenceActive && demiseCutscene.visible && (
         <aside
           ref={speechBubbleRef}
-          className={`pennywise-speech-bubble ${dialoguePhase === 'exiting' ? 'bubble-exiting' : 'bubble-entering'}`}
-          key={`${dialogueIndex}-${dialoguePhase === 'exiting' ? 'exit' : 'enter'}`}
-          aria-live="polite"
+          className="pennywise-speech-bubble pennywise-speech-bubble--demise"
+          key={`demise-${demiseCutscene.lineIndex}`}
+          aria-live="assertive"
         >
-          <div className="speech-bubble-tail" />
-          <p className="speech-bubble-text">
-            {formatDialogue(PENNYWISE_LINES[dialogueIndex])}
+          {/* Jagged Panic Crack SVG Overlays */}
+          <svg className="bubble-demise-cracks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0,0 L18,12 L10,24 L22,30" stroke="#dc2626" strokeWidth="2.5" fill="none" />
+            <path d="M100,0 L82,14 L90,26 L78,32" stroke="#dc2626" strokeWidth="2.5" fill="none" />
+            <path d="M0,100 L16,84 L8,74 L20,68" stroke="#dc2626" strokeWidth="2.5" fill="none" />
+            <path d="M100,100 L84,82 L92,72 L80,66" stroke="#dc2626" strokeWidth="2.5" fill="none" />
+          </svg>
+          <div className="speech-bubble-tail speech-bubble-tail--demise" />
+          <p className="speech-bubble-text demise-bubble-text">
+            {formatDialogue(PENNYWISE_DEMISE_LINES[demiseCutscene.lineIndex] || PENNYWISE_DEMISE_LINES[0])}
           </p>
         </aside>
       )}
@@ -584,8 +656,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         </>
       )}
 
-      {/* 5. STAGE-SPECIFIC POKÉMON BOTTOM 5-CARD DOCK */}
-      {(() => {
+      {/* 5. STAGE-SPECIFIC POKÉMON BOTTOM 5-CARD DOCK (Hidden during cutscene to allow full spectacle) */}
+      {!engineState.victorySequenceActive && (() => {
         const stageTargetCard = POKEMON_CARD_ROSTER[(engineState.stageNumber - 1) % POKEMON_CARD_ROSTER.length];
         return (
           <section
@@ -648,28 +720,71 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         );
       })()}
 
-      {/* ── CARTOON VICTORY CELEBRATION OVERLAY ── */}
+      {/* ── CARTOON VICTORY CELEBRATION OVERLAY (100% UNOBSTRUCTED CENTER VIEWPORT) ── */}
       {engineState.victorySequenceActive && (
         <div className="victory-celebration-overlay" aria-live="polite">
-          <div className="victory-confetti-container">
-            {Array.from({ length: 32 }).map((_, i) => (
-              <span
-                key={i}
-                className={`victory-confetti confetti-p-${i % 4}`}
-                style={{
-                  '--confetti-x': `${(i * 3.1) % 100}%`,
-                  '--confetti-delay': `${(i * 0.11) % 1.5}s`,
-                }}
-              />
-            ))}
+          {/* Confetti raining along the left and right screen edges only */}
+          <div className="victory-confetti-container" aria-hidden="true">
+            {Array.from({ length: 36 }).map((_, i) => {
+              const isLeft = i % 2 === 0;
+              const xPercent = isLeft ? 1.5 + ((i * 4.9) % 16) : 82.5 + ((i * 4.9) % 16);
+              return (
+                <span
+                  key={i}
+                  className={`victory-confetti confetti-p-${i % 4}`}
+                  style={{
+                    '--confetti-x': `${xPercent}%`,
+                    '--confetti-delay': `${(i * 0.12) % 1.6}s`,
+                    '--confetti-duration': `${2.4 + (i % 3) * 0.4}s`,
+                  }}
+                />
+              );
+            })}
           </div>
-          <div className="victory-burst-header">
-            <span className="victory-badge">★ GRAND VICTORY ★</span>
-            <h1 className="victory-title">PENNYWISE BANISHED TO THE VOID!</h1>
-          </div>
-          <div className="victory-ribbon-bar">
-            CHAMPION OF THE HEXEDEX · ALL 6 STAGES PURIFIED!
-          </div>
+
+          {/* Top Marquee Trophy Banner (Transitions at 4.0s) */}
+          <header className={`victory-top-marquee ${demiseCutscene.isGrandChampion ? 'victory-top-marquee--champion' : ''}`}>
+            <div className="victory-marquee-pill">
+              <span className="victory-marquee-sparkle" aria-hidden="true">★</span>
+              <span className="victory-marquee-text">
+                {demiseCutscene.isGrandChampion
+                  ? '🏆 GRAND CHAMPION · THE CURSED CARNIVAL IS PURIFIED! 🏆'
+                  : '★ HEXEDEX SEAL ACTIVATED · BANISHING PENNYWISE ★'}
+              </span>
+              <span className="victory-marquee-sparkle" aria-hidden="true">★</span>
+            </div>
+          </header>
+
+          {/* Bottom Celebration Bar with the 6 Glowing Pokémon Card Icons */}
+          <footer className="victory-bottom-cards-bar">
+            <div className="victory-cards-row">
+              {POKEMON_CARD_ROSTER.slice(0, 6).map((card, idx) => (
+                <div
+                  key={card.id || idx}
+                  className="victory-mini-card-icon"
+                  style={{
+                    '--card-theme-color': card.color,
+                    '--card-accent-color': card.accentColor,
+                    '--card-anim-delay': `${idx * 0.08}s`,
+                  }}
+                  title={`Stage ${idx + 1}: ${card.name} (${card.type})`}
+                >
+                  <div className="mini-card-badge">S{idx + 1}</div>
+                  <div className="mini-card-art">
+                    <StagePokemonMiniSprite stageNumber={idx + 1} />
+                  </div>
+                  <div className="mini-card-footer">
+                    <span className="mini-card-name-short">{card.name.split('-')[0]}</span>
+                    <span className="mini-card-symbol">{card.symbol}</span>
+                  </div>
+                  <div className="mini-card-glow-aura" />
+                </div>
+              ))}
+            </div>
+            <div className="victory-cards-bar-subtitle">
+              ALL 6 POKÉDEX CARDS CONVERGED · HEXEDEX SEAL ACTIVE
+            </div>
+          </footer>
         </div>
       )}
 

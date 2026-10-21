@@ -927,15 +927,168 @@ export class PursuerEntity {
   triggerDefeatCollapse() {
     this.isDefeated = true;
     this.defeatElapsed = 0;
-    this.defeatDuration = 3.6;
+    this.defeatDuration = 5.2;
     this.yVel = 0;
-    // Set Pennywise into clear, dramatic visual focus in front of the heroic camera
-    this.root.position.set(0, 1.4, -5.2);
+
+    // Reset visual visibility and base transforms
+    this.root.position.set(0, 0, -6.2);
     this.root.rotation.set(0, 0, 0);
-    this.bodyGroup.rotation.set(0, 0, 0);
     this.root.scale.set(1.36, 1.36, 1.36);
     this.root.visible = true;
+
+    this.bodyGroup.visible = true;
+    this.bodyGroup.position.set(0, 1.55, 0);
+    this.bodyGroup.rotation.set(0, 0, 0);
+
+    if (this.headGroup) {
+      this.headGroup.position.set(0, 2.40, 0);
+      this.headGroup.rotation.set(0, 0, 0);
+    }
+    if (this.jawGroup) this.jawGroup.rotation.x = 0;
+
+    // Reset all 3 balloons
+    this.balloons?.forEach((b) => {
+      b.group.visible = true;
+      b.group.scale.set(1, 1, 1);
+      b.group.position.set(b.base.x, b.base.y, b.base.z);
+      b.hasBurst = false;
+    });
+
     if (this.faceLight) this.faceLight.intensity = 5.0;
+
+    // Build Cutscene 3D VFX Group
+    this.setupDefeatVfx();
+  }
+
+  setupDefeatVfx() {
+    if (this.defeatVfxGroup) {
+      this.root.remove(this.defeatVfxGroup);
+      this.defeatVfxGroup = null;
+    }
+
+    const group = new THREE.Group();
+    this.defeatVfxGroup = group;
+    this.root.add(group);
+
+    // 1. The 6 Purified Pokédex Seal Cards
+    const elementColors = ['#10b981', '#f59e0b', '#38bdf8', '#c084fc', '#94a3b8', '#06b6d4'];
+    this.sealCards = [];
+    elementColors.forEach((colorHex, idx) => {
+      const cardGroup = new THREE.Group();
+
+      // Card Slab
+      const slabGeo = this.trackDisposable(new THREE.BoxGeometry(0.52, 0.76, 0.04));
+      const slabMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+        color: colorHex,
+        emissive: colorHex,
+        emissiveIntensity: 1.2,
+        roughness: 0.3,
+        metalness: 0.2,
+      }));
+      const slab = new THREE.Mesh(slabGeo, slabMat);
+      cardGroup.add(slab);
+
+      // Dark Border
+      const borderGeo = this.trackDisposable(new THREE.BoxGeometry(0.56, 0.80, 0.03));
+      const borderMat = this.trackDisposable(new THREE.MeshBasicMaterial({ color: '#120b1d' }));
+      const border = new THREE.Mesh(borderGeo, borderMat);
+      border.position.z = -0.01;
+      cardGroup.add(border);
+
+      // Inner Symbol Emblem Dot
+      const dotGeo = this.trackDisposable(new THREE.SphereGeometry(0.12, 8, 8));
+      const dotMat = this.trackDisposable(new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+      const dot = new THREE.Mesh(dotGeo, dotMat);
+      dot.position.z = 0.03;
+      cardGroup.add(dot);
+
+      // Laser Beam connecting card to Pennywise chest (0, 1.55, 0)
+      const beamGeo = this.trackDisposable(new THREE.CylinderGeometry(0.035, 0.035, 1, 6));
+      const beamMat = this.trackDisposable(new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0,
+      }));
+      const beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.visible = false;
+      group.add(beam);
+
+      group.add(cardGroup);
+      this.sealCards.push({
+        group: cardGroup,
+        beam,
+        colorHex,
+        baseAngle: (idx * Math.PI) / 3,
+        idx,
+      });
+    });
+
+    // 2. The Abyssal Void Vortex Portal (at cobblestone surface Y = 0.06)
+    const portalGroup = new THREE.Group();
+    portalGroup.position.set(0, 0.06, 0);
+    portalGroup.rotation.x = -Math.PI / 2;
+    portalGroup.scale.set(0.01, 0.01, 0.01);
+
+    // Multi-ringed portal
+    const outerRingGeo = this.trackDisposable(new THREE.RingGeometry(1.6, 2.3, 32));
+    const outerRingMat = this.trackDisposable(new THREE.MeshBasicMaterial({
+      color: '#991b1b',
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85,
+    }));
+    this.portalOuterRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+    portalGroup.add(this.portalOuterRing);
+
+    const midRingGeo = this.trackDisposable(new THREE.RingGeometry(0.85, 1.6, 32));
+    const midRingMat = this.trackDisposable(new THREE.MeshBasicMaterial({
+      color: '#7c3aed',
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85,
+    }));
+    this.portalMidRing = new THREE.Mesh(midRingGeo, midRingMat);
+    portalGroup.add(this.portalMidRing);
+
+    const coreGeo = this.trackDisposable(new THREE.CircleGeometry(0.85, 32));
+    const coreMat = this.trackDisposable(new THREE.MeshBasicMaterial({
+      color: '#080210',
+      side: THREE.DoubleSide,
+    }));
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    portalGroup.add(coreMesh);
+
+    // 16 Rising dark-void voxel shards around rim
+    this.portalShards = [];
+    const shardGeo = this.trackDisposable(new THREE.BoxGeometry(0.12, 0.32, 0.12));
+    for (let i = 0; i < 16; i++) {
+      const shardMat = this.trackDisposable(new THREE.MeshBasicMaterial({
+        color: i % 2 === 0 ? '#ef4444' : '#a855f7',
+      }));
+      const shard = new THREE.Mesh(shardGeo, shardMat);
+      const angle = (i / 16) * Math.PI * 2;
+      shard.position.set(Math.cos(angle) * 1.9, Math.sin(angle) * 1.9, 0.15);
+      portalGroup.add(shard);
+      this.portalShards.push({ mesh: shard, angle, baseZ: 0.15 });
+    }
+
+    // Golden Purification Shockwave Ring
+    const shockwaveGeo = this.trackDisposable(new THREE.RingGeometry(0.3, 0.65, 32));
+    this.shockwaveMat = this.trackDisposable(new THREE.MeshBasicMaterial({
+      color: '#facc15',
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+    }));
+    this.shockwaveRing = new THREE.Mesh(shockwaveGeo, this.shockwaveMat);
+    this.shockwaveRing.visible = false;
+    portalGroup.add(this.shockwaveRing);
+
+    group.add(portalGroup);
+    this.abyssPortal = portalGroup;
+
+    // 3. Voxel Shrapnel Confetti Bursts
+    this.balloonVoxelBursts = [];
   }
 
   updateDefeat(deltaMs) {
@@ -944,60 +1097,234 @@ export class PursuerEntity {
     this.defeatElapsed += dt;
     const t = this.defeatElapsed;
 
-    // Phase 1: 0.0s – 1.0s (Balloon Pop & Agony Shudder)
-    if (this.balloons && this.balloons.length > 0) {
-      const popTimes = [0.25, 0.55, 0.85];
-      this.balloons.forEach((b, idx) => {
-        const popT = popTimes[idx];
-        if (t < popT) {
-          const shake = Math.sin(t * 30 + idx) * 0.08;
-          b.group.scale.set(1 + shake, 1 + shake, 1 + shake);
-          b.group.visible = true;
-        } else if (t < popT + 0.12) {
-          const burstFrac = (t - popT) / 0.12;
-          const s = 1.0 + burstFrac * 0.6;
-          b.group.scale.set(s, s, s);
-          b.group.visible = true;
-        } else {
-          b.group.visible = false;
-        }
-      });
+    // Update balloon burst voxel particles if any
+    for (let i = this.balloonVoxelBursts.length - 1; i >= 0; i--) {
+      const p = this.balloonVoxelBursts[i];
+      p.mesh.position.x += p.vel.x * dt;
+      p.mesh.position.y += p.vel.y * dt;
+      p.mesh.position.z += p.vel.z * dt;
+      p.vel.y -= 12 * dt;
+      p.mesh.rotation.x += dt * 6;
+      p.mesh.rotation.y += dt * 8;
+      p.life -= dt * 1.5;
+      p.mesh.scale.setScalar(Math.max(0.01, p.life));
+      if (p.life <= 0) {
+        if (this.defeatVfxGroup) this.defeatVfxGroup.remove(p.mesh);
+        this.balloonVoxelBursts.splice(i, 1);
+      }
     }
 
-    if (t <= 1.0) {
+    const spawnBalloonBurst = (pos) => {
+      if (!this.defeatVfxGroup) return;
+      const cubeGeo = new THREE.BoxGeometry(0.16, 0.16, 0.16);
+      const colors = ['#dc2626', '#facc15', '#ef4444', '#f59e0b'];
+      for (let k = 0; k < 8; k++) {
+        const mat = new THREE.MeshBasicMaterial({ color: colors[k % colors.length] });
+        const mesh = new THREE.Mesh(cubeGeo, mat);
+        mesh.position.copy(pos);
+        this.defeatVfxGroup.add(mesh);
+        this.balloonVoxelBursts.push({
+          mesh,
+          vel: new THREE.Vector3(
+            (Math.random() - 0.5) * 6,
+            Math.random() * 5 + 2,
+            (Math.random() - 0.5) * 6
+          ),
+          life: 1.0,
+        });
+      }
+    };
+
+    // ── Phase 1 (0.0s to 1.4s): The 6-Card Hexedex Seal & Balloon Pop ──
+    if (t < 1.4) {
+      const popTimes = [0.35, 0.75, 1.15];
+      if (this.balloons) {
+        this.balloons.forEach((b, idx) => {
+          const popT = popTimes[idx];
+          if (t < popT) {
+            const shake = Math.sin(t * 35 + idx) * 0.08;
+            b.group.scale.set(1 + shake, 1 + shake, 1 + shake);
+            b.group.visible = true;
+          } else if (t < popT + 0.08) {
+            const burstFrac = (t - popT) / 0.08;
+            const s = 1.0 + burstFrac * 0.6;
+            b.group.scale.set(s, s, s);
+            b.group.visible = true;
+            if (!b.hasBurst) {
+              b.hasBurst = true;
+              spawnBalloonBurst(b.group.position);
+            }
+          } else {
+            b.group.visible = false;
+          }
+        });
+      }
+
       if (this.leftArm) {
-        this.leftArm.rotation.set(-1.8 + Math.sin(t * 30) * 0.2, 0.4, 0.5);
+        this.leftArm.rotation.set(-2.2 + Math.sin(t * 35) * 0.25, 0.6, 0.8);
       }
       if (this.rightArm) {
-        this.rightArm.rotation.set(-1.8 + Math.cos(t * 30) * 0.2, -0.4, -0.5);
+        this.rightArm.rotation.set(-2.2 + Math.cos(t * 35) * 0.25, -0.6, -0.8);
       }
       if (this.headGroup) {
         this.headGroup.rotation.z = Math.sin(t * 45) * 0.4;
         this.headGroup.rotation.x = -0.3 + Math.sin(t * 35) * 0.2;
       }
-      if (this.jawGroup) {
-        this.jawGroup.rotation.x = 0.85;
-      }
       if (this.faceMat) {
-        this.faceMat.emissiveIntensity = Math.random() > 0.4 ? 4.5 : 0.2;
+        this.faceMat.emissiveIntensity = Math.random() > 0.3 ? 5.0 : 0.4;
       }
       if (this.deadlightsMat) {
-        this.deadlightsMat.emissiveIntensity = Math.random() > 0.4 ? 5.0 : 0.5;
+        this.deadlightsMat.emissiveIntensity = Math.random() > 0.3 ? 6.0 : 0.6;
       }
-    } else {
-      // Phase 2: 1.0s – 2.6s+ (Tumbling Fall into Dark Abyss)
-      this.bodyGroup.rotation.x = Math.max(-1.45, this.bodyGroup.rotation.x - dt * 2.2);
-      this.bodyGroup.rotation.y += dt * 5.0;
 
-      this.yVel = (this.yVel || 0) - 18 * dt;
-      this.root.position.y += this.yVel * dt;
+      const spiralIn = Math.min(1, t / 0.7);
+      const rad = 2.8 + (1 - spiralIn) * 3.5;
+      const height = 1.55 + (1 - spiralIn) * 2.5;
 
-      const currentScale = Math.max(0.05, this.root.scale.x - dt * 0.75);
-      this.root.scale.set(currentScale, currentScale, currentScale);
+      this.sealCards?.forEach((card) => {
+        const angle = card.baseAngle + t * 4.2;
+        const cx = Math.cos(angle) * rad;
+        const cz = Math.sin(angle) * rad;
+        const cy = height + Math.sin(t * 3.5 + card.idx) * 0.15;
+        card.group.position.set(cx, cy, cz);
+        card.group.lookAt(0, 1.55, 0);
 
-      if (this.root.position.y < -10) {
+        if (t >= 0.4) {
+          card.beam.visible = true;
+          const chestPos = new THREE.Vector3(0, 1.55, 0);
+          const cardPos = card.group.position;
+          const midPos = cardPos.clone().add(chestPos).multiplyScalar(0.5);
+          card.beam.position.copy(midPos);
+          card.beam.scale.set(1, cardPos.distanceTo(chestPos), 1);
+          card.beam.quaternion.setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0),
+            cardPos.clone().sub(chestPos).normalize()
+          );
+          card.beam.material.opacity = 0.5 + Math.sin(t * 22 + card.idx) * 0.35;
+        }
+      });
+    }
+
+    // ── Phase 2 (1.4s to 2.8s): Deadlights Overload & Abyssal Portal ──
+    else if (t < 2.8) {
+      const p2 = (t - 1.4) / 1.4;
+
+      if (this.abyssPortal) {
+        const pScale = 0.1 + p2 * 3.5;
+        this.abyssPortal.scale.set(pScale, pScale, pScale);
+        if (this.portalOuterRing) this.portalOuterRing.rotation.z += dt * 3.8;
+        if (this.portalMidRing) this.portalMidRing.rotation.z -= dt * 5.2;
+
+        this.portalShards?.forEach((shard) => {
+          shard.angle += dt * 3.0;
+          const r = 1.8;
+          shard.mesh.position.x = Math.cos(shard.angle) * r;
+          shard.mesh.position.y = Math.sin(shard.angle) * r;
+          shard.mesh.position.z = shard.baseZ + Math.sin(t * 10 + shard.angle) * 0.35;
+        });
+      }
+
+      if (this.jawGroup) {
+        this.jawGroup.rotation.x = -1.2 * Math.min(1, p2 * 2.0);
+      }
+
+      if (this.faceMat) {
+        this.faceMat.emissive.setHex(Math.sin(t * 30) > 0 ? 0xff4400 : 0x7c3aed);
+        this.faceMat.emissiveIntensity = 6.0 + Math.sin(t * 40) * 3.0;
+      }
+      if (this.deadlightsMat) {
+        this.deadlightsMat.emissiveIntensity = 8.0 + Math.sin(t * 35) * 4.0;
+      }
+
+      this.bodyGroup.position.y = 1.55 - p2 * 0.90;
+      this.bodyGroup.rotation.z = Math.sin(t * 30) * 0.15;
+
+      this.sealCards?.forEach((card) => {
+        const angle = card.baseAngle + t * 4.8;
+        const cx = Math.cos(angle) * 2.6;
+        const cz = Math.sin(angle) * 2.6;
+        const cy = 1.25 + Math.sin(t * 4.0 + card.idx) * 0.2;
+        card.group.position.set(cx, cy, cz);
+        card.group.lookAt(0, this.bodyGroup.position.y, 0);
+
+        const chestPos = new THREE.Vector3(0, this.bodyGroup.position.y, 0);
+        const cardPos = card.group.position;
+        const midPos = cardPos.clone().add(chestPos).multiplyScalar(0.5);
+        card.beam.position.copy(midPos);
+        card.beam.scale.set(1.4, cardPos.distanceTo(chestPos), 1.4);
+        card.beam.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          cardPos.clone().sub(chestPos).normalize()
+        );
+        card.beam.material.opacity = 0.85 + Math.sin(t * 28 + card.idx) * 0.15;
+      });
+    }
+
+    // ── Phase 3 (2.8s to 4.2s): Swallowed Into Darkness ──
+    else if (t < 4.2) {
+      const p3 = (t - 2.8) / 1.4;
+
+      if (this.abyssPortal) {
+        if (this.portalOuterRing) this.portalOuterRing.rotation.z += dt * 6.0;
+        if (this.portalMidRing) this.portalMidRing.rotation.z -= dt * 8.0;
+
+        if (t >= 4.05) {
+          const swFrac = (t - 4.05) / 0.15;
+          if (this.shockwaveRing) {
+            this.shockwaveRing.visible = true;
+            const swScale = 1.0 + swFrac * 12.0;
+            this.shockwaveRing.scale.set(swScale, swScale, swScale);
+            this.shockwaveMat.opacity = Math.max(0, 1.0 - swFrac);
+          }
+          const closeScale = Math.max(0, 3.6 * (1 - swFrac));
+          this.abyssPortal.scale.set(closeScale, closeScale, closeScale);
+        }
+      }
+
+      this.sealCards?.forEach((card) => {
+        card.beam.visible = false;
+        const angle = card.baseAngle + t * 3.5;
+        card.group.position.set(Math.cos(angle) * 3.2, 2.0, Math.sin(angle) * 3.2);
+        card.group.rotation.y += dt * 4;
+      });
+
+      this.bodyGroup.rotation.x = Math.max(-1.45, this.bodyGroup.rotation.x - dt * 2.8);
+      this.bodyGroup.rotation.y += dt * 6.5;
+
+      this.yVel = (this.yVel || 0) - 22 * dt;
+      this.bodyGroup.position.y += this.yVel * dt;
+
+      if (this.rightArm) {
+        this.rightArm.rotation.set(-2.8, 0, 0);
+      }
+
+      const s = Math.max(0.08, 1.36 * (1 - p3 * 0.92));
+      this.root.scale.set(s, s, s);
+
+      if (t >= 4.1) {
+        this.bodyGroup.visible = false;
         this.root.visible = false;
       }
+    }
+
+    // ── Phase 4 (4.2s to 5.2s): Champion's Triumph ──
+    else {
+      this.root.visible = false;
+
+      const p4 = (t - 4.2) / 1.0;
+      const fwdZ = 6.2 * Math.min(1, p4 * 1.5);
+      const orbitRad = 1.8 + Math.sin(t * 3.5) * 0.2;
+
+      this.sealCards?.forEach((card) => {
+        card.group.visible = true;
+        const angle = card.baseAngle + t * 3.6;
+        const cx = Math.cos(angle) * orbitRad;
+        const cz = fwdZ + Math.sin(angle) * orbitRad;
+        const cy = 1.1 + Math.sin(t * 4.5 + card.idx) * 0.35;
+        card.group.position.set(cx, cy, cz);
+        card.group.rotation.y += dt * 4;
+        card.group.rotation.x = Math.sin(t * 3 + card.idx) * 0.15;
+      });
     }
   }
 

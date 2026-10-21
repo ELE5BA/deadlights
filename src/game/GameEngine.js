@@ -780,8 +780,18 @@ export class GameEngine {
 
   triggerVictorySequence() {
     this.isVictorySequenceActive = true;
+    this.paused = false;
+    this.clock.getDelta();
     this.victoryElapsedMs = 0;
-    this.victoryDurationMs = 3600;
+    this.victoryDurationMs = 5200;
+
+    // Smoothly center the player in middle lane
+    this.targetX = 0;
+    this.currentX = 0;
+    if (this.playerEntity?.root) {
+      this.playerEntity.root.position.set(0, 0, 0);
+      this.playerEntity.root.rotation.set(0, 0, 0);
+    }
 
     stopBackgroundMusic();
     playVictoryCelebrationSfx();
@@ -795,10 +805,11 @@ export class GameEngine {
     this.objects = this.objects.filter((obj) => !obj.isHazard);
 
     this.pursuerEntity?.triggerDefeatCollapse();
-    this.playerCharacter?.setVictory(true);
+    this.playerEntity?.setVictory(true);
 
     this.updateHudImmediate({
       victorySequenceActive: true,
+      paused: false,
     });
   }
 
@@ -807,20 +818,62 @@ export class GameEngine {
     const deltaMs = Math.min(this.clock.getDelta() * 1000, 50);
     const dt = deltaMs / 1000;
 
-    // Grand Victory Sequence (3.6s defeat cutscene & celebration)
+    // Grand Victory Sequence (5.2s 4-phase defeat cutscene & celebration)
     if (this.isVictorySequenceActive) {
       this.victoryElapsedMs += deltaMs;
 
       this.pursuerEntity?.updateDefeat(deltaMs);
-      this.playerCharacter?.updateVictory(deltaMs);
+      this.playerEntity?.updateVictory(deltaMs);
 
-      // Heroic camera low-angle front-three-quarter glide:
-      // camera.position damping toward (1.8, 2.6, 5.2) looking at (0, 1.4, -2)
-      const camDamp = Math.min(1, dt * 2.5);
-      this.world.camera.position.x += (1.8 - this.world.camera.position.x) * camDamp;
-      this.world.camera.position.y += (2.6 - this.world.camera.position.y) * camDamp;
-      this.world.camera.position.z += (5.2 - this.world.camera.position.z) * camDamp;
-      this.world.camera.lookAt(0, 1.4, -2);
+      // Keep 60FPS speech bubble tracking active during cutscene
+      const pursuerSpeechPos = this.pursuerEntity?.getSpeechBubbleScreenCoords(this.world.camera);
+      this.onFrameTick?.({
+        stageProgressRatio: 1,
+        speed: 0,
+        pursuerSpeechPos,
+        victoryElapsedMs: this.victoryElapsedMs,
+      });
+
+      // Dynamic Camera Choreography:
+      // Phase 1 - 3 (0.0s to 4.0s): Frame celebrating runner in foreground and Pennywise in midground
+      // camera damping toward (1.4, 3.1, 4.8) looking at (0, 1.9, -4.5) with impact shakes
+      // Phase 4 (4.0s to 5.2s): Glide camera into close-up champion angle (0, 2.2, 3.8) looking at (0, 1.3, 0)
+      const tSec = this.victoryElapsedMs / 1000;
+
+      let targetCamX = 1.4;
+      let targetCamY = 3.1;
+      let targetCamZ = 4.8;
+      let lookX = 0;
+      let lookY = 1.9;
+      let lookZ = -4.5;
+      let camDamp = Math.min(1, dt * 2.8);
+
+      if (tSec >= 4.0) {
+        targetCamX = 0;
+        targetCamY = 2.2;
+        targetCamZ = 3.8;
+        lookX = 0;
+        lookY = 1.3;
+        lookZ = 0;
+        camDamp = Math.min(1, dt * 3.6);
+      }
+
+      // Calculate camera shake on balloon pops and abyssal drag
+      let shakeAmp = 0;
+      const impacts = [0.35, 0.75, 1.15, 2.8];
+      for (const impact of impacts) {
+        const diff = tSec - impact;
+        if (diff >= 0 && diff < 0.22) {
+          shakeAmp = Math.max(shakeAmp, (1 - diff / 0.22) * (impact === 2.8 ? 0.32 : 0.18));
+        }
+      }
+      const shakeX = (Math.random() - 0.5) * shakeAmp;
+      const shakeY = (Math.random() - 0.5) * shakeAmp;
+
+      this.world.camera.position.x += (targetCamX + shakeX - this.world.camera.position.x) * camDamp;
+      this.world.camera.position.y += (targetCamY + shakeY - this.world.camera.position.y) * camDamp;
+      this.world.camera.position.z += (targetCamZ - this.world.camera.position.z) * camDamp;
+      this.world.camera.lookAt(lookX, lookY, lookZ);
 
       this.world.renderer.render(this.world.scene, this.world.camera);
 

@@ -801,8 +801,11 @@ export function stopBackgroundMusic() {
 }
 
 /**
- * Synthesizes dramatic sub-bass banish boom as Pennywise falls (0.0s - 1.2s),
- * followed by triumphant, upbeat 8-bit Pokémon Hall-of-Fame victory fanfare (1.2s - 3.5s).
+ * Synthesizes the 4-phase, 5.2-second Pennywise demise cutscene audio:
+ * Phase 1 (0.35s, 0.75s, 1.15s): 3 cartoon balloon pops with sparkle chimes.
+ * Phase 2 (1.4s - 2.8s): Laser seal convergence hum & crackling Deadlights overload sweep.
+ * Phase 3 (2.8s - 4.1s): Deep descending abyssal vortex implosion whoosh (320Hz -> 28Hz).
+ * Phase 4 (4.0s - 5.2s): Triumphant 8-bit Pokémon Hall-of-Fame Champion Fanfare chord progression!
  */
 export function playVictoryCelebrationSfx() {
   if (muted) return;
@@ -810,60 +813,218 @@ export function playVictoryCelebrationSfx() {
   if (!ctx) return;
   const now = ctx.currentTime;
 
-  // 1. Sub-bass banish boom (0.0s - 1.2s)
-  const boomOsc = ctx.createOscillator();
-  const boomFilter = ctx.createBiquadFilter();
-  const boomGain = ctx.createGain();
-
-  boomOsc.type = 'sawtooth';
-  boomOsc.frequency.setValueAtTime(140, now);
-  boomOsc.frequency.exponentialRampToValueAtTime(28, now + 1.2);
-
-  boomFilter.type = 'lowpass';
-  boomFilter.frequency.setValueAtTime(500, now);
-  boomFilter.frequency.exponentialRampToValueAtTime(60, now + 1.2);
-
-  boomGain.gain.setValueAtTime(0.001, now);
-  boomGain.gain.linearRampToValueAtTime(0.35, now + 0.05);
-  boomGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-
-  boomOsc.connect(boomFilter);
-  boomFilter.connect(boomGain);
-  boomGain.connect(ctx.destination);
-  boomOsc.start(now);
-  boomOsc.stop(now + 1.25);
-
-  // 2. Hall-of-Fame style upbeat 8-bit victory fanfare arpeggios (1.2s - 3.5s)
-  // C Major / G Major triumphant ascending arpeggio notes
-  const notes = [
-    { freq: 261.63, delay: 1.20, dur: 0.16 }, // C4
-    { freq: 329.63, delay: 1.36, dur: 0.16 }, // E4
-    { freq: 392.00, delay: 1.52, dur: 0.16 }, // G4
-    { freq: 523.25, delay: 1.68, dur: 0.28 }, // C5
-    { freq: 392.00, delay: 1.98, dur: 0.14 }, // G4
-    { freq: 523.25, delay: 2.14, dur: 0.16 }, // C5
-    { freq: 659.25, delay: 2.32, dur: 0.18 }, // E5
-    { freq: 783.99, delay: 2.52, dur: 0.32 }, // G5
-    { freq: 880.00, delay: 2.86, dur: 0.22 }, // A5
-    { freq: 1046.50, delay: 3.10, dur: 0.55 }, // C6 (apex hold)
+  // -------------------------------------------------------------
+  // Phase 1: 3 Cartoon Balloon Pops & Sparkle Chimes
+  // -------------------------------------------------------------
+  const balloonPops = [
+    { delay: 0.35, popFreq: 640, chimes: [1318.51, 1975.53] }, // E6, B6
+    { delay: 0.75, popFreq: 720, chimes: [1567.98, 2349.32] }, // G6, D7
+    { delay: 1.15, popFreq: 820, chimes: [2093.00, 3135.96] }, // C7, G7
   ];
 
-  notes.forEach(({ freq, delay, dur }) => {
+  balloonPops.forEach(({ delay, popFreq, chimes }) => {
+    const popStart = now + delay;
+
+    // Snappy balloon pop pitch-drop oscillator
+    const popOsc = ctx.createOscillator();
+    const popGain = ctx.createGain();
+    popOsc.type = 'sawtooth';
+    popOsc.frequency.setValueAtTime(popFreq, popStart);
+    popOsc.frequency.exponentialRampToValueAtTime(55, popStart + 0.055);
+
+    popGain.gain.setValueAtTime(0.26, popStart);
+    popGain.gain.exponentialRampToValueAtTime(0.001, popStart + 0.06);
+
+    popOsc.connect(popGain);
+    popGain.connect(ctx.destination);
+    popOsc.start(popStart);
+    popOsc.stop(popStart + 0.065);
+
+    // Noise pop click
+    try {
+      const noiseBuf = createNoiseBuffer(ctx, 0.04);
+      const noiseNode = ctx.createBufferSource();
+      noiseNode.buffer = noiseBuf;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'highpass';
+      noiseFilter.frequency.setValueAtTime(1400, popStart);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.18, popStart);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, popStart + 0.04);
+
+      noiseNode.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noiseNode.start(popStart);
+      noiseNode.stop(popStart + 0.045);
+    } catch {
+      // Audio buffer creation fallback
+    }
+
+    // Sparkle chimes
+    chimes.forEach((freq, idx) => {
+      const chimeStart = popStart + idx * 0.02;
+      const chimeOsc = ctx.createOscillator();
+      const chimeGain = ctx.createGain();
+      chimeOsc.type = 'sine';
+      chimeOsc.frequency.setValueAtTime(freq, chimeStart);
+
+      chimeGain.gain.setValueAtTime(0.001, chimeStart);
+      chimeGain.gain.linearRampToValueAtTime(0.14, chimeStart + 0.015);
+      chimeGain.gain.exponentialRampToValueAtTime(0.001, chimeStart + 0.24);
+
+      chimeOsc.connect(chimeGain);
+      chimeGain.connect(ctx.destination);
+      chimeOsc.start(chimeStart);
+      chimeOsc.stop(chimeStart + 0.25);
+    });
+  });
+
+  // -------------------------------------------------------------
+  // Phase 2: Laser Seal Convergence Hum & Deadlights Overload (1.4s - 2.8s)
+  // -------------------------------------------------------------
+  const laserStart = now + 1.4;
+  const laserDur = 1.4; // 1.4s to 2.8s
+
+  // Sweeping laser convergence carrier
+  const laserOsc = ctx.createOscillator();
+  const laserFilter = ctx.createBiquadFilter();
+  const laserGain = ctx.createGain();
+
+  laserOsc.type = 'sawtooth';
+  laserOsc.frequency.setValueAtTime(220, laserStart);
+  laserOsc.frequency.exponentialRampToValueAtTime(880, laserStart + laserDur);
+
+  laserFilter.type = 'bandpass';
+  laserFilter.Q.setValueAtTime(5.0, laserStart);
+  laserFilter.frequency.setValueAtTime(450, laserStart);
+  laserFilter.frequency.exponentialRampToValueAtTime(2600, laserStart + laserDur);
+
+  laserGain.gain.setValueAtTime(0.001, laserStart);
+  laserGain.gain.linearRampToValueAtTime(0.24, laserStart + 0.2);
+  laserGain.gain.setValueAtTime(0.22, laserStart + laserDur * 0.8);
+  laserGain.gain.exponentialRampToValueAtTime(0.001, laserStart + laserDur);
+
+  laserOsc.connect(laserFilter);
+  laserFilter.connect(laserGain);
+  laserGain.connect(ctx.destination);
+  laserOsc.start(laserStart);
+  laserOsc.stop(laserStart + laserDur + 0.05);
+
+  // Deadlights crackling overload sweep
+  const crackleOsc = ctx.createOscillator();
+  const crackleGain = ctx.createGain();
+  crackleOsc.type = 'square';
+  crackleOsc.frequency.setValueAtTime(330, laserStart);
+  crackleOsc.frequency.linearRampToValueAtTime(1100, laserStart + laserDur);
+
+  crackleGain.gain.setValueAtTime(0.001, laserStart);
+  crackleGain.gain.linearRampToValueAtTime(0.09, laserStart + 0.4);
+  crackleGain.gain.exponentialRampToValueAtTime(0.001, laserStart + laserDur);
+
+  crackleOsc.connect(crackleGain);
+  crackleGain.connect(ctx.destination);
+  crackleOsc.start(laserStart);
+  crackleOsc.stop(laserStart + laserDur + 0.05);
+
+  // -------------------------------------------------------------
+  // Phase 3: Deep Descending Abyssal Vortex Implosion (2.8s - 4.1s)
+  // -------------------------------------------------------------
+  const vortexStart = now + 2.8;
+  const vortexDur = 1.35; // 2.8s to 4.15s
+
+  const vortexOsc = ctx.createOscillator();
+  const vortexFilter = ctx.createBiquadFilter();
+  const vortexGain = ctx.createGain();
+
+  vortexOsc.type = 'sawtooth';
+  // Plunge 320Hz down to 28Hz
+  vortexOsc.frequency.setValueAtTime(320, vortexStart);
+  vortexOsc.frequency.exponentialRampToValueAtTime(28, vortexStart + vortexDur);
+
+  vortexFilter.type = 'lowpass';
+  vortexFilter.Q.setValueAtTime(4.2, vortexStart);
+  vortexFilter.frequency.setValueAtTime(850, vortexStart);
+  vortexFilter.frequency.exponentialRampToValueAtTime(45, vortexStart + vortexDur);
+
+  vortexGain.gain.setValueAtTime(0.001, vortexStart);
+  vortexGain.gain.linearRampToValueAtTime(0.38, vortexStart + 0.12);
+  vortexGain.gain.setValueAtTime(0.32, vortexStart + vortexDur * 0.7);
+  vortexGain.gain.exponentialRampToValueAtTime(0.001, vortexStart + vortexDur);
+
+  vortexOsc.connect(vortexFilter);
+  vortexFilter.connect(vortexGain);
+  vortexGain.connect(ctx.destination);
+  vortexOsc.start(vortexStart);
+  vortexOsc.stop(vortexStart + vortexDur + 0.05);
+
+  // Abyssal sub-bass suction foundation
+  const subOsc = ctx.createOscillator();
+  const subGain = ctx.createGain();
+  subOsc.type = 'sine';
+  subOsc.frequency.setValueAtTime(90, vortexStart);
+  subOsc.frequency.exponentialRampToValueAtTime(24, vortexStart + vortexDur);
+
+  subGain.gain.setValueAtTime(0.001, vortexStart);
+  subGain.gain.linearRampToValueAtTime(0.34, vortexStart + 0.15);
+  subGain.gain.exponentialRampToValueAtTime(0.001, vortexStart + vortexDur);
+
+  subOsc.connect(subGain);
+  subGain.connect(ctx.destination);
+  subOsc.start(vortexStart);
+  subOsc.stop(vortexStart + vortexDur + 0.05);
+
+  // -------------------------------------------------------------
+  // Phase 4: Triumphant 8-bit Pokémon Champion Fanfare (4.0s - 5.2s+)
+  // -------------------------------------------------------------
+  const fanfareNotes = [
+    // Triplet lead-in on C5
+    { freq: 523.25, bassFreq: 261.63, delay: 4.00, dur: 0.11 }, // C5
+    { freq: 523.25, bassFreq: 261.63, delay: 4.14, dur: 0.11 }, // C5
+    { freq: 523.25, bassFreq: 261.63, delay: 4.28, dur: 0.11 }, // C5
+    // Sustained C chord
+    { freq: 659.25, bassFreq: 261.63, delay: 4.42, dur: 0.26 }, // E5
+    // Turnaround chords
+    { freq: 622.25, bassFreq: 207.65, delay: 4.70, dur: 0.16 }, // Eb5 / Ab3
+    { freq: 698.46, bassFreq: 233.08, delay: 4.88, dur: 0.18 }, // F5 / Bb3
+    // Apex Grand Triumph Octave Chord
+    { freq: 1046.50, bassFreq: 523.25, delay: 5.08, dur: 0.70 }, // C6 & C5 ring-out
+  ];
+
+  fanfareNotes.forEach(({ freq, bassFreq, delay, dur }) => {
     const noteStart = now + delay;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
 
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(freq, noteStart);
+    // Lead voice: square wave
+    const leadOsc = ctx.createOscillator();
+    const leadGain = ctx.createGain();
+    leadOsc.type = 'square';
+    leadOsc.frequency.setValueAtTime(freq, noteStart);
 
-    gain.gain.setValueAtTime(0.001, noteStart);
-    gain.gain.linearRampToValueAtTime(0.20, noteStart + 0.02);
-    gain.gain.setValueAtTime(0.18, noteStart + dur * 0.7);
-    gain.gain.exponentialRampToValueAtTime(0.001, noteStart + dur);
+    leadGain.gain.setValueAtTime(0.001, noteStart);
+    leadGain.gain.linearRampToValueAtTime(0.18, noteStart + 0.015);
+    leadGain.gain.setValueAtTime(0.16, noteStart + dur * 0.75);
+    leadGain.gain.exponentialRampToValueAtTime(0.001, noteStart + dur);
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(noteStart);
-    osc.stop(noteStart + dur + 0.02);
+    leadOsc.connect(leadGain);
+    leadGain.connect(ctx.destination);
+    leadOsc.start(noteStart);
+    leadOsc.stop(noteStart + dur + 0.02);
+
+    // Bass / harmony voice: triangle wave
+    const bassOsc = ctx.createOscillator();
+    const bassGain = ctx.createGain();
+    bassOsc.type = 'triangle';
+    bassOsc.frequency.setValueAtTime(bassFreq, noteStart);
+
+    bassGain.gain.setValueAtTime(0.001, noteStart);
+    bassGain.gain.linearRampToValueAtTime(0.14, noteStart + 0.015);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, noteStart + dur);
+
+    bassOsc.connect(bassGain);
+    bassGain.connect(ctx.destination);
+    bassOsc.start(noteStart);
+    bassOsc.stop(noteStart + dur + 0.02);
   });
 }
+
