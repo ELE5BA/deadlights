@@ -4289,7 +4289,17 @@ h1 span {
   flex-wrap: wrap;
 }
 
+.dash-btn-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
 .sim-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   background: #1f1732;
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   color: #94a3b8;
@@ -4459,6 +4469,7 @@ h1 span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.55rem;
 }
 
 @media (max-width: 900px) {

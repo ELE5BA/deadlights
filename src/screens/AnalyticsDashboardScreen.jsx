@@ -3,6 +3,51 @@ import { adminLogout, getAnalytics } from '../services/apiClient.js';
 import { runMonteCarloSimulation } from '../services/monteCarloSimulation.js';
 import { playButtonClickSfx } from '../game/soundEffects.js';
 
+/* ── CREATIVE ARCADE VECTOR ICONS (NO EMOJIS) ── */
+function RefreshIcon({ className = 'dash-btn-icon' }) {
+  return (
+    <svg className={className} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19" />
+    </svg>
+  );
+}
+
+function ReturnIcon({ className = 'dash-btn-icon' }) {
+  return (
+    <svg className={className} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+
+function SignOutIcon({ className = 'dash-btn-icon' }) {
+  return (
+    <svg className={className} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+function LiveDbIcon({ className = 'dash-btn-icon' }) {
+  return (
+    <svg className={className} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+    </svg>
+  );
+}
+
+function SimSparkIcon({ className = 'dash-btn-icon' }) {
+  return (
+    <svg className={className} width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  );
+}
+
 export default function AnalyticsDashboardScreen({ onExit }) {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -157,7 +202,8 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                   loadLive();
                 }}
               >
-                ▶ REFRESH LIVE DB
+                <RefreshIcon />
+                <span>REFRESH LIVE DB</span>
               </button>
             </div>
 
@@ -169,10 +215,12 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                   onExit();
                 }}
               >
-                ◀ RETURN TO TITLE
+                <ReturnIcon />
+                <span>RETURN TO TITLE</span>
               </button>
               <button className="cabinet-btn-danger dash-logout-btn" onClick={logout}>
-                ✖ SIGN OUT
+                <SignOutIcon />
+                <span>SIGN OUT</span>
               </button>
             </div>
           </div>
@@ -190,7 +238,8 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                     setActiveMode('live');
                   }}
                 >
-                  ● LIVE SQLITE DB ({liveData?.metrics?.completedRuns ?? 0} RUNS)
+                  <LiveDbIcon />
+                  <span>LIVE SQLITE DB ({liveData?.metrics?.completedRuns ?? 0} RUNS)</span>
                 </button>
                 <button
                   className={`sim-toggle-pill ${isSim ? 'active-pill' : ''}`}
@@ -199,7 +248,8 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                     setActiveMode('simulation');
                   }}
                 >
-                  ⚡ SIMULATION ENGINE (N = {cohortSize} RUNS)
+                  <SimSparkIcon />
+                  <span>SIMULATION ENGINE (N = {cohortSize} RUNS)</span>
                 </button>
               </div>
 
@@ -305,7 +355,8 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                       handleRunSim();
                     }}
                   >
-                    ⚡ RUN MONTE CARLO SIMULATION
+                    <SimSparkIcon />
+                    <span>RUN MONTE CARLO SIMULATION</span>
                   </button>
                 </div>
               </div>

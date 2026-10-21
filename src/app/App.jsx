@@ -19,6 +19,17 @@ import {
   playButtonClickSfx,
 } from '../game/soundEffects.js';
 
+function DashboardIcon({ className = 'home-dash-icon' }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '5px' }}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M7 16v-4" />
+      <path d="M12 16v-7" />
+      <path d="M17 16v-2" />
+    </svg>
+  );
+}
+
 const RUNNER_TRAITS = {
   'pika-georgie': '⚡ SPARK DASH',
   'mimikyu-kid': '🎭 DECOY VEIL',
@@ -256,7 +267,7 @@ export default function App() {
                   setScreen('analytics');
                 }}
               >
-                📊 DASHBOARD
+                <DashboardIcon /> DASHBOARD
               </button>
               <span className="home-link-divider">·</span>
               <button
