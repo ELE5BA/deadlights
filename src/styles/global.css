@@ -4326,75 +4326,80 @@ h1 span {
   letter-spacing: 0.1em;
 }
 
-/* 4-Parameter Grid: Generous minimum width and spacing */
-.sim-params-cabinet-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.25rem;
-  align-items: stretch;
-}
-
-.sim-param-card {
+/* ── SIMULATOR TELEMETRY DECK (AUTHENTIC OCCULT ARCADE CONSOLE) ── */
+.sim-console-deck {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 0.85rem;
-  padding: 1.1rem 1.25rem !important;
-  background: #090610 !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 12px;
+  gap: 1.4rem;
+  width: 100%;
 }
 
-.sim-param-header {
+.sim-console-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+  width: 100%;
+}
+
+.sim-tuning-row {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 1.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sim-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.sim-control-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.sim-param-label {
+.sim-control-label {
   font-family: var(--font-sans);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 900;
   color: #94a3b8;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.sim-param-val-badge {
-  font-family: var(--font-display, sans-serif);
-  font-size: 0.74rem;
-  font-weight: 900;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  padding: 0.2rem 0.55rem;
-  border-radius: 6px;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-}
-
-.sim-param-val-badge.skill-badge {
+.sim-val-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 800;
   color: #facc15;
-  background: rgba(250, 204, 21, 0.12);
-  border-color: rgba(250, 204, 21, 0.25);
+  letter-spacing: 0.04em;
 }
 
 .sim-chip-options {
   display: flex;
-  gap: 0.65rem; /* Generous spacing so chips never touch */
+  gap: 0.65rem;
+  width: 100%;
 }
 
 .sim-chip-btn {
   flex: 1;
-  background: #191228;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  min-width: 0;
+  background: #181228;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
   color: #cbd5e1;
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 800;
-  padding: 0.55rem 0.65rem;
+  padding: 0.55rem 0.75rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
-  white-space: nowrap;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .sim-chip-btn:hover {
@@ -4411,6 +4416,13 @@ h1 span {
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
 }
 
+.sim-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
 .sim-slider-head {
   display: flex;
   justify-content: space-between;
@@ -4418,16 +4430,10 @@ h1 span {
 }
 
 .sim-slider-val {
-  font-family: var(--font-display, sans-serif);
+  font-family: var(--font-mono, monospace);
   font-size: 0.78rem;
   font-weight: 900;
   color: #facc15;
-}
-
-.sim-slider-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
 }
 
 .sim-range-input {
@@ -4437,54 +4443,30 @@ h1 span {
   height: 6px;
 }
 
-.sim-slider-ticks {
+.sim-action-group {
   display: flex;
-  justify-content: space-between;
-  font-family: monospace;
-  font-size: 0.62rem;
-  color: #64748b;
-  font-weight: 700;
-}
-
-/* Dedicated Action Trigger Bar with generous separation */
-.sim-action-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.sim-config-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-family: var(--font-sans);
-  font-size: 0.76rem;
-  color: #94a3b8;
-}
-
-.sim-config-summary .summary-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  flex-shrink: 0;
-}
-
-.sim-config-summary b {
-  color: #f6efe2;
+  align-items: flex-end;
+  min-width: 0;
 }
 
 .sim-execute-btn {
-  padding: 0.95rem 1.85rem !important;
-  font-size: 0.88rem !important;
+  padding: 0.75rem 1.65rem !important;
+  font-size: 0.84rem !important;
   letter-spacing: 0.08em !important;
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45) !important;
   white-space: nowrap;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .sim-console-row,
+  .sim-tuning-row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 }
 
 /* ── ANALYTICS TIER CARDS & COLOR PRINCIPLES ── */

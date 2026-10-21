@@ -212,58 +212,62 @@ export default function AnalyticsDashboardScreen({ onExit }) {
               </div>
             </div>
 
-            {/* Structured 4-parameter grid with generous spacing */}
-            <div className="sim-params-cabinet-grid">
-              <div className="cabinet-telemetry-well sim-param-card">
-                <div className="sim-param-header">
-                  <span className="sim-param-label">COHORT RUNS</span>
-                  <span className="sim-param-val-badge">{cohortSize} SESSIONS</span>
+            {/* Arcade Telemetry Console Deck (Spacious & Overflow-Proof) */}
+            <div className="sim-console-deck">
+              {/* Row 1: Session Parameters (Cohort & Skill) */}
+              <div className="sim-console-row">
+                <div className="sim-control-group">
+                  <div className="sim-control-head">
+                    <span className="sim-control-label">COHORT RUNS</span>
+                    <span className="sim-val-pill">{cohortSize} SESSIONS</span>
+                  </div>
+                  <div className="sim-chip-options">
+                    {[50, 250, 500].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        className={`sim-chip-btn ${cohortSize === num ? 'chip-active' : ''}`}
+                        onClick={() => {
+                          playButtonClickSfx();
+                          setCohortSize(num);
+                        }}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="sim-chip-options">
-                  {[50, 250, 500].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      className={`sim-chip-btn ${cohortSize === num ? 'chip-active' : ''}`}
-                      onClick={() => {
-                        playButtonClickSfx();
-                        setCohortSize(num);
-                      }}
-                    >
-                      {num} RUNS
-                    </button>
-                  ))}
+
+                <div className="sim-control-group">
+                  <div className="sim-control-head">
+                    <span className="sim-control-label">SKILL PROFILE</span>
+                    <span className="sim-val-pill">{skillProfile.toUpperCase()}</span>
+                  </div>
+                  <div className="sim-chip-options">
+                    {['novice', 'balanced', 'veteran'].map((prof) => (
+                      <button
+                        key={prof}
+                        type="button"
+                        className={`sim-chip-btn ${skillProfile === prof ? 'chip-active' : ''}`}
+                        onClick={() => {
+                          playButtonClickSfx();
+                          setSkillProfile(prof);
+                        }}
+                      >
+                        {prof.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="cabinet-telemetry-well sim-param-card">
-                <div className="sim-param-header">
-                  <span className="sim-param-label">SKILL PROFILE</span>
-                  <span className="sim-param-val-badge skill-badge">{skillProfile.toUpperCase()}</span>
-                </div>
-                <div className="sim-chip-options">
-                  {['novice', 'balanced', 'veteran'].map((prof) => (
-                    <button
-                      key={prof}
-                      type="button"
-                      className={`sim-chip-btn ${skillProfile === prof ? 'chip-active' : ''}`}
-                      onClick={() => {
-                        playButtonClickSfx();
-                        setSkillProfile(prof);
-                      }}
-                    >
-                      {prof.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="cabinet-telemetry-well sim-param-card">
-                <div className="sim-slider-head">
-                  <span className="sim-param-label">HAZARD DENSITY</span>
-                  <span className="sim-slider-val">{Number(hazardDensity).toFixed(2)}x</span>
-                </div>
-                <div className="sim-slider-wrap">
+              {/* Row 2: Physics Tuning & Launch Action */}
+              <div className="sim-console-row sim-tuning-row">
+                <div className="sim-control-group sim-slider-group">
+                  <div className="sim-slider-head">
+                    <span className="sim-control-label">HAZARD DENSITY</span>
+                    <span className="sim-slider-val">{Number(hazardDensity).toFixed(2)}x</span>
+                  </div>
                   <input
                     type="range"
                     min="0.8"
@@ -272,21 +276,15 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                     value={hazardDensity}
                     onChange={(e) => setHazardDensity(e.target.value)}
                     className="sim-range-input"
+                    aria-label="Hazard Density"
                   />
-                  <div className="sim-slider-ticks">
-                    <span>0.80x (SPARSE)</span>
-                    <span>1.00x</span>
-                    <span>1.30x (DENSE)</span>
-                  </div>
                 </div>
-              </div>
 
-              <div className="cabinet-telemetry-well sim-param-card">
-                <div className="sim-slider-head">
-                  <span className="sim-param-label">SPEED SCALING</span>
-                  <span className="sim-slider-val">{Number(speedMultiplier).toFixed(2)}x</span>
-                </div>
-                <div className="sim-slider-wrap">
+                <div className="sim-control-group sim-slider-group">
+                  <div className="sim-slider-head">
+                    <span className="sim-control-label">SPEED SCALING</span>
+                    <span className="sim-slider-val">{Number(speedMultiplier).toFixed(2)}x</span>
+                  </div>
                   <input
                     type="range"
                     min="0.85"
@@ -295,27 +293,22 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                     value={speedMultiplier}
                     onChange={(e) => setSpeedMultiplier(e.target.value)}
                     className="sim-range-input"
+                    aria-label="Speed Scaling"
                   />
-                  <div className="sim-slider-ticks">
-                    <span>0.85x (CALM)</span>
-                    <span>1.00x</span>
-                    <span>1.25x (FRENZIED)</span>
-                  </div>
+                </div>
+
+                <div className="sim-action-group">
+                  <button
+                    className="cabinet-btn-primary sim-execute-btn"
+                    onClick={() => {
+                      playButtonClickSfx();
+                      handleRunSim();
+                    }}
+                  >
+                    ⚡ RUN MONTE CARLO SIMULATION
+                  </button>
                 </div>
               </div>
-            </div>
-
-            {/* Dedicated Action Trigger Bar with generous separation */}
-            <div className="sim-action-toolbar">
-              <div className="sim-config-summary">
-                <span className="summary-dot" />
-                <span className="summary-text">
-                  SIMULATION COHORT: <b>{cohortSize} RUNS</b> · <b>{skillProfile.toUpperCase()}</b> · <b>{Number(hazardDensity).toFixed(2)}x HAZARDS</b> · <b>{Number(speedMultiplier).toFixed(2)}x SPEED</b>
-                </span>
-              </div>
-              <button className="cabinet-btn-primary sim-execute-btn" onClick={handleRunSim}>
-                ⚡ RUN MONTE CARLO SIMULATION
-              </button>
             </div>
           </section>
         </header>
