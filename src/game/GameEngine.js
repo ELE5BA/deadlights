@@ -39,12 +39,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'GRS',
     hp: 120,
     attacks: [
-      { name: 'Vine Whip', damage: '40', desc: 'Strikes with emerald thorn-vines across the carnival rails.' },
-      { name: 'Solar Beam', damage: '90', desc: 'Gathers radiant solar energy to blast incoming obstacles.' },
+      { name: 'Razor Vine Burst', damage: '40+', desc: 'Strikes with razor-sharp thorned vines. Deals 20 more damage if this Pokémon has full Vitality.' },
+      { name: 'Solar Bloom Cataclysm', damage: '100', desc: 'Gathers stored photosynthetic energy in its bulb, unleashing a radiant beam that purifies dark carnival mist.' },
     ],
     rarity: 'Holo Rare',
-    illustrator: 'ELE5BA Studio',
-    lore: 'A bulb-dinosaur sprite bearing a glowing cyan carnival blossom that purifies dark mist.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'A cybernetic bulb Pokémon fused with ancient carnival moss. The flower blooming on its back absorbs spectral energy and radiates a soothing emerald aura.',
   },
   {
     id: '002',
@@ -56,12 +56,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'FIR',
     hp: 130,
     attacks: [
-      { name: 'Thunder Shock', damage: '45', desc: 'Discharges electric sparks from its red cheeks.' },
-      { name: 'Volt Tackle', damage: '95', desc: 'Charges forward enveloped in high-voltage electricity.' },
+      { name: 'Spark Beacon', damage: '45', desc: 'Discharges crackling high-voltage sparks from its cheek pouches, illuminating hidden track hazards.' },
+      { name: 'Volt Overdrive Tackle', damage: '110', desc: 'Cloaks itself in blinding golden electricity and charges headlong through enemy barricades.' },
     ],
     rarity: 'Ultra Rare',
-    illustrator: 'ELE5BA Studio',
-    lore: 'An energetic electric mouse leaping across ticket booths with a lightning tail lantern.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'An energetic electric mouse leaping across ticket booths in a protective yellow slicker. Its lightning tail lantern guides lost runners through the dark.',
   },
   {
     id: '003',
@@ -73,12 +73,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'ELC',
     hp: 140,
     attacks: [
-      { name: 'Electro Web', damage: '50', desc: 'Captures incoming hazards in a crackling lightning net.' },
-      { name: 'Thunder Hurricane', damage: '110', desc: 'Summons an overwhelming vortex of storm energy.' },
+      { name: 'Electro Web Snare', damage: '50', desc: 'Spins a crackling mesh of blue lightning across the rails, paralyzing incoming shadows.' },
+      { name: 'Thunder Vortex Hurricane', damage: '120', desc: 'Beats its charged storm wings to summon a deafening hurricane that scatters nearby spectral hazards.' },
     ],
     rarity: 'Secret Rare',
-    illustrator: 'ELE5BA Studio',
-    lore: 'A spiky electric moth flitting along carnival high-voltage power lines.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'An electrified storm moth whose vibrating wings generate thousands of volts. It glides fearlessly along high-tension circus wires.',
   },
   {
     id: '004',
@@ -90,12 +90,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'PSI',
     hp: 140,
     attacks: [
-      { name: 'Shadow Ball', damage: '55', desc: 'Hurls a shadowy blob of concentrated spirit power.' },
-      { name: 'Dream Eater', damage: '105', desc: 'Absorbs nightmarish fairground illusions to restore vitality.' },
+      { name: 'Shadow Pulse Barrage', damage: '60', desc: 'Hurls an orb of concentrated ectoplasm from the ethereal plane into the physical track.' },
+      { name: 'Nightmare Dream Eater', damage: '115', desc: 'Feeds upon the sinister fairground illusions spun by Pennywise, siphoning life back into the runner.' },
     ],
     rarity: 'Holo Rare',
-    illustrator: 'ELE5BA Studio',
-    lore: 'A grinning shadow phantom drifting between Ferris wheel spokes with floating soul-orbs.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'A shadowy phantom trickster lurking behind the haunted Ferris wheel. Its iconic wide grin gleams with eldritch purple flames.',
   },
   {
     id: '005',
@@ -107,12 +107,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'STL',
     hp: 150,
     attacks: [
-      { name: 'Steel Wing', damage: '60', desc: 'Strikes with razor-sharp hardened steel feathers.' },
-      { name: 'Klinklang Crush', damage: '120', desc: 'Rotates interlocking brass saw-cogs to smash barriers.' },
+      { name: 'Razor Wing Flurry', damage: '65', desc: 'Sweeps tempered steel feather blades forward, deflecting oncoming projectile hazards.' },
+      { name: 'Clockwork Cog Overclock', damage: '130', desc: 'Rotates interlocking brass saw gears inside its chest cavity to shred reinforced obsidian blockades.' },
     ],
     rarity: 'Ultra Rare',
-    illustrator: 'ELE5BA Studio',
-    lore: 'An armored raven with clockwork cogs perched atop the haunted carousel.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'An imposing raven warrior forged from clockwork brass gears and gunmetal steel armor. It perches atop the carousel roof, ever vigilant.',
   },
   {
     id: '006',
@@ -124,12 +124,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'WAT',
     hp: 160,
     attacks: [
-      { name: 'Aqua Tail', damage: '70', desc: 'Swings an armored serpentine tail like a tidal wave.' },
-      { name: 'Hyper Fang Tsunami', damage: '140', desc: 'Unleashes devastating neon fangs amidst a roaring deluge.' },
+      { name: 'Tidal Flume Surge', damage: '75', desc: 'Swings an armored serpentine tail to wash away track debris in a torrential neon deluge.' },
+      { name: 'Apex Dragon Deluge', damage: '150', desc: 'Opens its three-crested fanged maw and roars with untamed aquatic fury, shattering Pennywise’s barrier.' },
     ],
     rarity: 'Apex Legendary',
-    illustrator: 'ELE5BA Studio',
-    lore: 'A fearsome serpentine sea dragon thrashing through the flooded carnival flume.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'A colossal sea dragon surging through the flooded subterranean flumes of Derry. Its ancient roar reverberates across dimensions.',
   },
   {
     id: '007',
@@ -141,12 +141,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'RCK',
     hp: 170,
     attacks: [
-      { name: 'Crunch', damage: '80', desc: 'Crushes solid obsidian barriers with its armored jaw.' },
-      { name: 'Lunar Hyper Beam', damage: '150', desc: 'Shatters space with a devastating cosmic beam beneath the moon.' },
+      { name: 'Obsidian Jaw Crunch', damage: '85', desc: 'Clamps down with crushing prehistoric jaw force, fracturing the strongest carnival obstacles.' },
+      { name: 'Lunar Hyper Beam', damage: '160', desc: 'Harnesses moonlight to fire an apocalyptic cosmic beam that obliterates reality along the center lane.' },
     ],
     rarity: 'Cosmic Secret',
-    illustrator: 'ELE5BA Studio',
-    lore: 'An obsidian-plated kaiju beast awakening when moonlight strikes the carnival crater.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'A prehistoric apex juggernaut encased in black diamond carapace. It awakens only when the lunar eclipse bathes the fairground in silver.',
   },
   {
     id: '008',
@@ -158,12 +158,12 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'MYTH',
     hp: 200,
     attacks: [
-      { name: 'Deadlights Beam', damage: '100', desc: 'The horrifying glowing lights from beyond the stars.' },
-      { name: 'Funhouse Barrier', damage: '160', desc: 'Traps pursuers in an infinite hexagonal clown dimension.' },
+      { name: 'Deadlights Hypnosis', damage: '100', desc: 'Summons three spinning glowing red balloons from beyond the stars, paralyzing all who behold them.' },
+      { name: 'Infinite Funhouse Collapse', damage: '170', desc: 'Traps the entire dimensional rift in a twisted hall of mirrors until shattered by all six Pokédex seals.' },
     ],
     rarity: 'Apex Mythic',
-    illustrator: 'ELE5BA Studio',
-    lore: 'The sinister pantomime entity wielding three floating Poké-Balloons from the Deadlights core.',
+    illustrator: 'HEXEDEX ARCHIVES',
+    lore: 'The primordial shape-shifting cosmic jester inhabiting the abyss beneath Derry. Wields floating Poké-Balloons to lure runners into the eternal Deadlights.',
   },
 ];
 
@@ -817,19 +817,19 @@ export class GameEngine {
         stageCompletedCard: completedCard,
       });
     } else {
-      // Stage 6 complete: show card modal, pause, and wait for dismissCardModal to trigger victory cutscene
-      this.updateHudImmediate({
-        stageCompletedCard: completedCard,
-      });
+      // Stage 6 complete: directly launch Pennywise's Demise & Hexedex Seal Cutscene!
+      this.triggerVictorySequence();
     }
   }
 
   triggerVictorySequence() {
-    this.isVictorySequenceActive = true;
+    this.running = true;
     this.paused = false;
-    this.clock.getDelta();
+    this.isLossSequenceActive = false;
+    this.isVictorySequenceActive = true;
     this.victoryElapsedMs = 0;
     this.victoryDurationMs = 5200;
+    this.clock.getDelta();
 
     // Smoothly center the player in middle lane at Z = 1.5
     this.targetX = 0;
@@ -842,13 +842,23 @@ export class GameEngine {
     stopBackgroundMusic();
     playVictoryCelebrationSfx();
 
-    // Clear any remaining track hazards
-    for (const obj of this.objects) {
-      if (obj.isHazard && obj.mesh) {
-        this.world.scene.remove(obj.mesh);
+    // Clear all remaining track hazards and pickup meshes
+    if (this.objects) {
+      for (const obj of this.objects) {
+        if (obj?.mesh) {
+          this.world.scene.remove(obj.mesh);
+        }
       }
+      this.objects = [];
     }
-    this.objects = this.objects.filter((obj) => !obj.isHazard);
+    if (this.pickupAnimations) {
+      for (const anim of this.pickupAnimations) {
+        if (anim?.mesh) {
+          this.world.scene.remove(anim.mesh);
+        }
+      }
+      this.pickupAnimations = [];
+    }
 
     this.pursuerEntity?.triggerDefeatCollapse();
     this.playerEntity?.setVictory(true);
@@ -1109,7 +1119,11 @@ export class GameEngine {
           return;
         }
         this.advanceStage();
-        if (!this.running) return;
+        this.world.renderer.render(this.world.scene, this.world.camera);
+        if (this.running) {
+          this.animationFrame = requestAnimationFrame(this.frame);
+        }
+        return;
       }
 
       // Obstacle & Shard spawning
@@ -1141,11 +1155,6 @@ export class GameEngine {
       if (this.elapsedMs - this.lastHudSyncMs >= 120) {
         this.lastHudSyncMs = this.elapsedMs;
         this.updateHud();
-      }
-
-      if (this.elapsedMs >= GAME_CONFIG.roundCapSeconds * 1000) {
-        this.triggerLossSequence('time_limit');
-        return;
       }
 
       this.world.renderer.render(this.world.scene, this.world.camera);

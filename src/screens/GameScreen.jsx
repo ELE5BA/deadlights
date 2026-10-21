@@ -248,6 +248,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   const demiseCutsceneRef = useRef(demiseCutscene);
   demiseCutsceneRef.current = demiseCutscene;
 
+  const dialoguePhaseRef = useRef(dialoguePhase);
+  dialoguePhaseRef.current = dialoguePhase;
+  const speechPosRef = useRef({ x: 60, y: 25 });
+
   useEffect(() => {
     return subscribeMuteChange(setSoundMuted);
   }, []);
@@ -293,11 +297,15 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       if (stageProgressRef.current) {
         stageProgressRef.current.style.transform = `scaleX(${stageProgressRatio})`;
       }
-      if (speechBubbleRef.current && pursuerSpeechPos) {
+      if (pursuerSpeechPos && dialoguePhaseRef.current === 'visible') {
         const clampedX = Math.max(10, Math.min(84, pursuerSpeechPos.xPercent));
         const clampedY = Math.max(8, Math.min(76, pursuerSpeechPos.yPercent));
-        speechBubbleRef.current.style.left = `${clampedX}%`;
-        speechBubbleRef.current.style.top = `${clampedY}%`;
+        speechPosRef.current.x += (clampedX - speechPosRef.current.x) * 0.25;
+        speechPosRef.current.y += (clampedY - speechPosRef.current.y) * 0.25;
+        if (speechBubbleRef.current) {
+          speechBubbleRef.current.style.left = `${speechPosRef.current.x.toFixed(2)}%`;
+          speechBubbleRef.current.style.top = `${speechPosRef.current.y.toFixed(2)}%`;
+        }
       }
       if (typeof victoryElapsedMs === 'number') {
         const curr = demiseCutsceneRef.current;
@@ -606,22 +614,25 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       )}
 
       {/* 3. PENNYWISE DYNAMIC 3D-TRACKED CARTOON SPEECH BUBBLE */}
-      {/* 3a. Normal Gameplay Chase Speech Bubble (Hidden when modal or pause is active) */}
-      {sessionState === 'playing' &&
-        !hasActiveModalOrCutscene &&
-        dialoguePhase !== 'hidden' && (
-          <aside
-            ref={speechBubbleRef}
-            className={`pennywise-speech-bubble ${dialoguePhase === 'exiting' ? 'bubble-exiting' : 'bubble-entering'}`}
-            key={`chase-${dialogueIndex}-${dialoguePhase === 'exiting' ? 'exit' : 'enter'}`}
-            aria-live="polite"
-          >
-            <div className="speech-bubble-tail" />
-            <p className="speech-bubble-text">
-              {formatDialogue(PENNYWISE_LINES[dialogueIndex])}
-            </p>
-          </aside>
-        )}
+      {/* 3a. Normal Gameplay Chase Speech Bubble (Persistent element, never remounted during exit) */}
+      {sessionState === 'playing' && !hasActiveModalOrCutscene && (
+        <aside
+          ref={speechBubbleRef}
+          className={`pennywise-speech-bubble ${
+            dialoguePhase === 'visible'
+              ? 'bubble-visible'
+              : dialoguePhase === 'exiting'
+              ? 'bubble-exiting'
+              : 'bubble-hidden'
+          }`}
+          aria-live="polite"
+        >
+          <div className="speech-bubble-tail" />
+          <p className="speech-bubble-text">
+            {formatDialogue(PENNYWISE_LINES[dialogueIndex])}
+          </p>
+        </aside>
+      )}
 
       {/* 3b. Pennywise Demise Speech Bubble (0.0s to 4.1s in Cutscene) */}
       {engineState.victorySequenceActive && demiseCutscene.visible && !lossModal && !completedCardModal && (
@@ -801,11 +812,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       {/* ── HANDCRAFTED COLLECTIBLE CARD MODAL (STAGE CLEAR) ── */}
       {completedCardModal && (
         <div className="pokemon-card-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="pokemon-card-modal">
-            <header className="card-modal-header">
-              <span className="modal-stage-tag">STAGE {completedCardModal.stageNumber} PURIFIED</span>
-              <h2 className="modal-title">POKÉDEX CARD COMPLETE</h2>
-              <p className="modal-sub">Trial concluded within 60 seconds with all 5 cards assembled</p>
+          <div className="pokemon-card-modal cabinet-card">
+            <header className="card-modal-header cabinet-modal-header">
+              <h2 className="modal-title cabinet-modal-title">POKÉDEX CARD COMPLETE</h2>
+              <p className="modal-sub cabinet-modal-sub">STAGE {completedCardModal.stageNumber} PURIFIED · 5 CARDS ASSEMBLED</p>
             </header>
 
             {/* Handcrafted Physical Collectible Card with 3D Tilt */}
@@ -861,15 +871,15 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               </div>
 
               <footer className="tcg-footer">
-                <span>Illus. {completedCardModal.illustrator || 'ELE5BA Studio'}</span>
+                <span>Illus. {completedCardModal.illustrator || 'HEXEDEX ARCHIVES'}</span>
                 <span className="tcg-rarity">{completedCardModal.rarity || 'Holo Rare'}</span>
-                <span>#{completedCardModal.id} / 006</span>
+                <span>#{completedCardModal.id} / 008</span>
               </footer>
             </article>
 
             <div className="card-modal-actions">
               <button
-                className="primary-button proceed-stage-btn"
+                className="primary-button proceed-stage-btn cabinet-btn-primary"
                 onClick={dismissCardModal}
                 autoFocus
               >
@@ -893,21 +903,22 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       {/* ── LOSS / RETRY MODAL ── */}
       {lossModal && (
         <div className="card-missed-modal-backdrop loss-modal-backdrop" role="alertdialog">
-          <div className="card-missed-modal loss-modal">
-            <span className="loss-badge">RUN CONCLUDED</span>
-            <h2 className="loss-title">
-              {lossModal.reason === 'card_missed' && 'STAGE CARD MISSED'}
-              {lossModal.reason === 'hit_points_zero' && 'VITALITY DEPLETED'}
-              {lossModal.reason === 'time_limit' && 'TIME EXPIRED'}
-              {!['card_missed', 'hit_points_zero', 'time_limit'].includes(lossModal.reason) && 'RUN CONCLUDED'}
-            </h2>
-            <p className="loss-sub">
-              {lossModal.reason === 'card_missed' && 'All 5 stage cards must be gathered within the 60-second trial to complete the Pokédex card and advance.'}
-              {lossModal.reason === 'hit_points_zero' && 'Obstacles depleted your health before completing the gauntlet.'}
-              {lossModal.reason === 'time_limit' && 'The 60-second trial ran out before purifying the stage.'}
-              {!['card_missed', 'hit_points_zero', 'time_limit'].includes(lossModal.reason) && 'The carnival gauntlet was not conquered.'}
-            </p>
-            <div className="loss-stats">
+          <div className="card-missed-modal loss-modal cabinet-card">
+            <div className="cabinet-modal-header">
+              <h2 className="loss-title cabinet-modal-title">
+                {lossModal.reason === 'card_missed' && 'STAGE CARD MISSED'}
+                {lossModal.reason === 'hit_points_zero' && 'VITALITY DEPLETED'}
+                {lossModal.reason === 'time_limit' && 'TIME EXPIRED'}
+                {!['card_missed', 'hit_points_zero', 'time_limit'].includes(lossModal.reason) && 'RUN CONCLUDED'}
+              </h2>
+              <p className="loss-sub cabinet-modal-sub">
+                {lossModal.reason === 'card_missed' && 'ALL 5 STAGE CARDS MUST BE GATHERED WITHIN THE 60-SECOND TRIAL TO CONQUER THE STAGE.'}
+                {lossModal.reason === 'hit_points_zero' && 'CARNIVAL OBSTACLES DEPLETED YOUR VITALITY BEFORE PURIFYING THE GAUNTLET.'}
+                {lossModal.reason === 'time_limit' && 'THE 60-SECOND STAGE TRIAL EXPIRED BEFORE GATHERING ALL REQUIRED CARDS.'}
+                {!['card_missed', 'hit_points_zero', 'time_limit'].includes(lossModal.reason) && 'THE CARNIVAL GAUNTLET WAS NOT CONQUERED.'}
+              </p>
+            </div>
+            <div className="loss-stats cabinet-telemetry-well">
               <div className="stat-col">
                 <span className="stat-label">STAGE</span>
                 <b className="stat-val">{lossModal.stage} / {engineState.totalStages}</b>
@@ -922,11 +933,11 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               </div>
             </div>
             <div className="loss-actions">
-              <button className="primary-button loss-retry-btn" onClick={restartRun}>
+              <button className="primary-button loss-retry-btn cabinet-btn-primary" onClick={restartRun}>
                 TRY AGAIN [PRESS R]
               </button>
               <button
-                className="text-button"
+                className="text-button cabinet-btn-secondary"
                 onClick={() => {
                   if (savedRunResult) {
                     onFinished(savedRunResult);
@@ -967,17 +978,16 @@ export default function GameScreen({ player, onFinished, runnerId }) {
 
       {engineState.paused && !completedCardModal && !engineState.victorySequenceActive && (
         <div className="pause-overlay" role="dialog" aria-modal="true" aria-label="Game Paused">
-          <section className="pause-cabinet-card">
-            <div className="pause-marquee-header">
-              <span className="pause-intermission-pill">⏸ ARCADE INTERMISSION</span>
-              <h2 className="pause-cabinet-title">GAME PAUSED</h2>
-              <div className="pause-stage-badge">
+          <section className="pause-cabinet-card cabinet-card">
+            <div className="pause-marquee-header cabinet-modal-header">
+              <h2 className="pause-cabinet-title cabinet-modal-title">GAME PAUSED</h2>
+              <div className="pause-stage-badge cabinet-modal-sub">
                 STAGE {engineState.stageNumber} OF 6 · {engineState.stageName.toUpperCase()}
               </div>
             </div>
 
             {/* Live Run Status Telemetry Box */}
-            <div className="pause-telemetry-grid">
+            <div className="pause-telemetry-grid cabinet-telemetry-well">
               <div className="pause-telemetry-item">
                 <span className="pause-telem-label">VITALITY</span>
                 <span className="pause-telem-val">{currentHp} / {maxHp} HEARTS</span>

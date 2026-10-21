@@ -28,7 +28,7 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
 
   return (
     <main className="overlay-screen">
-      <section className="setup-card results-card cartoon-results-card">
+      <section className="setup-card results-card cartoon-results-card cabinet-card">
         {/* 1. TOP COMIC STATUS BANNER (Full-width, zero overlap!) */}
         <div className={`results-status-banner ${isFlawless ? 'banner-victory' : 'banner-defeat'}`}>
           <div className="status-banner-icon">
@@ -96,30 +96,30 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
         </div>
 
         {/* 4. CLEAN 3×2 TELEMETRY GRID */}
-        <div className="results-telemetry-grid">
+        <div className="results-telemetry-grid cabinet-telemetry-well">
           <div className="telemetry-tile">
-            <span className="telemetry-val">{stagesCleared} / 6</span>
-            <span className="telemetry-lbl">STAGES PURIFIED</span>
+            <span className="telemetry-val stat-val">{stagesCleared} / 6</span>
+            <span className="telemetry-lbl stat-label">STAGES PURIFIED</span>
           </div>
           <div className="telemetry-tile">
-            <span className="telemetry-val">+{result.fragmentsEarned ?? 0}</span>
-            <span className="telemetry-lbl">CARDS ASSEMBLED</span>
+            <span className="telemetry-val stat-val">+{result.fragmentsEarned ?? 0}</span>
+            <span className="telemetry-lbl stat-label">CARDS ASSEMBLED</span>
           </div>
           <div className="telemetry-tile">
-            <span className="telemetry-val">{result.survivalSeconds.toFixed(1)}s</span>
-            <span className="telemetry-lbl">TIME SURVIVED</span>
+            <span className="telemetry-val stat-val">{result.survivalSeconds.toFixed(1)}s</span>
+            <span className="telemetry-lbl stat-label">TIME SURVIVED</span>
           </div>
           <div className="telemetry-tile">
-            <span className="telemetry-val">+{result.shardsEarned}</span>
-            <span className="telemetry-lbl">SHARDS EARNED</span>
+            <span className="telemetry-val stat-val">+{result.shardsEarned}</span>
+            <span className="telemetry-lbl stat-label">SHARDS EARNED</span>
           </div>
           <div className="telemetry-tile">
-            <span className="telemetry-val">{result.wallet?.shardsBalance ?? 0}</span>
-            <span className="telemetry-lbl">WALLET SHARDS</span>
+            <span className="telemetry-val stat-val">{result.wallet?.shardsBalance ?? 0}</span>
+            <span className="telemetry-lbl stat-label">WALLET SHARDS</span>
           </div>
           <div className="telemetry-tile">
-            <span className="telemetry-val">{(result.bestScore ?? result.score).toLocaleString()}</span>
-            <span className="telemetry-lbl">PERSONAL BEST</span>
+            <span className="telemetry-val stat-val">{(result.bestScore ?? result.score).toLocaleString()}</span>
+            <span className="telemetry-lbl stat-label">PERSONAL BEST</span>
           </div>
         </div>
 
@@ -133,20 +133,20 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
           <span className="status-dot" /> RECORD PERSISTED TO LOCAL ARCHIVE
         </div>
 
-        <button className="primary-button results-primary-btn" onClick={onPlayAgain}>
+        <button className="primary-button results-primary-btn cabinet-btn-primary" onClick={onPlayAgain}>
           PLAY AGAIN [PRESS R]
         </button>
 
         <nav className="results-nav-row">
-          <button className="text-button" onClick={onCollection}>
+          <button className="text-button cabinet-btn-secondary" onClick={onCollection}>
             CARD BINDER
           </button>
           <span className="nav-divider">·</span>
-          <button className="text-button" onClick={onLeaderboard}>
+          <button className="text-button cabinet-btn-secondary" onClick={onLeaderboard}>
             LEADERBOARD
           </button>
           <span className="nav-divider">·</span>
-          <button className="text-button" onClick={onTitle}>
+          <button className="text-button cabinet-btn-secondary" onClick={onTitle}>
             RETURN TO TITLE
           </button>
         </nav>

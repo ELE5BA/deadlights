@@ -286,21 +286,21 @@ function drawCreatureCartoon(ctx, artKey, isOwned, animFrame = 0) {
 
   // ── 2. CREATURE DRAWING (CARTOON OUTLINED & CEL SHADED) ──────────
   const cx = 80;
-  const cy = 64 + bobY;
+  const cy = 48 + bobY;
 
   if (!isOwned) {
     // Mystery Silhouette Mode
     ctx.save();
     ctx.fillStyle = '#0f172a';
     ctx.beginPath();
-    ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 26, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 3.5;
     ctx.strokeStyle = '#120b1d';
     ctx.stroke();
 
     // Large glowing Mystery Question Mark
-    ctx.font = '900 38px Impact, sans-serif';
+    ctx.font = '900 36px Impact, sans-serif';
     ctx.fillStyle = '#38bdf8';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -314,76 +314,121 @@ function drawCreatureCartoon(ctx, artKey, isOwned, animFrame = 0) {
 
   switch (artKey) {
     case 'mossbyte': {
-      // Bulba-Moss: Teal-green bulb-dinosaur with glowing cyan carnival flower bulb
-      // Flower Bulb on back
+      // Bulba-Moss: Cute quadruped teal dinosaur with 4 legs, dark green spots, and lush multi-petal emerald plant bulb on back
+      // 1. Lush multi-petal emerald plant bulb with blooming cyan-pink rose bud
+      // Base emerald leaves
       ctx.beginPath();
-      ctx.ellipse(cx, cy - 14, 18, 14, 0, 0, Math.PI * 2);
-      strokeCartoon('#06b6d4', '#120b1d', 3.5);
+      ctx.ellipse(cx, cy - 14, 20, 16, 0, 0, Math.PI * 2);
+      strokeCartoon('#059669', '#120b1d', 3.2);
 
-      // Bulb petals
+      // Overlapping bulb petals
+      ctx.beginPath();
+      ctx.moveTo(cx - 16, cy - 12);
+      ctx.quadraticCurveTo(cx - 8, cy - 28, cx, cy - 26);
+      ctx.quadraticCurveTo(cx + 8, cy - 28, cx + 16, cy - 12);
+      ctx.quadraticCurveTo(cx, cy - 4, cx - 16, cy - 12);
+      ctx.closePath();
+      strokeCartoon('#10b981', '#120b1d', 2.5);
+
+      // Crown lotus petal bud
+      ctx.beginPath();
+      ctx.moveTo(cx - 7, cy - 20);
+      ctx.lineTo(cx, cy - 30);
+      ctx.lineTo(cx + 7, cy - 20);
+      ctx.closePath();
+      strokeCartoon('#06b6d4', '#120b1d', 2.0);
+
       ctx.fillStyle = '#f43f5e';
       ctx.beginPath();
-      ctx.moveTo(cx - 6, cy - 20);
-      ctx.lineTo(cx, cy - 30);
-      ctx.lineTo(cx + 6, cy - 20);
-      ctx.closePath();
-      strokeCartoon('#f43f5e', '#120b1d', 2.0);
-
-      // Dinosaur Body
-      ctx.beginPath();
-      ctx.roundRect(cx - 24, cy - 8, 48, 34, [14, 14, 8, 8]);
-      strokeCartoon('#10b981', '#120b1d', 3.5);
-
-      // Darker teal patches
-      ctx.fillStyle = '#047857';
-      ctx.beginPath();
-      ctx.arc(cx - 14, cy + 2, 5, 0, Math.PI * 2);
-      ctx.arc(cx + 12, cy + 4, 6, 0, Math.PI * 2);
-      ctx.arc(cx - 2, cy + 14, 4, 0, Math.PI * 2);
+      ctx.arc(cx, cy - 23, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Little dinosaur feet
-      [-16, 16].forEach((fx) => {
+      // 2. Back legs (left and right)
+      [-19, 19].forEach((blx) => {
         ctx.beginPath();
-        ctx.roundRect(cx + fx - 5, cy + 22, 10, 8, [0, 0, 4, 4]);
-        strokeCartoon('#059669', '#120b1d', 2.5);
+        ctx.ellipse(cx + blx, cy + 12, 7, 10, blx > 0 ? -0.3 : 0.3, 0, Math.PI * 2);
+        strokeCartoon('#0d9488', '#120b1d', 2.8);
       });
 
-      // Expressive Red Dinosaur Eyes with highlights
-      [-11, 11].forEach((ex) => {
+      // 3. Quadruped Dinosaur Torso
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 5, 23, 17, 0, 0, Math.PI * 2);
+      strokeCartoon('#14b8a6', '#120b1d', 3.5);
+
+      // 4. Front legs (left and right) with white toenails
+      [-11, 11].forEach((flx) => {
+        ctx.beginPath();
+        ctx.roundRect(cx + flx - 5, cy + 10, 10, 14, [4, 4, 6, 6]);
+        strokeCartoon('#2dd4bf', '#120b1d', 2.8);
+
+        // Claws / toenails
+        ctx.fillStyle = '#ffffff';
+        [-3, 0, 3].forEach((tx) => {
+          ctx.beginPath();
+          ctx.arc(cx + flx + tx, cy + 23, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      });
+
+      // 5. Dark green spots on forehead and body
+      ctx.fillStyle = '#065f46';
+      ctx.beginPath();
+      ctx.arc(cx - 13, cy + 1, 4, 0, Math.PI * 2);
+      ctx.arc(cx + 12, cy + 3, 5, 0, Math.PI * 2);
+      ctx.arc(cx - 1, cy + 11, 3.5, 0, Math.PI * 2);
+      ctx.arc(cx - 6, cy - 4, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. Expressive Red Dinosaur Eyes with highlights
+      [-10, 10].forEach((ex) => {
         if (blink) {
           ctx.beginPath();
-          ctx.moveTo(cx + ex - 6, cy - 1);
-          ctx.lineTo(cx + ex + 6, cy - 1);
+          ctx.moveTo(cx + ex - 6, cy - 2);
+          ctx.lineTo(cx + ex + 6, cy - 2);
           ctx.strokeStyle = '#120b1d';
-          ctx.lineWidth = 3.5;
+          ctx.lineWidth = 3.2;
           ctx.stroke();
         } else {
           ctx.beginPath();
-          ctx.arc(cx + ex, cy - 1, 7.5, 0, Math.PI * 2);
-          strokeCartoon('#ffffff', '#120b1d', 3.0);
+          ctx.ellipse(cx + ex, cy - 2, 7, 8, ex > 0 ? 0.2 : -0.2, 0, Math.PI * 2);
+          strokeCartoon('#ffffff', '#120b1d', 2.8);
 
           ctx.beginPath();
-          ctx.arc(cx + ex, cy - 1, 4.5, 0, Math.PI * 2);
+          ctx.ellipse(cx + ex, cy - 2, 4.5, 6, ex > 0 ? 0.2 : -0.2, 0, Math.PI * 2);
           ctx.fillStyle = '#dc2626';
           ctx.fill();
 
+          // Anime white eye gleam
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(cx + ex - 1.5, cy - 3, 2, 0, Math.PI * 2);
+          ctx.arc(cx + ex - 1.5, cy - 4, 2.2, 0, Math.PI * 2);
+          ctx.arc(cx + ex + 1.2, cy, 1.2, 0, Math.PI * 2);
           ctx.fill();
         }
       });
 
-      // Snout with upward tooth spikes
+      // 7. Cute dinosaur smile & nostrils
+      ctx.fillStyle = '#120b1d';
+      ctx.beginPath();
+      ctx.arc(cx - 2.5, cy + 4, 1.2, 0, Math.PI * 2);
+      ctx.arc(cx + 2.5, cy + 4, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy + 7, 7, 0.2, Math.PI - 0.2);
+      ctx.strokeStyle = '#120b1d';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // Cute white fangs pointing up
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.moveTo(cx - 5, cy + 12);
-      ctx.lineTo(cx - 3, cy + 8);
-      ctx.lineTo(cx - 1, cy + 12);
-      ctx.moveTo(cx + 1, cy + 12);
-      ctx.lineTo(cx + 3, cy + 8);
-      ctx.lineTo(cx + 5, cy + 12);
+      ctx.moveTo(cx - 4, cy + 9);
+      ctx.lineTo(cx - 2.5, cy + 6.5);
+      ctx.lineTo(cx - 1, cy + 9);
+      ctx.moveTo(cx + 1, cy + 9);
+      ctx.lineTo(cx + 2.5, cy + 6.5);
+      ctx.lineTo(cx + 4, cy + 9);
       ctx.fill();
       break;
     }

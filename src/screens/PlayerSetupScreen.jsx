@@ -26,9 +26,11 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
 
   return (
     <main className="overlay-screen">
-      <form className="setup-card" onSubmit={submit}>
-        <p className="eyebrow">PROFILE REGISTRATION</p>
-        <h2>{returning ? 'Restore Arcade Profile' : 'Enter Player Call-Sign'}</h2>
+      <form className="setup-card cabinet-card" onSubmit={submit}>
+        <div className="cabinet-modal-header">
+          <h2 className="cabinet-modal-title">{returning ? 'RESTORE ARCHIVE' : 'ENTER CALL-SIGN'}</h2>
+          <p className="cabinet-modal-sub">{returning ? 'RECOVERY CREDENTIALS · RETRIEVE BINDER' : 'PROFILE REGISTRATION · LEADERBOARD'}</p>
+        </div>
         <p className="setup-sub">
           {returning
             ? 'Input your registered call-sign and secret recovery code to retrieve your collection.'
@@ -63,13 +65,13 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
 
         {error && <p className="form-error" role="alert">{error}</p>}
 
-        <button className="primary-button setup-submit-btn" disabled={saving}>
+        <button className="primary-button setup-submit-btn cabinet-btn-primary" disabled={saving}>
           {saving ? 'AUTHENTICATING…' : returning ? 'RESTORE ARCHIVE' : 'ENTER GAUNTLET'}
         </button>
 
         <div className="setup-actions">
           <button
-            className="text-button"
+            className="text-button cabinet-btn-secondary"
             type="button"
             onClick={() => {
               setReturning(!returning);
@@ -78,7 +80,7 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
           >
             {returning ? 'CREATE NEW CALL-SIGN' : 'RESTORE WITH RECOVERY CODE'}
           </button>
-          <button className="text-button" type="button" onClick={onCancel}>
+          <button className="text-button cabinet-btn-secondary" type="button" onClick={onCancel}>
             RETURN TO TITLE
           </button>
         </div>

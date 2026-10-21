@@ -6,14 +6,14 @@ const POKEMON_CARD_META = {
   mossbyte: {
     name: 'Bulba-Moss',
     displayName: 'Bulba-Moss',
-    lore: 'A cybernetic bulb Pokémon fused with haunted forest moss. Its leaves glow with photosynthetic energy amidst the mist.',
+    lore: 'A cybernetic bulb Pokémon fused with ancient carnival moss. The flower blooming on its back absorbs spectral energy and radiates a soothing emerald aura.',
     element: 'GRASS / POISON',
     elementTag: 'GRASS',
     stageOrigin: 'Stage 1: Twilight Mist',
     hp: 120,
     attacks: [
-      { name: 'Vine Whip', dmg: '40', desc: 'Strikes with emerald thorn-vines across the carnival rails.' },
-      { name: 'Solar Beam', dmg: '90', desc: 'Gathers radiant solar energy to blast incoming obstacles.' },
+      { name: 'Razor Vine Burst', dmg: '40+', desc: 'Strikes with razor-sharp thorned vines. Deals 20 more damage if this Pokémon has full Vitality.' },
+      { name: 'Solar Bloom Cataclysm', dmg: '100', desc: 'Gathers stored photosynthetic energy in its bulb, unleashing a radiant beam that purifies dark carnival mist.' },
     ],
     weakness: 'FIRE',
     retreatCost: 1,
@@ -21,14 +21,14 @@ const POKEMON_CARD_META = {
   'lantern-hare': {
     name: 'Pika-Lantern',
     displayName: 'Pika-Lantern',
-    lore: 'An electric rodent running in a yellow slicker, carrying a spark lantern whose beacon pierces carnival gloom.',
+    lore: 'An energetic electric mouse leaping across ticket booths in a protective yellow slicker. Its lightning tail lantern guides lost runners through the dark.',
     element: 'ELECTRIC / LIGHT',
     elementTag: 'LIGHT',
     stageOrigin: 'Stage 2: Amber Hollow',
     hp: 130,
     attacks: [
-      { name: 'Thunder Shock', dmg: '45', desc: 'Discharges electric sparks from its red cheeks.' },
-      { name: 'Volt Tackle', dmg: '95', desc: 'Charges forward enveloped in high-voltage electricity.' },
+      { name: 'Spark Beacon', dmg: '45', desc: 'Discharges crackling high-voltage sparks from its cheek pouches, illuminating hidden track hazards.' },
+      { name: 'Volt Overdrive Tackle', dmg: '110', desc: 'Cloaks itself in blinding golden electricity and charges headlong through enemy barricades.' },
     ],
     weakness: 'GROUND',
     retreatCost: 1,
@@ -36,14 +36,14 @@ const POKEMON_CARD_META = {
   'static-moth': {
     name: 'Zap-Venomoth',
     displayName: 'Zap-Venomoth',
-    lore: 'An electrified storm moth whose vibrating wings charge the air with crackling blue lightning bolts.',
+    lore: 'An electrified storm moth whose vibrating wings generate thousands of volts. It glides fearlessly along high-tension circus wires.',
     element: 'ELECTRIC / FLYING',
     elementTag: 'STORM',
     stageOrigin: 'Stage 3: Crimson Mire',
     hp: 140,
     attacks: [
-      { name: 'Electro Web', dmg: '50', desc: 'Captures incoming hazards in a crackling lightning net.' },
-      { name: 'Thunder Hurricane', dmg: '110', desc: 'Summons an overwhelming vortex of storm energy.' },
+      { name: 'Electro Web Snare', dmg: '50', desc: 'Spins a crackling mesh of blue lightning across the rails, paralyzing incoming shadows.' },
+      { name: 'Thunder Vortex Hurricane', dmg: '120', desc: 'Beats its charged storm wings to summon a deafening hurricane that scatters nearby spectral hazards.' },
     ],
     weakness: 'ROCK',
     retreatCost: 1,
@@ -51,14 +51,14 @@ const POKEMON_CARD_META = {
   'velvet-wisp': {
     name: 'Gengar-Wisp',
     displayName: 'Gengar-Wisp',
-    lore: 'A shadowy phantom prankster wearing a spiky grin. Its purple ectoplasm flickers between dimensions.',
+    lore: 'A shadowy phantom trickster lurking behind the haunted Ferris wheel. Its iconic wide grin gleams with eldritch purple flames.',
     element: 'GHOST / POISON',
     elementTag: 'GHOST',
     stageOrigin: 'Stage 4: Glitch Rift',
     hp: 140,
     attacks: [
-      { name: 'Shadow Ball', dmg: '55', desc: 'Hurls a shadowy blob of concentrated spirit power.' },
-      { name: 'Dream Eater', dmg: '105', desc: 'Absorbs nightmarish fairground illusions to restore vitality.' },
+      { name: 'Shadow Pulse Barrage', dmg: '60', desc: 'Hurls an orb of concentrated ectoplasm from the ethereal plane into the physical track.' },
+      { name: 'Nightmare Dream Eater', dmg: '115', desc: 'Feeds upon the sinister fairground illusions spun by Pennywise, siphoning life back into the runner.' },
     ],
     weakness: 'DARK',
     retreatCost: 2,
@@ -66,14 +66,14 @@ const POKEMON_CARD_META = {
   'clockwork-crow': {
     name: 'Corvi-Gear',
     displayName: 'Corvi-Gear',
-    lore: 'An armored raven forged of clockwork gears and dark steel feathers, patrolling the twilight skies.',
+    lore: 'An imposing raven warrior forged from clockwork brass gears and gunmetal steel armor. It perches atop the carousel roof, ever vigilant.',
     element: 'STEEL / FLYING',
     elementTag: 'STEEL',
     stageOrigin: 'Stage 5: Abyssal Void',
     hp: 150,
     attacks: [
-      { name: 'Steel Wing', dmg: '60', desc: 'Strikes with razor-sharp hardened steel feathers.' },
-      { name: 'Klinklang Crush', dmg: '120', desc: 'Rotates interlocking brass saw-cogs to smash barriers.' },
+      { name: 'Razor Wing Flurry', dmg: '65', desc: 'Sweeps tempered steel feather blades forward, deflecting oncoming projectile hazards.' },
+      { name: 'Clockwork Cog Overclock', dmg: '130', desc: 'Rotates interlocking brass saw gears inside its chest cavity to shred reinforced obsidian blockades.' },
     ],
     weakness: 'FIRE',
     retreatCost: 2,
@@ -81,14 +81,14 @@ const POKEMON_CARD_META = {
   grinfin: {
     name: 'Gyarados-Fin',
     displayName: 'Gyarados-Fin',
-    lore: 'An ancient serpentine sea beast that surges through carnival rapids, roaring with untamable neon fury.',
+    lore: 'A colossal sea dragon surging through the flooded subterranean flumes of Derry. Its ancient roar reverberates across dimensions.',
     element: 'WATER / DARK',
     elementTag: 'WATER',
     stageOrigin: 'Stage 6: Deadlights Core',
     hp: 160,
     attacks: [
-      { name: 'Aqua Tail', dmg: '70', desc: 'Swings an armored serpentine tail like a tidal wave.' },
-      { name: 'Hyper Fang Tsunami', dmg: '140', desc: 'Unleashes devastating neon fangs amidst a roaring deluge.' },
+      { name: 'Tidal Flume Surge', dmg: '75', desc: 'Swings an armored serpentine tail to wash away track debris in a torrential neon deluge.' },
+      { name: 'Apex Dragon Deluge', dmg: '150', desc: 'Opens its three-crested fanged maw and roars with untamed aquatic fury, shattering Pennywise’s barrier.' },
     ],
     weakness: 'LIGHTNING',
     retreatCost: 2,
@@ -96,14 +96,14 @@ const POKEMON_CARD_META = {
   moonjaw: {
     name: 'Tyran-Jaw',
     displayName: 'Tyran-Jaw',
-    lore: 'A prehistoric apex juggernaut with obsidian armor and jaws capable of crushing dimensional barriers.',
+    lore: 'A prehistoric apex juggernaut encased in black diamond carapace. It awakens only when the lunar eclipse bathes the fairground in silver.',
     element: 'ROCK / DARK',
     elementTag: 'ROCK',
     stageOrigin: 'Secret: Shard Vault',
     hp: 170,
     attacks: [
-      { name: 'Crunch', dmg: '80', desc: 'Crushes solid obsidian barriers with its armored jaw.' },
-      { name: 'Lunar Hyper Beam', dmg: '150', desc: 'Shatters space with a devastating cosmic beam beneath the moon.' },
+      { name: 'Obsidian Jaw Crunch', dmg: '85', desc: 'Clamps down with crushing prehistoric jaw force, fracturing the strongest carnival obstacles.' },
+      { name: 'Lunar Hyper Beam', dmg: '160', desc: 'Harnesses moonlight to fire an apocalyptic cosmic beam that obliterates reality along the center lane.' },
     ],
     weakness: 'FIGHTING',
     retreatCost: 3,
@@ -111,14 +111,14 @@ const POKEMON_CARD_META = {
   'the-tethered': {
     name: 'Penny-Mime EX',
     displayName: 'Penny-Mime EX',
-    lore: 'The sinister clown entity inhabiting the carnival core. Orbiting Deadlights mesmerize anyone who gazes too deeply.',
+    lore: 'The primordial shape-shifting cosmic jester inhabiting the abyss beneath Derry. Wields floating Poké-Balloons to lure runners into the eternal Deadlights.',
     element: 'PSYCHIC / VOID',
     elementTag: 'MYTH',
     stageOrigin: 'Apex Entity',
     hp: 200,
     attacks: [
-      { name: 'Deadlights Beam', dmg: '100', desc: 'The horrifying glowing lights from beyond the stars.' },
-      { name: 'Funhouse Barrier', dmg: '160', desc: 'Traps pursuers in an infinite hexagonal clown dimension.' },
+      { name: 'Deadlights Hypnosis', dmg: '100', desc: 'Summons three spinning glowing red balloons from beyond the stars, paralyzing all who behold them.' },
+      { name: 'Infinite Funhouse Collapse', dmg: '170', desc: 'Traps the entire dimensional rift in a twisted hall of mirrors until shattered by all six Pokédex seals.' },
     ],
     weakness: 'NONE',
     retreatCost: 3,
@@ -201,21 +201,23 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
 
   return (
     <main className="overlay-screen collection-screen">
-      <section className="collection-panel">
-        <header className="binder-header">
+      <section className="collection-panel cabinet-card">
+        <header className="binder-header cabinet-modal-header">
           <div className="binder-title-block">
-            <p className="eyebrow">ARCHIVAL CODEX · THE LOST POKÉDEX</p>
-            <h2>{player.nickname.toUpperCase()}’S CARD BINDER</h2>
-            <div className="binder-counters">
+            <h2 className="cabinet-modal-title">{player.nickname.toUpperCase()}’S CARD BINDER</h2>
+            <p className="cabinet-modal-sub">ARCHIVAL CODEX · THE LOST POKÉDEX</p>
+            <div className="binder-counters cabinet-telemetry-well">
               <span className="balance-pill">
-                <span className="pill-dot" /> {data.wallet.shardsBalance} RIFT SHARDS
+                <span className="stat-label">RIFT SHARDS: </span>
+                <b className="stat-val">{data.wallet.shardsBalance}</b>
               </span>
               <span className="balance-pill">
-                <span className="pill-dot" /> {owned.size} / {data.catalog.length} CARDS ACQUIRED
+                <span className="stat-label">ACQUIRED: </span>
+                <b className="stat-val">{owned.size} / {data.catalog.length}</b>
               </span>
             </div>
           </div>
-          <button className="primary-button binder-return-btn" onClick={onBack}>
+          <button className="primary-button binder-return-btn cabinet-btn-secondary" onClick={onBack}>
             RETURN TO TITLE
           </button>
         </header>

@@ -96,21 +96,21 @@ export default function LeaderboardScreen({ player, onBack, onPlay }) {
 
   return (
     <main className="overlay-screen leaderboard-overlay">
-      <section className="arcade-hall-cabinet" aria-label="Arcade Leaderboard Hall of Champions">
+      <section className="arcade-hall-cabinet cabinet-card" aria-label="Arcade Leaderboard Hall of Champions">
         {/* Top Header Marquee */}
-        <header className="leaderboard-hall-header">
+        <header className="leaderboard-hall-header cabinet-modal-header">
           <div className="hall-header-left">
             <div className="hall-emblem-wrap">
               <TrophyEmblemSvg />
             </div>
             <div>
-              <span className="hall-marquee-badge">HALL OF CHAMPIONS · TOP 10 RUNNERS</span>
-              <h2 className="hall-title">ARCADE LEADERBOARD</h2>
+              <h2 className="hall-title cabinet-modal-title">ARCADE LEADERBOARD</h2>
+              <p className="hall-marquee-badge cabinet-modal-sub">HALL OF CHAMPIONS · TOP 10 RUNNERS</p>
             </div>
           </div>
           <div className="hall-header-actions">
             <button
-              className="hall-refresh-btn"
+              className="hall-refresh-btn cabinet-btn-secondary"
               onClick={() => {
                 playButtonClickSfx();
                 refresh();
@@ -121,7 +121,7 @@ export default function LeaderboardScreen({ player, onBack, onPlay }) {
               ↻ {isRefreshing ? 'SYNCING…' : 'REFRESH'}
             </button>
             <button
-              className="hall-return-btn"
+              className="hall-return-btn cabinet-btn-secondary"
               onClick={() => {
                 playButtonClickSfx();
                 onBack();
@@ -232,7 +232,7 @@ export default function LeaderboardScreen({ player, onBack, onPlay }) {
 
         <footer className="hall-cabinet-footer">
           <button
-            className="hall-play-btn"
+            className="hall-play-btn cabinet-btn-primary"
             onClick={() => {
               playButtonClickSfx();
               onPlay();

@@ -22,9 +22,11 @@ export default function AdminLoginScreen({ onSignedIn, onBack }) {
 
   return (
     <main className="overlay-screen">
-      <form className="setup-card" onSubmit={submit}>
-        <p className="eyebrow">SECURITY CHECKPOINT</p>
-        <h2>Booth Administration</h2>
+      <form className="setup-card cabinet-card" onSubmit={submit}>
+        <div className="cabinet-modal-header">
+          <h2 className="cabinet-modal-title">BOOTH ADMINISTRATION</h2>
+          <p className="cabinet-modal-sub">SECURITY CHECKPOINT · MASTER PASSPHRASE</p>
+        </div>
         <p className="setup-sub">
           Authorized personnel access for live analytics, obstacle collision telemetry, and booth performance logs.
         </p>
@@ -43,12 +45,12 @@ export default function AdminLoginScreen({ onSignedIn, onBack }) {
 
         {error && <p className="form-error" role="alert">{error}</p>}
 
-        <button className="primary-button setup-submit-btn" disabled={busy}>
+        <button className="primary-button setup-submit-btn cabinet-btn-primary" disabled={busy}>
           {busy ? 'VERIFYING…' : 'AUTHENTICATE'}
         </button>
 
         <div className="setup-actions">
-          <button type="button" className="text-button" onClick={onBack}>
+          <button type="button" className="text-button cabinet-btn-secondary" onClick={onBack}>
             RETURN TO TITLE
           </button>
         </div>
