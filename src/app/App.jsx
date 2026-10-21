@@ -11,75 +11,13 @@ import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen.jsx';
 import PokeBalloonEmblem from '../components/PokeBalloonEmblem.jsx';
 import HomeBackgroundCanvas from '../components/HomeBackgroundCanvas.jsx';
 import { RUNNER_ROSTER } from '../game/entities/PlayerCharacter.js';
+import RunnerPortraitCanvas from '../components/RunnerPortraitCanvas.jsx';
 import {
   isMuted,
   toggleMute,
   subscribeMuteChange,
   playButtonClickSfx,
 } from '../game/soundEffects.js';
-
-function RunnerMiniAvatar({ runnerId }) {
-  switch (runnerId) {
-    case 'pika-georgie':
-      return (
-        <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true" className="runner-mini-svg">
-          <path d="M12 18 L6 4 L14 10 Z" fill="#ffd000" stroke="#120b1d" strokeWidth="2.2" strokeLinejoin="round" />
-          <path d="M6 4 L9 6 L7 10 Z" fill="#120b1d" />
-          <path d="M36 18 L42 4 L34 10 Z" fill="#ffd000" stroke="#120b1d" strokeWidth="2.2" strokeLinejoin="round" />
-          <path d="M42 4 L39 6 L41 10 Z" fill="#120b1d" />
-          <circle cx="24" cy="26" r="14" fill="#ffd000" stroke="#120b1d" strokeWidth="2.5" />
-          <circle cx="24" cy="28" r="9" fill="#fde047" />
-          <circle cx="17" cy="30" r="2.4" fill="#ef4444" />
-          <circle cx="31" cy="30" r="2.4" fill="#ef4444" />
-          <circle cx="20" cy="26" r="1.5" fill="#120b1d" />
-          <circle cx="28" cy="26" r="1.5" fill="#120b1d" />
-          <path d="M22 31 Q24 33 26 31" fill="none" stroke="#120b1d" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-      );
-    case 'mimikyu-kid':
-      return (
-        <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true" className="runner-mini-svg">
-          <path d="M14 20 L10 6 L18 12 Z" fill="#eab308" stroke="#120b1d" strokeWidth="2.2" strokeLinejoin="round" />
-          <path d="M10 6 L12 8 L10 11 Z" fill="#120b1d" />
-          <path d="M32 18 L38 12 L44 14 L36 22 Z" fill="#eab308" stroke="#120b1d" strokeWidth="2.2" strokeLinejoin="round" />
-          <path d="M44 14 L40 13 L42 16 Z" fill="#120b1d" />
-          <circle cx="24" cy="26" r="14" fill="#eab308" stroke="#120b1d" strokeWidth="2.5" />
-          <path d="M18 22 Q20 20 22 23" fill="none" stroke="#120b1d" strokeWidth="2" strokeLinecap="round" />
-          <path d="M26 23 Q28 20 30 22" fill="none" stroke="#120b1d" strokeWidth="2" strokeLinecap="round" />
-          <path d="M18 30 L21 32 L24 30 L27 32 L30 30" fill="none" stroke="#120b1d" strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="21" cy="35" r="1.5" fill="#c084fc" />
-          <circle cx="27" cy="35" r="1.5" fill="#c084fc" />
-        </svg>
-      );
-    case 'gengar-hood':
-      return (
-        <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true" className="runner-mini-svg">
-          <path d="M12 18 L8 7 L17 14 Z" fill="#7e22ce" stroke="#120b1d" strokeWidth="2.2" strokeLinejoin="round" />
-          <path d="M36 18 L40 7 L31 14 Z" fill="#7e22ce" stroke="#120b1d" strokeWidth="2.2" strokeLinejoin="round" />
-          <circle cx="24" cy="26" r="14" fill="#7e22ce" stroke="#120b1d" strokeWidth="2.5" />
-          <path d="M16 23 L22 25 L18 27 Z" fill="#dc2626" stroke="#120b1d" strokeWidth="1.2" />
-          <path d="M32 23 L26 25 L30 27 Z" fill="#dc2626" stroke="#120b1d" strokeWidth="1.2" />
-          <path d="M17 30 Q24 36 31 30 Z" fill="#f8fafc" stroke="#120b1d" strokeWidth="1.8" />
-          <path d="M20 30 L20 33 M24 30 L24 34 M28 30 L28 33" stroke="#120b1d" strokeWidth="1.2" />
-        </svg>
-      );
-    case 'litwick-runner':
-    default:
-      return (
-        <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true" className="runner-mini-svg">
-          <path d="M24 2 Q28 8 26 12 Q24 15 22 12 Q20 8 24 2 Z" fill="#38bdf8" stroke="#120b1d" strokeWidth="1.8" />
-          <circle cx="24" cy="10" r="2.2" fill="#a855f7" />
-          <circle cx="24" cy="26" r="14" fill="#f8fafc" stroke="#120b1d" strokeWidth="2.5" />
-          <path d="M16 22 Q17 28 18 24 Q19 32 21 26" fill="none" stroke="#e2e8f0" strokeWidth="2.2" strokeLinecap="round" />
-          <ellipse cx="19" cy="26" rx="2.5" ry="1.8" fill="#eab308" stroke="#120b1d" strokeWidth="1.2" />
-          <ellipse cx="29" cy="26" rx="2.5" ry="1.8" fill="#eab308" stroke="#120b1d" strokeWidth="1.2" />
-          <circle cx="19" cy="26" r="1" fill="#7e22ce" />
-          <circle cx="29" cy="26" r="1" fill="#7e22ce" />
-          <circle cx="24" cy="31" r="1.2" fill="#120b1d" />
-        </svg>
-      );
-  }
-}
 
 export default function App() {
   const [health, setHealth] = useState({ state: 'checking' });
@@ -239,7 +177,7 @@ export default function App() {
                     >
                       {isSelected && <span className="active-runner-badge">ACTIVE</span>}
                       <div className="runner-avatar-frame">
-                        <RunnerMiniAvatar runnerId={runner.id} />
+                        <RunnerPortraitCanvas runnerId={runner.id} />
                       </div>
                       <strong className="runner-card-name">{runner.name}</strong>
                       <span className="runner-card-title">{runner.title}</span>

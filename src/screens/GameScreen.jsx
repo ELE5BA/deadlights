@@ -10,6 +10,77 @@ import {
   playCountdownSfx,
   playButtonClickSfx,
 } from '../game/soundEffects.js';
+import { POKEMON_CARD_ROSTER } from '../game/GameEngine.js';
+
+/**
+ * Miniature cartoon sprite for the 6 stage-specific Pokémon
+ */
+function StagePokemonMiniSprite({ stageNumber }) {
+  const stg = ((stageNumber - 1) % 6) + 1;
+  switch (stg) {
+    case 1: // Bulba-Moss
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" className="mini-stage-sprite">
+          <path d="M12 3 C16 3 20 8 18 16 C16 20 8 20 6 16 C4 8 8 3 12 3 Z" fill="#10b981" stroke="#120b1d" strokeWidth="1.6" />
+          <path d="M12 4 Q15 9 12 14 Q9 9 12 4 Z" fill="#34d399" />
+          <circle cx="9" cy="13" r="1.5" fill="#120b1d" />
+          <circle cx="15" cy="13" r="1.5" fill="#120b1d" />
+        </svg>
+      );
+    case 2: // Pika-Lantern
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" className="mini-stage-sprite">
+          <path d="M7 8 L3 2 L8 5 Z" fill="#f59e0b" stroke="#120b1d" strokeWidth="1.4" />
+          <path d="M17 8 L21 2 L16 5 Z" fill="#f59e0b" stroke="#120b1d" strokeWidth="1.4" />
+          <circle cx="12" cy="13" r="7" fill="#fbbf24" stroke="#120b1d" strokeWidth="1.6" />
+          <circle cx="8" cy="14" r="1.6" fill="#ef4444" />
+          <circle cx="16" cy="14" r="1.6" fill="#ef4444" />
+          <circle cx="10" cy="12" r="1.2" fill="#120b1d" />
+          <circle cx="14" cy="12" r="1.2" fill="#120b1d" />
+        </svg>
+      );
+    case 3: // Zap-Venomoth
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" className="mini-stage-sprite">
+          <path d="M12 12 C6 6 3 9 5 15 C7 19 11 15 12 12 Z" fill="#38bdf8" stroke="#120b1d" strokeWidth="1.4" />
+          <path d="M12 12 C18 6 21 9 19 15 C17 19 13 15 12 12 Z" fill="#38bdf8" stroke="#120b1d" strokeWidth="1.4" />
+          <ellipse cx="12" cy="13" rx="2.5" ry="5" fill="#0284c7" stroke="#120b1d" strokeWidth="1.4" />
+          <circle cx="10" cy="11" r="1.2" fill="#fef08a" />
+          <circle cx="14" cy="11" r="1.2" fill="#fef08a" />
+        </svg>
+      );
+    case 4: // Gengar-Wisp
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" className="mini-stage-sprite">
+          <path d="M6 9 L4 3 L9 6 Z" fill="#7e22ce" stroke="#120b1d" strokeWidth="1.4" />
+          <path d="M18 9 L20 3 L15 6 Z" fill="#7e22ce" stroke="#120b1d" strokeWidth="1.4" />
+          <circle cx="12" cy="13" r="7" fill="#c084fc" stroke="#120b1d" strokeWidth="1.6" />
+          <path d="M8 11 L11 12 L9 13 Z" fill="#dc2626" />
+          <path d="M16 11 L13 12 L15 13 Z" fill="#dc2626" />
+          <path d="M9 15 Q12 18 15 15 Z" fill="#ffffff" stroke="#120b1d" strokeWidth="1.0" />
+        </svg>
+      );
+    case 5: // Corvi-Gear
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" className="mini-stage-sprite">
+          <circle cx="12" cy="12" r="7" fill="#64748b" stroke="#120b1d" strokeWidth="1.6" />
+          <circle cx="12" cy="12" r="3.2" fill="#f59e0b" stroke="#120b1d" strokeWidth="1.2" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#120b1d" strokeWidth="1.8" />
+          <path d="M9 10 L15 7 L12 14 Z" fill="#94a3b8" />
+        </svg>
+      );
+    case 6: // Gyarados-Fin
+    default:
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" className="mini-stage-sprite">
+          <path d="M12 2 L15 9 L20 8 L16 13 L19 19 L12 15 L5 19 L8 13 L4 8 L9 9 Z" fill="#06b6d4" stroke="#120b1d" strokeWidth="1.6" />
+          <circle cx="10" cy="12" r="1.3" fill="#dc2626" />
+          <circle cx="14" cy="12" r="1.3" fill="#dc2626" />
+          <path d="M10 14 Q12 16 14 14" stroke="#ffffff" strokeWidth="1.2" />
+        </svg>
+      );
+  }
+}
 
 /**
  * Custom Bespoke Cartoon-Outlined Poké-Heart SVG
@@ -120,6 +191,7 @@ function formatDialogue(text) {
 export default function GameScreen({ player, onFinished, runnerId }) {
   const engineRef = useRef(null);
   const stageProgressRef = useRef(null);
+  const speechBubbleRef = useRef(null);
 
   const [engineState, setEngineState] = useState({
     lane: 1,
@@ -195,12 +267,16 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     return () => window.clearTimeout(timer);
   }, [sessionState, engineState.paused, jumpscareActive, completedCardModal, lossModal, dialoguePhase]);
 
-  // 60FPS DOM Progress Bar Callback hookup
+  // 60FPS DOM Progress Bar & 3D Pursuer Speech Bubble tracking
   const onEngine = useCallback((engine) => {
     engineRef.current = engine;
-    engine.onFrameTick = ({ stageProgressRatio }) => {
+    engine.onFrameTick = ({ stageProgressRatio, pursuerSpeechPos }) => {
       if (stageProgressRef.current) {
         stageProgressRef.current.style.transform = `scaleX(${stageProgressRatio})`;
+      }
+      if (speechBubbleRef.current && pursuerSpeechPos) {
+        speechBubbleRef.current.style.left = `${pursuerSpeechPos.xPercent}%`;
+        speechBubbleRef.current.style.top = `${pursuerSpeechPos.yPercent}%`;
       }
     };
   }, []);
@@ -215,11 +291,9 @@ export default function GameScreen({ player, onFinished, runnerId }) {
           cardName: next.cardPickup.cardName,
           cardColor: next.cardPickup.cardColor,
         });
-        setTimeout(() => {
-          setRecentDockSlot(slot);
-          setTimeout(() => setRecentDockSlot(null), 900);
-        }, 550);
-        setTimeout(() => setFlyingCardAnim(null), 1050);
+        setRecentDockSlot(slot);
+        setTimeout(() => setRecentDockSlot(null), 850);
+        setTimeout(() => setFlyingCardAnim(null), 850);
       }
       if (next.stageClearedBanner) {
         setStageBanner({
@@ -463,9 +537,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         </button>
       </aside>
 
-      {/* 3. PENNYWISE RANDOMIZED SILENT CARTOON SPEECH BUBBLE (To the side, disappears smoothly every once in awhile) */}
+      {/* 3. PENNYWISE DYNAMIC 3D-TRACKED CARTOON SPEECH BUBBLE */}
       {sessionState === 'playing' && !engineState.paused && !jumpscareActive && !completedCardModal && !lossModal && dialoguePhase !== 'hidden' && (
         <aside
+          ref={speechBubbleRef}
           className={`pennywise-speech-bubble ${dialoguePhase === 'exiting' ? 'bubble-exiting' : 'bubble-entering'}`}
           key={`${dialogueIndex}-${dialoguePhase === 'exiting' ? 'exit' : 'enter'}`}
           aria-live="polite"
@@ -477,54 +552,90 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         </aside>
       )}
 
-      {/* 4. 2D CARTOON FLYING CARD-TO-DOCK ANIMATION */}
+      {/* 4. SUBTLE PERIPHERAL CARD-ARC & COMPACT TOAST PILL (Never covers the center track!) */}
       {flyingCardAnim && (
-        <div
-          className={`flying-card-overlay fly-to-slot-${flyingCardAnim.slot}`}
-          key={flyingCardAnim.id}
-          style={{ '--card-pickup-color': flyingCardAnim.cardColor || '#f59e0b' }}
-        >
-          <div className="flying-card-pop-banner">POKÉ-CARD FRAGMENT!</div>
-          <div className="flying-card-mini">
-            <div className="mini-card-sparkle">✦</div>
-            <div className="mini-card-name">{flyingCardAnim.cardName}</div>
+        <>
+          <div
+            className={`peripheral-card-arc slot-target-${flyingCardAnim.slot}`}
+            key={flyingCardAnim.id}
+            style={{ '--card-pickup-color': flyingCardAnim.cardColor || '#f59e0b' }}
+          >
+            <div className="mini-arc-card">
+              <span className="mini-arc-slot">{flyingCardAnim.slot}</span>
+            </div>
           </div>
-        </div>
+          <div
+            className="hud-card-toast-pill"
+            style={{ '--toast-accent': flyingCardAnim.cardColor || '#f59e0b' }}
+          >
+            +1 {flyingCardAnim.cardName.toUpperCase()} FRAGMENT [{flyingCardAnim.slot}/5]
+          </div>
+        </>
       )}
 
-      {/* 5. BOTTOM-CENTER FANNED 5-CARD DOCK */}
-      <section className="hud-bottom-card-dock" aria-label="5 Stage Pokédex Cards">
-        <div className="hud-dock-fanned-cards" title="Gather all 5 cards across 60 seconds">
-          {[1, 2, 3, 4, 5].map((slot) => {
-            const isGot = slot <= cardsGot;
-            const angles = [-8, -4, 0, 4, 8];
-            const angle = angles[slot - 1];
-            return (
-              <div
-                key={slot}
-                className={`fanned-card-slot ${isGot ? 'card-collected' : 'card-pending'} ${
-                  recentDockSlot === slot ? 'slot-bounce-glow' : ''
-                }`}
-                style={{
-                  '--card-fan-rot': `${angle}deg`,
-                  '--card-fan-y': `${Math.abs(angle) * 0.7}px`,
-                }}
-                title={`Stage Card ${slot}/5: ${isGot ? 'Secured' : 'Missing'}`}
-              >
-                <div className="card-flipper">
-                  <div className="card-front">
-                    <span className="fanned-card-index">{slot}</span>
-                    <span className="fanned-card-mark">✦</span>
+      {/* 5. STAGE-SPECIFIC POKÉMON BOTTOM 5-CARD DOCK */}
+      {(() => {
+        const stageTargetCard = POKEMON_CARD_ROSTER[(engineState.stageNumber - 1) % POKEMON_CARD_ROSTER.length];
+        return (
+          <section
+            className="hud-bottom-card-dock"
+            aria-label={`5 Stage ${engineState.stageNumber} Pokédex Cards: ${stageTargetCard.name}`}
+            style={{
+              '--stage-card-color': stageTargetCard.color,
+              '--stage-card-accent': stageTargetCard.accentColor,
+            }}
+          >
+            <div className="hud-dock-fanned-cards" title="Gather all 5 cards across 60 seconds">
+              {[1, 2, 3, 4, 5].map((slot) => {
+                const isGot = slot <= cardsGot;
+                const angles = [-8, -4, 0, 4, 8];
+                const angle = angles[slot - 1];
+                return (
+                  <div
+                    key={slot}
+                    className={`fanned-card-slot ${isGot ? 'card-collected' : 'card-pending'} ${
+                      recentDockSlot === slot ? 'slot-bounce-glow' : ''
+                    }`}
+                    style={{
+                      '--card-fan-rot': `${angle}deg`,
+                      '--card-fan-y': `${Math.abs(angle) * 0.7}px`,
+                    }}
+                    title={`Stage Card ${slot}/5: ${isGot ? 'Secured' : 'Missing'}`}
+                  >
+                    <div className="card-flipper">
+                      {/* Uncollected: Stage-tinted custom cartoon Pokéball back-plate */}
+                      <div className="card-front card-pokeball-back">
+                        <div className="mini-pokeball-icon">
+                          <div className="pokeball-top-half" />
+                          <div className="pokeball-center-band" />
+                          <div className="pokeball-button" />
+                        </div>
+                        <span className="fanned-card-index">{slot}</span>
+                      </div>
+
+                      {/* Collected: Miniature cartoon sprite of that stage's Pokémon + elemental bar + gold border */}
+                      <div className="card-back card-pokemon-mini-face">
+                        <div className="mini-card-elem-bar">
+                          <span className="mini-stage-num">S{engineState.stageNumber}</span>
+                          <span className="mini-card-hp">{stageTargetCard.hp}</span>
+                        </div>
+                        <div className="mini-card-art-box">
+                          <StagePokemonMiniSprite stageNumber={engineState.stageNumber} />
+                        </div>
+                        <span className="mini-card-mon-name">{stageTargetCard.name.split('-')[0]}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="card-back">
-                    <span className="fanned-back-pattern">◈</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+                );
+              })}
+            </div>
+            {/* Compact Stage Target Label Pill tucked at the base of the dock */}
+            <div className="dock-stage-target-pill">
+              STAGE {engineState.stageNumber} CARD: {stageTargetCard.name.toUpperCase()} ({cardsGot}/5)
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Stage Clear Celebration Banner (Positioned well below Pennywise at bottom: 5.5rem) */}
       {stageBanner && (

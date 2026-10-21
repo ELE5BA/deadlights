@@ -459,34 +459,183 @@ export function playButtonClickSfx() {
   osc.stop(now + 0.06);
 }
 
-// ── 8-BIT CHIPTUNE MUSIC SEQUENCER (POKÉMON BATTLE X CARNIVAL) ──────────
+// ── 8-BIT CHIPTUNE MUSIC SEQUENCER (6 STAGE-SPECIFIC COMPOSITIONS) ──
 
-// 64-step melody pattern in C Minor / Phrygian Dominant with carnival chromaticism
-const LEAD_MELODY_64 = [
-  // Phrase 1 (0-15)
-  261.6, 311.1, 392.0, 523.3,  493.9, 392.0, 311.1, 293.7,
-  261.6, 311.1, 392.0, 415.3,  392.0, 349.2, 311.1, 293.7,
-  // Phrase 2 (16-31)
-  261.6, 392.0, 523.3, 622.3,  587.3, 523.3, 493.9, 392.0,
-  415.3, 523.3, 493.9, 415.3,  392.0, 370.0, 392.0, 493.9,
-  // Phrase 3 (32-47)
-  523.3, 392.0, 311.1, 392.0,  415.3, 523.3, 587.3, 622.3,
-  587.3, 523.3, 493.9, 523.3,  587.3, 493.9, 392.0, 349.2,
-  // Phrase 4 (48-63) - Eerie carnival turnaround
-  311.1, 349.2, 370.0, 392.0,  415.3, 392.0, 370.0, 349.2,
-  311.1, 293.7, 246.9, 293.7,  261.6, 196.0, 261.6, 0,
-];
-
-// 32-step bassline (played on 8th notes, steps 0, 2, 4...)
-const BASS_LINE_32 = [
-  // Bar 1
-  65.4, 130.8, 65.4, 130.8,  77.8, 155.6, 98.0, 196.0,
-  // Bar 2
-  65.4, 130.8, 65.4, 130.8,  103.8, 207.6, 98.0, 196.0,
-  // Bar 3
-  87.3, 174.6, 87.3, 174.6,  98.0, 196.0, 123.5, 246.9,
-  // Bar 4
-  65.4, 130.8, 77.8, 98.0,   103.8, 98.0, 65.4, 130.8,
+export const STAGE_MUSIC_THEMES = [
+  // Stage 1 (156 BPM - Twilight Mist): Eerie C Minor Game Boy Pokémon trainer/ghost melody
+  {
+    stageNumber: 1,
+    name: 'Twilight Mist',
+    bpm: 156,
+    leadTimbre: 'square',
+    filterFreq: 2400,
+    bassTimbre: 'triangle',
+    leadMelody: [
+      // Phrase 1 (0-15)
+      261.6, 311.1, 392.0, 523.3,  493.9, 392.0, 311.1, 293.7,
+      261.6, 311.1, 392.0, 415.3,  392.0, 349.2, 311.1, 293.7,
+      // Phrase 2 (16-31)
+      261.6, 392.0, 523.3, 622.3,  587.3, 523.3, 493.9, 392.0,
+      415.3, 523.3, 493.9, 415.3,  392.0, 370.0, 392.0, 493.9,
+      // Phrase 3 (32-47)
+      523.3, 392.0, 311.1, 392.0,  415.3, 523.3, 587.3, 622.3,
+      587.3, 523.3, 493.9, 523.3,  587.3, 493.9, 392.0, 349.2,
+      // Phrase 4 (48-63)
+      311.1, 349.2, 370.0, 392.0,  415.3, 392.0, 370.0, 349.2,
+      311.1, 293.7, 246.9, 293.7,  261.6, 196.0, 261.6, 0,
+    ],
+    bassLine: [
+      65.4, 130.8, 65.4, 130.8,  77.8, 155.6, 98.0, 196.0,
+      65.4, 130.8, 65.4, 130.8,  103.8, 207.6, 98.0, 196.0,
+      87.3, 174.6, 87.3, 174.6,  98.0, 196.0, 123.5, 246.9,
+      65.4, 130.8, 77.8, 98.0,   103.8, 98.0, 65.4, 130.8,
+    ],
+  },
+  // Stage 2 (162 BPM - Amber Hollow): Syncopated D Dorian / Phrygian lantern-festival melody
+  {
+    stageNumber: 2,
+    name: 'Amber Hollow',
+    bpm: 162,
+    leadTimbre: 'triangle',
+    filterFreq: 3400,
+    bassTimbre: 'square',
+    leadMelody: [
+      // Phrase 1 (0-15)
+      293.7, 0, 349.2, 392.0,      440.0, 0, 587.3, 523.3,
+      440.0, 392.0, 349.2, 392.0,  440.0, 0, 349.2, 329.6,
+      // Phrase 2 (16-31)
+      293.7, 349.2, 440.0, 587.3,  523.3, 440.0, 392.0, 349.2,
+      311.1, 392.0, 466.2, 440.0,  392.0, 349.2, 329.6, 261.6,
+      // Phrase 3 (32-47)
+      587.3, 0, 440.0, 0,          349.2, 392.0, 440.0, 523.3,
+      587.3, 698.5, 659.3, 587.3,  523.3, 440.0, 392.0, 440.0,
+      // Phrase 4 (48-63)
+      466.2, 440.0, 392.0, 349.2,  311.1, 349.2, 392.0, 440.0,
+      349.2, 293.7, 261.6, 329.6,  293.7, 220.0, 293.7, 0,
+    ],
+    bassLine: [
+      73.4, 110.0, 87.3, 130.8,   98.0, 146.8, 110.0, 164.8,
+      73.4, 146.8, 98.0, 130.8,   77.8, 116.5, 110.0, 146.8,
+      87.3, 130.8, 98.0, 146.8,   110.0, 164.8, 130.8, 196.0,
+      73.4, 110.0, 87.3, 110.0,   98.0, 110.0, 73.4, 146.8,
+    ],
+  },
+  // Stage 3 (168 BPM - Crimson Mire): High-energy E Minor electric gym-battle theme
+  {
+    stageNumber: 3,
+    name: 'Crimson Mire',
+    bpm: 168,
+    leadTimbre: 'square',
+    filterFreq: 3100,
+    bassTimbre: 'sawtooth',
+    leadMelody: [
+      // Phrase 1 (0-15)
+      329.6, 392.0, 493.9, 659.3,  622.3, 659.3, 493.9, 392.0,
+      329.6, 493.9, 392.0, 370.0,  329.6, 392.0, 440.0, 493.9,
+      // Phrase 2 (16-31)
+      659.3, 493.9, 392.0, 493.9,  587.3, 523.3, 493.9, 440.0,
+      392.0, 440.0, 493.9, 587.3,  523.3, 493.9, 440.0, 370.0,
+      // Phrase 3 (32-47)
+      392.0, 493.9, 659.3, 784.0,  740.0, 659.3, 622.3, 659.3,
+      740.0, 622.3, 493.9, 622.3,  659.3, 493.9, 392.0, 329.6,
+      // Phrase 4 (48-63)
+      523.3, 493.9, 440.0, 392.0,  370.0, 392.0, 440.0, 493.9,
+      392.0, 329.6, 311.1, 370.0,  329.6, 246.9, 329.6, 0,
+    ],
+    bassLine: [
+      82.4, 164.8, 82.4, 164.8,    98.0, 196.0, 110.0, 220.0,
+      82.4, 164.8, 82.4, 164.8,    123.5, 246.9, 110.0, 196.0,
+      103.8, 207.6, 110.0, 220.0,  123.5, 246.9, 146.8, 293.7,
+      82.4, 164.8, 98.0, 123.5,    110.0, 123.5, 82.4, 164.8,
+    ],
+  },
+  // Stage 4 (174 BPM - Glitch Rift): Frantic F# Phrygian Dominant cyber-rift theme
+  {
+    stageNumber: 4,
+    name: 'Glitch Rift',
+    bpm: 174,
+    leadTimbre: 'sawtooth',
+    filterFreq: 2800,
+    bassTimbre: 'square',
+    leadMelody: [
+      // Phrase 1 (0-15)
+      370.0, 0, 466.2, 554.4,      740.0, 587.3, 554.4, 466.2,
+      392.0, 466.2, 554.4, 493.9,  466.2, 392.0, 370.0, 0,
+      // Phrase 2 (16-31)
+      370.0, 740.0, 659.3, 554.4,  587.3, 493.9, 554.4, 466.2,
+      493.9, 392.0, 466.2, 370.0,  392.0, 329.6, 370.0, 0,
+      // Phrase 3 (32-47)
+      554.4, 587.3, 554.4, 466.2,  493.9, 554.4, 587.3, 659.3,
+      740.0, 587.3, 554.4, 493.9,  466.2, 392.0, 370.0, 392.0,
+      // Phrase 4 (48-63)
+      466.2, 392.0, 370.0, 329.6,  293.7, 329.6, 370.0, 392.0,
+      466.2, 554.4, 493.9, 466.2,  392.0, 370.0, 0, 0,
+    ],
+    bassLine: [
+      92.5, 185.0, 92.5, 0,        98.0, 196.0, 116.5, 233.1,
+      92.5, 185.0, 138.6, 0,       98.0, 185.0, 82.4, 164.8,
+      116.5, 233.1, 123.5, 246.9,  138.6, 277.2, 146.8, 0,
+      92.5, 185.0, 98.0, 116.5,    123.5, 116.5, 92.5, 185.0,
+    ],
+  },
+  // Stage 5 (180 BPM - Abyssal Void): Heavy G Harmonic Minor clockwork tower theme
+  {
+    stageNumber: 5,
+    name: 'Abyssal Void',
+    bpm: 180,
+    leadTimbre: 'square',
+    filterFreq: 3300,
+    bassTimbre: 'sawtooth',
+    leadMelody: [
+      // Phrase 1 (0-15)
+      392.0, 466.2, 587.3, 784.0,  740.0, 587.3, 466.2, 440.0,
+      392.0, 587.3, 523.3, 466.2,  440.0, 370.0, 392.0, 440.0,
+      // Phrase 2 (16-31)
+      466.2, 587.3, 784.0, 932.3,  880.0, 784.0, 740.0, 587.3,
+      622.3, 784.0, 740.0, 622.3,  587.3, 523.3, 466.2, 440.0,
+      // Phrase 3 (32-47)
+      587.3, 784.0, 932.3, 1174.7, 1046.5, 932.3, 880.0, 784.0,
+      740.0, 880.0, 1174.7, 1046.5, 932.3, 880.0, 784.0, 740.0,
+      // Phrase 4 (48-63)
+      622.3, 587.3, 523.3, 466.2,  440.0, 466.2, 523.3, 587.3,
+      622.3, 523.3, 440.0, 370.0,  392.0, 293.7, 392.0, 0,
+    ],
+    bassLine: [
+      98.0, 196.0, 98.0, 196.0,    116.5, 233.1, 146.8, 293.7,
+      98.0, 196.0, 98.0, 196.0,    155.6, 311.1, 146.8, 293.7,
+      130.8, 261.6, 130.8, 261.6,  146.8, 293.7, 185.0, 370.0,
+      98.0, 196.0, 116.5, 146.8,   155.6, 146.8, 98.0, 196.0,
+    ],
+  },
+  // Stage 6 (188 BPM - Deadlights Core): Blistering A Minor / Tritone apex boss finale
+  {
+    stageNumber: 6,
+    name: 'Deadlights Core',
+    bpm: 188,
+    leadTimbre: 'sawtooth',
+    filterFreq: 3600,
+    bassTimbre: 'sawtooth',
+    leadMelody: [
+      // Phrase 1 (0-15)
+      440.0, 523.3, 659.3, 880.0,  830.6, 659.3, 523.3, 493.9,
+      440.0, 622.3, 587.3, 523.3,  493.9, 415.3, 440.0, 493.9,
+      // Phrase 2 (16-31)
+      523.3, 659.3, 880.0, 1046.5, 987.8, 880.0, 830.6, 659.3,
+      698.5, 880.0, 830.6, 698.5,  659.3, 622.3, 587.3, 493.9,
+      // Phrase 3 (32-47)
+      880.0, 659.3, 523.3, 659.3,  622.3, 523.3, 440.0, 523.3,
+      587.3, 698.5, 880.0, 830.6,  880.0, 987.8, 1046.5, 987.8,
+      // Phrase 4 (48-63)
+      1046.5, 987.8, 880.0, 830.6, 698.5, 659.3, 622.3, 587.3,
+      523.3, 493.9, 415.3, 493.9,  440.0, 329.6, 440.0, 0,
+    ],
+    bassLine: [
+      110.0, 220.0, 110.0, 220.0,  130.8, 261.6, 164.8, 329.6,
+      110.0, 220.0, 155.6, 311.1,  174.6, 349.2, 164.8, 329.6,
+      146.8, 293.7, 155.6, 311.1,  164.8, 329.6, 207.7, 415.3,
+      110.0, 220.0, 130.8, 164.8,  174.6, 164.8, 110.0, 220.0,
+    ],
+  },
 ];
 
 export function startBackgroundMusic(stageNumber = 1) {
@@ -507,8 +656,9 @@ export function startBackgroundMusic(stageNumber = 1) {
   }
   bgmGainNode.gain.setValueAtTime(muted ? 0 : 0.22, ctx.currentTime);
 
-  // Speed: 160 BPM base + 4 BPM per stage
-  const bpm = 160 + (bgmStage - 1) * 4;
+  const themeIndex = (bgmStage - 1) % STAGE_MUSIC_THEMES.length;
+  const currentTheme = STAGE_MUSIC_THEMES[themeIndex];
+  const bpm = currentTheme.bpm;
   const stepDurationMs = ((60 / bpm) / 4) * 1000;
   let nextNoteTime = ctx.currentTime + 0.05;
 
@@ -521,20 +671,20 @@ export function startBackgroundMusic(stageNumber = 1) {
       const stepTime = nextNoteTime;
       const stepDurationSec = stepDurationMs / 1000;
 
-      // 1. Lead Channel (Square Wave)
-      const leadFreq = LEAD_MELODY_64[step];
+      // 1. Lead Channel (Current Theme synth timbre and filter frequency)
+      const leadFreq = currentTheme.leadMelody[step];
       if (leadFreq > 0) {
         const leadOsc = ctx.createOscillator();
         const leadGain = ctx.createGain();
         const leadFilter = ctx.createBiquadFilter();
 
-        leadOsc.type = 'square';
+        leadOsc.type = currentTheme.leadTimbre;
         leadOsc.frequency.setValueAtTime(leadFreq, stepTime);
 
         leadFilter.type = 'lowpass';
-        leadFilter.frequency.setValueAtTime(2600, stepTime);
+        leadFilter.frequency.setValueAtTime(currentTheme.filterFreq, stepTime);
 
-        leadGain.gain.setValueAtTime(0.09, stepTime);
+        leadGain.gain.setValueAtTime(currentTheme.leadTimbre === 'sawtooth' ? 0.075 : 0.09, stepTime);
         leadGain.gain.exponentialRampToValueAtTime(0.001, stepTime + stepDurationSec * 0.88);
 
         leadOsc.connect(leadFilter);
@@ -545,18 +695,18 @@ export function startBackgroundMusic(stageNumber = 1) {
         leadOsc.stop(stepTime + stepDurationSec * 0.9);
       }
 
-      // 2. Bass Channel (Triangle Wave, 8th notes on even steps)
+      // 2. Bass Channel (Current Theme bass timbre and notes, 8th notes on even steps)
       if (step % 2 === 0) {
         const bassIndex = (step / 2) % 32;
-        const bassFreq = BASS_LINE_32[bassIndex];
+        const bassFreq = currentTheme.bassLine[bassIndex];
         if (bassFreq > 0) {
           const bassOsc = ctx.createOscillator();
           const bassGain = ctx.createGain();
 
-          bassOsc.type = 'triangle';
+          bassOsc.type = currentTheme.bassTimbre;
           bassOsc.frequency.setValueAtTime(bassFreq, stepTime);
 
-          bassGain.gain.setValueAtTime(0.24, stepTime);
+          bassGain.gain.setValueAtTime(currentTheme.bassTimbre === 'sawtooth' ? 0.18 : 0.24, stepTime);
           bassGain.gain.exponentialRampToValueAtTime(0.01, stepTime + stepDurationSec * 1.8);
 
           bassOsc.connect(bassGain);
@@ -568,8 +718,8 @@ export function startBackgroundMusic(stageNumber = 1) {
       }
 
       // 3. Percussion Channel
-      // Hi-Hat on every 8th note (even steps)
-      if (step % 2 === 0) {
+      // Hi-Hat on even steps (with syncopation on later stages)
+      if (step % 2 === 0 || (currentTheme.stageNumber >= 4 && step % 4 === 3)) {
         const noiseBuf = createNoiseBuffer(ctx, 0.03);
         const hatSource = ctx.createBufferSource();
         hatSource.buffer = noiseBuf;
@@ -590,8 +740,8 @@ export function startBackgroundMusic(stageNumber = 1) {
         hatSource.stop(stepTime + 0.03);
       }
 
-      // Snappy Snare on beats 2 and 4 (steps 4, 12, 20, 28, 36, 44, 52, 60)
-      if (step % 8 === 4) {
+      // Snappy Snare on beats 2 and 4 (plus boss breaks on stage 6)
+      if (step % 8 === 4 || (currentTheme.stageNumber === 6 && step % 16 === 14)) {
         const snareBuf = createNoiseBuffer(ctx, 0.08);
         const snareSource = ctx.createBufferSource();
         snareSource.buffer = snareBuf;

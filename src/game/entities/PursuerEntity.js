@@ -3,7 +3,7 @@ import { createPixelTexture } from '../createScene.js';
 import { addBoxOutline, addHullOutline } from '../utils/outline.js';
 
 /**
- * Creates authentic pixel-art face texture for the Pennywise Deadlights villain.
+ * Creates authentic 256x256 hand-painted cel-shaded porcelain face texture for the Pennywise Deadlights villain.
  */
 function createPennywiseFaceTexture() {
   return createPixelTexture((ctx, w, h) => {
@@ -11,115 +11,134 @@ function createPennywiseFaceTexture() {
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(0, 0, w, h);
 
-    // Subtle skin contour shading
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillRect(0, 0, 16, h);
-    ctx.fillRect(w - 16, 0, 16, h);
-    ctx.fillRect(0, h - 14, w, 14);
+    // Subtle skin contour cel-shading on side cheeks & lower face
+    const sideGrad = ctx.createLinearGradient(0, 0, w, 0);
+    sideGrad.addColorStop(0, '#cbd5e1');
+    sideGrad.addColorStop(0.18, '#e2e8f0');
+    sideGrad.addColorStop(0.5, '#f8fafc');
+    sideGrad.addColorStop(0.82, '#e2e8f0');
+    sideGrad.addColorStop(1, '#cbd5e1');
+    ctx.fillStyle = sideGrad;
+    ctx.fillRect(0, 0, w, h);
 
-    // Fine porcelain forehead hairline cracks
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillRect(38, 10, 2, 14);
-    ctx.fillRect(40, 20, 14, 2);
-    ctx.fillRect(82, 12, 2, 12);
-    ctx.fillRect(74, 18, 10, 2);
+    // Dark-ink cartoon border / contour outlines
+    ctx.strokeStyle = '#120b1d';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(2, 2, w - 4, h - 4);
 
-    // 2. High-arched sinister black brows
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(24, 28, 26, 4);
-    ctx.fillRect(78, 28, 26, 4);
-    ctx.fillRect(20, 31, 6, 4);
-    ctx.fillRect(102, 31, 6, 4);
+    // 2. Bulbous Forehead Hairline Cracks
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(80, 24); ctx.lineTo(92, 40); ctx.lineTo(88, 52); ctx.lineTo(100, 60);
+    ctx.moveTo(176, 28); ctx.lineTo(164, 42); ctx.lineTo(168, 56);
+    ctx.moveTo(128, 16); ctx.lineTo(132, 32); ctx.lineTo(124, 44);
+    ctx.stroke();
 
-    // 3. Dark sunken eye sockets with deep charcoal shadow
-    ctx.fillStyle = '#090510';
-    ctx.fillRect(26, 34, 26, 26);
-    ctx.fillRect(76, 34, 26, 26);
+    // 3. Furrowed Menacing Brow Creases
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(60, 68); ctx.lineTo(110, 80);
+    ctx.moveTo(196, 68); ctx.lineTo(146, 80);
+    ctx.moveTo(116, 76); ctx.lineTo(128, 88); ctx.lineTo(140, 76);
+    ctx.stroke();
 
-    // Sclera: Jaundiced yellow-white
+    // 4. Dark Sunken Eye-Shadow Gradients
+    const eyeShadowL = ctx.createRadialGradient(82, 98, 4, 82, 98, 32);
+    eyeShadowL.addColorStop(0, '#090510');
+    eyeShadowL.addColorStop(0.65, '#1e102d');
+    eyeShadowL.addColorStop(1, 'transparent');
+    ctx.fillStyle = eyeShadowL;
+    ctx.beginPath(); ctx.arc(82, 98, 32, 0, Math.PI * 2); ctx.fill();
+
+    const eyeShadowR = ctx.createRadialGradient(174, 98, 4, 174, 98, 32);
+    eyeShadowR.addColorStop(0, '#090510');
+    eyeShadowR.addColorStop(0.65, '#1e102d');
+    eyeShadowR.addColorStop(1, 'transparent');
+    ctx.fillStyle = eyeShadowR;
+    ctx.beginPath(); ctx.arc(174, 98, 32, 0, Math.PI * 2); ctx.fill();
+
+    // Sclera in texture (provides backing behind 3D eye)
     ctx.fillStyle = '#fef08a';
-    ctx.fillRect(29, 37, 20, 20);
-    ctx.fillRect(79, 37, 20, 20);
+    ctx.beginPath();
+    ctx.ellipse(82, 98, 16, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(174, 98, 16, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Sulfur-yellow / amber predatory Deadlights iris
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(32, 40, 14, 14);
-    ctx.fillRect(82, 40, 14, 14);
+    // 5. Gaunt Cheek Hollows
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath();
+    ctx.ellipse(48, 148, 18, 32, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(208, 148, 18, 32, 0.2, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Blazing gold inner iris core
-    ctx.fillStyle = '#ffea00';
-    ctx.fillRect(35, 43, 8, 8);
-    ctx.fillRect(85, 43, 8, 8);
-
-    // Tiny dilated demonic black pupil
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(37, 45, 4, 4);
-    ctx.fillRect(87, 45, 4, 4);
-
-    // Eyelid crease shadow
-    ctx.fillStyle = '#450a0a';
-    ctx.fillRect(28, 35, 22, 3);
-    ctx.fillRect(78, 35, 22, 3);
-
-    // 4. Iconic Pennywise Crimson Red Paint Lines
+    // 6. Smooth Curved Crimson Makeup Lines
     ctx.fillStyle = '#b91c1c';
-    ctx.fillRect(37, 10, 6, 18);
-    ctx.fillRect(85, 10, 6, 18);
-    ctx.fillRect(38, 4, 4, 6);
-    ctx.fillRect(86, 4, 4, 6);
+    ctx.strokeStyle = '#7f1d1d';
+    ctx.lineWidth = 1.5;
 
-    // Lines slicing straight through center of both eyes
+    // Forehead points tapering upward toward crown
+    // Left spear point
+    ctx.beginPath();
+    ctx.moveTo(82, 12); ctx.lineTo(89, 72); ctx.lineTo(75, 72); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Right spear point
+    ctx.beginPath();
+    ctx.moveTo(174, 12); ctx.lineTo(181, 72); ctx.lineTo(167, 72); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Curved cheek paint running from eyes down through gaunt cheek hollows toward mouth
     ctx.fillStyle = '#dc2626';
-    ctx.fillRect(37, 34, 6, 26);
-    ctx.fillRect(85, 34, 6, 26);
+    ctx.beginPath();
+    // Left cheek curve
+    ctx.moveTo(76, 120);
+    ctx.quadraticCurveTo(68, 160, 52, 188);
+    ctx.lineTo(62, 192);
+    ctx.quadraticCurveTo(80, 160, 88, 120);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
 
-    // Curved cheek paint running toward mouth corners
-    ctx.fillRect(34, 60, 8, 14);
-    ctx.fillRect(86, 60, 8, 14);
-    ctx.fillRect(28, 72, 8, 12);
-    ctx.fillRect(92, 72, 8, 12);
-    ctx.fillRect(20, 80, 10, 12);
-    ctx.fillRect(98, 80, 10, 12);
+    // Right cheek curve
+    ctx.beginPath();
+    ctx.moveTo(180, 120);
+    ctx.quadraticCurveTo(188, 160, 204, 188);
+    ctx.lineTo(194, 192);
+    ctx.quadraticCurveTo(176, 160, 168, 120);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
 
-    // Extended curved smile tips curling upward
-    ctx.fillRect(16, 76, 8, 12);
-    ctx.fillRect(104, 76, 8, 12);
+    // Signature smile tips curling upward at mouth corners
+    ctx.beginPath();
+    ctx.arc(44, 178, 10, 0.5, Math.PI * 1.5, false);
+    ctx.arc(212, 178, 10, -Math.PI * 0.5, Math.PI * 0.5, false);
+    ctx.stroke();
 
-    // 5. Bulbous crimson clown nose
+    // 7. Glossy Crimson Clown Nose
     ctx.fillStyle = '#dc2626';
-    ctx.fillRect(54, 56, 20, 16);
+    ctx.beginPath();
+    ctx.arc(128, 134, 18, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#ef4444';
-    ctx.fillRect(57, 58, 14, 12);
+    ctx.beginPath();
+    ctx.arc(128, 131, 14, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(59, 60, 4, 4);
+    ctx.beginPath();
+    ctx.arc(133, 127, 4.5, 0, Math.PI * 2);
+    ctx.fill();
 
-    // 6. Maniacal wide razor-toothed smile
-    ctx.fillStyle = '#991b1b';
-    ctx.fillRect(16, 86, 96, 36);
-
-    ctx.fillStyle = '#050206';
-    ctx.fillRect(20, 92, 88, 24);
-
-    ctx.fillStyle = '#7f1d1d';
-    ctx.fillRect(22, 90, 84, 4);
-    ctx.fillRect(22, 112, 84, 4);
-
-    // Jagged white razor teeth rows
-    ctx.fillStyle = '#f8fafc';
-    for (let x = 24; x <= 100; x += 6) {
-      const isFront = x >= 56 && x <= 66;
-      const toothHeight = isFront ? 12 : 8;
-      ctx.fillRect(x, 92, 4, toothHeight);
-    }
-    for (let x = 26; x <= 98; x += 6) {
-      ctx.fillRect(x, 108, 4, 7);
-    }
-
-    ctx.fillStyle = '#0f172a';
-    for (let x = 28; x <= 100; x += 6) {
-      ctx.fillRect(x, 92, 2, 8);
-    }
-  }, 128, 128);
+    // 8. Dark Ink Cartoon Contour Lines for Mouth & Chin Base
+    ctx.fillStyle = '#050208';
+    ctx.beginPath();
+    ctx.moveTo(52, 188);
+    ctx.quadraticCurveTo(128, 240, 204, 188);
+    ctx.quadraticCurveTo(128, 204, 52, 188);
+    ctx.fill();
+    ctx.strokeStyle = '#120b1d';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }, 256, 256);
 }
 
 /**
@@ -458,52 +477,48 @@ export class PursuerEntity {
     }));
 
     // 1. Porcelain Cranium & Forehead Dome (Expanded upper skull)
-    const craniumGeo = this.trackDisposable(new THREE.SphereGeometry(0.72, 10, 8));
+    const craniumGeo = this.trackDisposable(new THREE.SphereGeometry(0.72, 16, 12));
     const cranium = new THREE.Mesh(craniumGeo, porcelainMat);
     cranium.scale.set(1.05, 1.24, 0.98);
     cranium.position.set(0, 0.10, -0.04);
     addHullOutline(cranium, 1.07);
     this.headGroup.add(cranium);
 
-    // Sculpted 3D Menacing Brow Ridges
-    [-0.22, 0.22].forEach((bx) => {
-      const browRidge = new THREE.Mesh(
-        this.trackDisposable(new THREE.BoxGeometry(0.32, 0.12, 0.16)),
-        porcelainMat
-      );
-      browRidge.position.set(bx, 0.20, 0.52);
-      browRidge.rotation.z = bx > 0 ? 0.20 : -0.20;
-      browRidge.rotation.x = -0.15;
-      addBoxOutline(browRidge);
-      this.headGroup.add(browRidge);
-    });
+    // Front Facial Shell: Seamless curved frontal hemisphere mapped with 256x256 cel-shaded porcelain face texture
+    this.faceTexture = this.trackDisposable(createPennywiseFaceTexture());
+    const faceShellMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      map: this.faceTexture,
+      roughness: 0.35,
+      metalness: 0.05,
+    }));
+    const faceShellGeo = this.trackDisposable(new THREE.SphereGeometry(
+      0.728,
+      24,
+      18,
+      Math.PI * 0.05,
+      Math.PI * 0.90,
+      Math.PI * 0.06,
+      Math.PI * 0.86
+    ));
+    const faceShell = new THREE.Mesh(faceShellGeo, faceShellMat);
+    faceShell.scale.set(1.05, 1.24, 1.0);
+    faceShell.position.set(0, 0.10, -0.04);
+    this.headGroup.add(faceShell);
 
-    // Sculpted 3D Tapered Cheekbones
-    [-0.34, 0.34].forEach((cx) => {
-      const cheek = new THREE.Mesh(
-        this.trackDisposable(new THREE.BoxGeometry(0.24, 0.24, 0.22)),
-        porcelainMat
-      );
-      cheek.position.set(cx, -0.06, 0.44);
-      cheek.rotation.z = cx > 0 ? -0.18 : 0.18;
-      addBoxOutline(cheek);
-      this.headGroup.add(cheek);
-    });
+    // 2. 3D Sunken Eye Sockets & Glowing Deadlights Eyeballs with Horizontal Player-Lane Tracking
+    this.eyeIrises = [];
+    const deadlightsIrisMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: '#ffaa00',
+      emissive: '#ffaa00',
+      emissiveIntensity: 2.8,
+      roughness: 0.15,
+    }));
+    this.faceMat = deadlightsIrisMat; // Linked for jumpscare emissive flares!
 
-    // Upper Muzzle & Snout Base
-    const muzzle = new THREE.Mesh(
-      this.trackDisposable(new THREE.BoxGeometry(0.58, 0.20, 0.34)),
-      porcelainMat
-    );
-    muzzle.position.set(0, -0.18, 0.44);
-    addBoxOutline(muzzle);
-    this.headGroup.add(muzzle);
-
-    // 2. 3D Sunken Eye Sockets & Glowing Deadlights Eyeballs
     [-0.22, 0.22].forEach((ex) => {
       // Dark eye socket cavity
       const socket = new THREE.Mesh(
-        this.trackDisposable(new THREE.BoxGeometry(0.25, 0.23, 0.16)),
+        this.trackDisposable(new THREE.BoxGeometry(0.24, 0.22, 0.16)),
         socketMat
       );
       socket.position.set(ex, 0.08, 0.48);
@@ -517,10 +532,10 @@ export class PursuerEntity {
       sclera.position.set(ex, 0.08, 0.51);
       this.headGroup.add(sclera);
 
-      // Blazing Deadlights Iris (Linked to this.faceMat for jumpscare emissive flares!)
+      // 3D Glowing Deadlights Iris (#ffaa00)
       const iris = new THREE.Mesh(
-        this.trackDisposable(new THREE.SphereGeometry(0.065, 6, 6)),
-        this.faceMat
+        this.trackDisposable(new THREE.SphereGeometry(0.065, 8, 8)),
+        deadlightsIrisMat
       );
       iris.position.set(ex, 0.08, 0.58);
       this.headGroup.add(iris);
@@ -533,72 +548,48 @@ export class PursuerEntity {
       pupil.position.set(ex, 0.08, 0.63);
       this.headGroup.add(pupil);
 
+      // Track references for horizontal lane tracking
+      this.eyeIrises.push({
+        iris,
+        pupil,
+        baseIrisX: ex,
+        basePupilX: ex,
+      });
+
       // High-arched sinister 3D eyebrow
       const eyebrow = new THREE.Mesh(
-        this.trackDisposable(new THREE.BoxGeometry(0.28, 0.06, 0.08)),
+        this.trackDisposable(new THREE.BoxGeometry(0.26, 0.06, 0.08)),
         browMat
       );
-      eyebrow.position.set(ex, 0.25, 0.57);
+      eyebrow.position.set(ex, 0.24, 0.57);
       eyebrow.rotation.z = ex > 0 ? 0.30 : -0.30;
       eyebrow.rotation.y = ex > 0 ? -0.15 : 0.15;
       this.headGroup.add(eyebrow);
     });
 
-    // 3. 3D Sculpted Crimson Face-Paint Lines
-    // Forehead vertical paint points slicing straight down through each eye
-    [-0.22, 0.22].forEach((px) => {
-      // Forehead spearhead
-      const foreheadStrip = new THREE.Mesh(
-        this.trackDisposable(new THREE.ConeGeometry(0.05, 0.38, 4)),
-        paintMat
-      );
-      foreheadStrip.position.set(px, 0.44, 0.48);
-      foreheadStrip.rotation.x = 0.25;
-      this.headGroup.add(foreheadStrip);
-
-      // Eye-slice vertical strip
-      const eyeStrip = new THREE.Mesh(
-        this.trackDisposable(new THREE.BoxGeometry(0.055, 0.40, 0.08)),
-        paintMat
-      );
-      eyeStrip.position.set(px, 0.10, 0.59);
-      this.headGroup.add(eyeStrip);
-
-      // Curved cheek paint slicing toward mouth corners
-      const cheekStrip = new THREE.Mesh(
-        this.trackDisposable(new THREE.BoxGeometry(0.06, 0.28, 0.08)),
-        paintMat
-      );
-      cheekStrip.position.set(px > 0 ? px + 0.12 : px - 0.12, -0.18, 0.51);
-      cheekStrip.rotation.z = px > 0 ? -0.42 : 0.42;
-      this.headGroup.add(cheekStrip);
-
-      // Extended smile tips curling upward
-      const curl = new THREE.Mesh(
-        this.trackDisposable(new THREE.BoxGeometry(0.06, 0.14, 0.06)),
-        paintMat
-      );
-      curl.position.set(px > 0 ? px + 0.20 : px - 0.20, -0.14, 0.46);
-      curl.rotation.z = px > 0 ? 0.35 : -0.35;
-      this.headGroup.add(curl);
-    });
-
-    // 4. Glossy 3D Red Clown Nose
+    // 3. Glossy 3D Red Clown Nose
     const nose = new THREE.Mesh(
-      this.trackDisposable(new THREE.SphereGeometry(0.16, 8, 8)),
+      this.trackDisposable(new THREE.SphereGeometry(0.16, 10, 10)),
       pomMat
     );
     nose.position.set(0, -0.04, 0.73);
     addHullOutline(nose, 1.15);
     this.headGroup.add(nose);
 
-    // 5. Signature Buck-Toothed Maw with Two Prominent Front Incisors + Razor Fangs
+    // 4. Contoured Crimson Upper Lip & Snarling Maw
     const teethMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: '#ffffff',
       roughness: 0.15,
       emissive: '#f8fafc',
       emissiveIntensity: 0.9,
     }));
+
+    // Contoured 3D Crimson Upper Lip Arch
+    const upperLipGeo = this.trackDisposable(new THREE.TorusGeometry(0.30, 0.045, 6, 12, Math.PI));
+    const upperLip = new THREE.Mesh(upperLipGeo, paintMat);
+    upperLip.position.set(0, -0.22, 0.50);
+    upperLip.rotation.x = 0.2;
+    this.headGroup.add(upperLip);
 
     // Two signature prominent front incisors (buck teeth)
     [-0.045, 0.045].forEach((ix) => {
@@ -611,18 +602,18 @@ export class PursuerEntity {
       this.headGroup.add(buckTooth);
     });
 
-    // Flanking upper razor fangs
-    [-0.26, -0.19, -0.12, 0.12, 0.19, 0.26].forEach((tx) => {
+    // Flanking curved side fangs
+    [-0.24, -0.16, 0.16, 0.24].forEach((tx) => {
       const fang = new THREE.Mesh(
-        this.trackDisposable(new THREE.ConeGeometry(0.04, 0.18, 4)),
+        this.trackDisposable(new THREE.ConeGeometry(0.042, 0.19, 4)),
         teethMat
       );
-      fang.position.set(tx, -0.27, 0.52 - Math.abs(tx) * 0.22);
+      fang.position.set(tx, -0.27, 0.52 - Math.abs(tx) * 0.2);
       fang.rotation.x = Math.PI;
       this.headGroup.add(fang);
     });
 
-    // Unhinging Lower Jaw Group
+    // Unhinging Lower Jaw Group with Chin & Lower Razor Teeth
     this.jawGroup = new THREE.Group();
     this.jawGroup.position.set(0, -0.28, 0.22);
 
@@ -632,6 +623,13 @@ export class PursuerEntity {
     chin.rotation.x = Math.PI;
     addHullOutline(chin, 1.07);
     this.jawGroup.add(chin);
+
+    // Contoured Crimson Lower Lip
+    const lowerLipGeo = this.trackDisposable(new THREE.TorusGeometry(0.28, 0.04, 6, 12, Math.PI));
+    const lowerLip = new THREE.Mesh(lowerLipGeo, paintMat);
+    lowerLip.position.set(0, -0.04, 0.24);
+    lowerLip.rotation.x = -Math.PI + 0.2;
+    this.jawGroup.add(lowerLip);
 
     // Lower Razor Teeth
     for (let t = -0.30; t <= 0.30; t += 0.075) {
@@ -644,9 +642,16 @@ export class PursuerEntity {
     }
     this.headGroup.add(this.jawGroup);
 
-    // Inner Glowing Deadlights Core (Throat cavity)
+    // 5. 3D Inner Mouth Cavity & 3 Orbiting Glowing Deadlights Throat Orbs
+    const mouthCavity = new THREE.Mesh(
+      this.trackDisposable(new THREE.BoxGeometry(0.48, 0.32, 0.36)),
+      socketMat
+    );
+    mouthCavity.position.set(0, -0.25, 0.26);
+    this.headGroup.add(mouthCavity);
+
     this.deadlightsCore = new THREE.Group();
-    this.deadlightsCore.position.set(0, -0.24, 0.16);
+    this.deadlightsCore.position.set(0, -0.24, 0.22);
 
     this.deadlightsMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: '#ffea00',
@@ -654,19 +659,24 @@ export class PursuerEntity {
       emissiveIntensity: 3.5,
       roughness: 0.1,
     }));
-    const core1 = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.18, 6, 6)), this.deadlightsMat);
-    this.deadlightsCore.add(core1);
 
-    const core2Mat = this.trackDisposable(new THREE.MeshStandardMaterial({
+    const coreGoldMat = this.deadlightsMat;
+    const coreOrangeMat = this.trackDisposable(new THREE.MeshStandardMaterial({
       color: '#f97316',
       emissive: '#f97316',
-      emissiveIntensity: 3.0,
+      emissiveIntensity: 3.2,
       roughness: 0.1,
     }));
-    [-0.14, 0.14].forEach((cx) => {
-      const subCore = new THREE.Mesh(this.trackDisposable(new THREE.SphereGeometry(0.11, 6, 6)), core2Mat);
-      subCore.position.set(cx, -0.05, -0.05);
-      this.deadlightsCore.add(subCore);
+
+    // 3 Orbiting Deadlights Throat Orbs
+    this.throatOrbs = [];
+    [coreGoldMat, coreOrangeMat, coreGoldMat].forEach((mat) => {
+      const orb = new THREE.Mesh(
+        this.trackDisposable(new THREE.SphereGeometry(0.085, 8, 8)),
+        mat
+      );
+      this.throatOrbs.push(orb);
+      this.deadlightsCore.add(orb);
     });
     this.headGroup.add(this.deadlightsCore);
 
@@ -1051,6 +1061,25 @@ export class PursuerEntity {
     this.bodyGroup.rotation.z = Math.sin(this.time * 0.6) * 0.05;
     this.bodyGroup.rotation.y = Math.sin(this.time * 0.4) * 0.06;
 
+    // 3D Eye Tracking: Rotate / shift pupils and glowing Deadlights irises toward player's lane!
+    if (this.eyeIrises) {
+      const lookOffset = Math.max(-0.032, Math.min(0.032, (targetLaneX / 2.5) * 0.032));
+      this.eyeIrises.forEach((eye) => {
+        eye.iris.position.x = eye.baseIrisX + lookOffset;
+        eye.pupil.position.x = eye.basePupilX + lookOffset * 1.15;
+      });
+    }
+
+    // 3 Orbiting Deadlights Throat Orbs inside snarling maw
+    if (this.throatOrbs) {
+      this.throatOrbs.forEach((orb, i) => {
+        const angle = this.time * 2.8 + (i * Math.PI * 2) / 3;
+        orb.position.x = Math.cos(angle) * 0.14;
+        orb.position.y = Math.sin(angle) * 0.08;
+        orb.position.z = Math.sin(angle * 2) * 0.06;
+      });
+    }
+
     // Slowly rotate occult Deadlights Aura Halo
     if (this.auraHalo) {
       this.auraHalo.rotation.z += dt * 0.6;
@@ -1120,6 +1149,33 @@ export class PursuerEntity {
     if (this.auraHaloMat) {
       this.auraHaloMat.emissiveIntensity = 2.0 + pulse * 1.5;
     }
+  }
+
+  /**
+   * Projects Pennywise's 3D head position to screen percentages for dynamic HUD tracking.
+   */
+  getSpeechBubbleScreenCoords(camera) {
+    if (!this.headGroup || !camera) return null;
+    if (!this._tempBubbleVec) {
+      this._tempBubbleVec = new THREE.Vector3();
+    }
+    this.headGroup.getWorldPosition(this._tempBubbleVec);
+    this._tempBubbleVec.x += 2.35;
+    this._tempBubbleVec.y += 0.35;
+    this._tempBubbleVec.project(camera);
+
+    // Screen coords: [-1, 1] -> [0, 100]%
+    const rawX = (this._tempBubbleVec.x * 0.5 + 0.5) * 100;
+    const rawY = (-this._tempBubbleVec.y * 0.5 + 0.5) * 100;
+
+    const xPercent = Math.max(10, Math.min(84, rawX));
+    const yPercent = Math.max(6, Math.min(74, rawY));
+
+    return {
+      xPercent,
+      yPercent,
+      tailSide: 'left',
+    };
   }
 
   dispose() {

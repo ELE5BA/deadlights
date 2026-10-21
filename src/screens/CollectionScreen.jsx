@@ -5,6 +5,8 @@ import PokedexCardArt from '../components/PokedexCardArt.jsx';
 const POKEMON_CARD_META = {
   mossbyte: {
     name: 'Bulba-Moss',
+    displayName: 'Bulba-Moss',
+    lore: 'A cybernetic bulb Pokémon fused with haunted forest moss. Its leaves glow with photosynthetic energy amidst the mist.',
     element: 'GRASS / POISON',
     elementTag: 'GRASS',
     stageOrigin: 'Stage 1: Twilight Mist',
@@ -18,6 +20,8 @@ const POKEMON_CARD_META = {
   },
   'lantern-hare': {
     name: 'Pika-Lantern',
+    displayName: 'Pika-Lantern',
+    lore: 'An electric rodent running in a yellow slicker, carrying a spark lantern whose beacon pierces carnival gloom.',
     element: 'ELECTRIC / LIGHT',
     elementTag: 'LIGHT',
     stageOrigin: 'Stage 2: Amber Hollow',
@@ -31,6 +35,8 @@ const POKEMON_CARD_META = {
   },
   'static-moth': {
     name: 'Zap-Venomoth',
+    displayName: 'Zap-Venomoth',
+    lore: 'An electrified storm moth whose vibrating wings charge the air with crackling blue lightning bolts.',
     element: 'ELECTRIC / FLYING',
     elementTag: 'STORM',
     stageOrigin: 'Stage 3: Crimson Mire',
@@ -44,6 +50,8 @@ const POKEMON_CARD_META = {
   },
   'velvet-wisp': {
     name: 'Gengar-Wisp',
+    displayName: 'Gengar-Wisp',
+    lore: 'A shadowy phantom prankster wearing a spiky grin. Its purple ectoplasm flickers between dimensions.',
     element: 'GHOST / POISON',
     elementTag: 'GHOST',
     stageOrigin: 'Stage 4: Glitch Rift',
@@ -57,6 +65,8 @@ const POKEMON_CARD_META = {
   },
   'clockwork-crow': {
     name: 'Corvi-Gear',
+    displayName: 'Corvi-Gear',
+    lore: 'An armored raven forged of clockwork gears and dark steel feathers, patrolling the twilight skies.',
     element: 'STEEL / FLYING',
     elementTag: 'STEEL',
     stageOrigin: 'Stage 5: Abyssal Void',
@@ -70,6 +80,8 @@ const POKEMON_CARD_META = {
   },
   grinfin: {
     name: 'Gyarados-Fin',
+    displayName: 'Gyarados-Fin',
+    lore: 'An ancient serpentine sea beast that surges through carnival rapids, roaring with untamable neon fury.',
     element: 'WATER / DARK',
     elementTag: 'WATER',
     stageOrigin: 'Stage 6: Deadlights Core',
@@ -83,6 +95,8 @@ const POKEMON_CARD_META = {
   },
   moonjaw: {
     name: 'Tyran-Jaw',
+    displayName: 'Tyran-Jaw',
+    lore: 'A prehistoric apex juggernaut with obsidian armor and jaws capable of crushing dimensional barriers.',
     element: 'ROCK / DARK',
     elementTag: 'ROCK',
     stageOrigin: 'Secret: Shard Vault',
@@ -96,6 +110,8 @@ const POKEMON_CARD_META = {
   },
   'the-tethered': {
     name: 'Penny-Mime EX',
+    displayName: 'Penny-Mime EX',
+    lore: 'The sinister clown entity inhabiting the carnival core. Orbiting Deadlights mesmerize anyone who gazes too deeply.',
     element: 'PSYCHIC / VOID',
     elementTag: 'MYTH',
     stageOrigin: 'Apex Entity',
@@ -240,7 +256,7 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
                     <div className="tcg-header">
                       <div className="tcg-title-block">
                         <span className="tcg-stage-tag">{meta.stageOrigin}</span>
-                        <h3 className="tcg-name">{meta.name || creature.name}</h3>
+                        <h3 className="tcg-name">{meta.displayName || meta.name || creature.name}</h3>
                       </div>
                       <div className="tcg-hp-block">
                         <span className="tcg-hp-label">HP</span>
@@ -254,7 +270,7 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
                       <PokedexCardArt
                         artKey={creature.artKey || creature.id}
                         isOwned={isOwned}
-                        creatureName={creature.name}
+                        creatureName={meta.displayName || creature.name}
                       />
                       <span className="tcg-meta-strip">
                         NO. 00{index + 1} · {meta.element} · {creature.rarity.toUpperCase()}
@@ -277,7 +293,7 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
 
                     {/* Lore Flavor Text */}
                     <div className="tcg-flavor-box">
-                      <p className="tcg-flavor-text">"{creature.description}"</p>
+                      <p className="tcg-flavor-text">"{meta.lore || creature.description}"</p>
                     </div>
 
                     {/* Card Footer */}

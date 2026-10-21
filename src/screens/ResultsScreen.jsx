@@ -1,9 +1,19 @@
 import { useEffect } from 'react';
 
+const STAGE_SEALS = [
+  { stage: 1, roman: 'I', name: 'Bulba-Moss', color: '#10b981' },
+  { stage: 2, roman: 'II', name: 'Pika-Lantern', color: '#f59e0b' },
+  { stage: 3, roman: 'III', name: 'Zap-Venomoth', color: '#38bdf8' },
+  { stage: 4, roman: 'IV', name: 'Gengar-Wisp', color: '#c084fc' },
+  { stage: 5, roman: 'V', name: 'Corvi-Gear', color: '#94a3b8' },
+  { stage: 6, roman: 'VI', name: 'Gyarados-Fin', color: '#06b6d4' },
+];
+
 export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollection, onLeaderboard }) {
   const stagesCleared = result.stagesCleared ?? 0;
   const isFlawless = stagesCleared === 6;
   const isCardMissed = result.endReason === 'card_missed';
+  const isPersonalBest = result.score >= (result.bestScore ?? result.score);
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -18,75 +28,104 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
 
   return (
     <main className="overlay-screen">
-      <section className="setup-card results-card ledger-certificate">
-        {/* Diegetic Stamped Ink Seal Badge */}
-        <div className={`ledger-stamp-badge ${isFlawless ? 'stamp-purified' : 'stamp-claimed'}`}>
-          <span className="stamp-inner">
-            {isFlawless ? 'PURIFIED' : 'CLAIMED BY DEADLIGHTS'}
+      <section className="setup-card results-card cartoon-results-card">
+        {/* 1. TOP COMIC STATUS BANNER (Full-width, zero overlap!) */}
+        <div className={`results-status-banner ${isFlawless ? 'banner-victory' : 'banner-defeat'}`}>
+          <div className="status-banner-icon">
+            {isFlawless ? (
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" fill="#10b981" stroke="#120b1d" strokeWidth="2.2" />
+                <path d="M7 12l3.5 3.5 6.5-6.5" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" fill="#dc2626" stroke="#120b1d" strokeWidth="2.2" />
+                <circle cx="12" cy="12" r="4" fill="#ffaa00" />
+                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="#ffffff" strokeWidth="1.8" />
+              </svg>
+            )}
+          </div>
+          <span className="status-banner-text">
+            {isFlawless
+              ? 'VICTORY · ALL 6 STAGES PURIFIED'
+              : isCardMissed
+              ? 'STAGE CARD MISSED · CLAIMED BY DEADLIGHTS'
+              : 'GAUNTLET TERMINATED · CLAIMED BY DEADLIGHTS'}
           </span>
         </div>
 
-        <header className="results-header">
-          <p className="eyebrow">
-            {isFlawless
-              ? 'OFFICIAL ARCHIVAL TRIAL CERTIFICATE · MAXIMUM PURIFICATION CONCLUDED'
-              : isCardMissed
-              ? 'ARCHIVAL FIELD LEDGER · STAGE CARD UNMET'
-              : 'ARCHIVAL FIELD LEDGER · GAUNTLET TERMINATED'}
-          </p>
-          <h2 className="results-score">
-            {result.score.toLocaleString()} <span className="results-points-label">PTS</span>
-          </h2>
-        </header>
+        {/* 2. CENTER SCORE SHOWCASE (Sunken velvet trophy plaque) */}
+        <div className="results-score-showcase">
+          <span className="showcase-eyebrow">FINAL RUN SCORE</span>
+          <div className="showcase-score-digits">
+            <span className="showcase-num">{result.score.toLocaleString()}</span>
+            <span className="showcase-pts">PTS</span>
+          </div>
+          {isPersonalBest && (
+            <div className="new-personal-best-pill">
+              <span className="star-sparkle">★</span> NEW PERSONAL BEST!
+            </div>
+          )}
+        </div>
 
-        {/* Roman Numeral Wax Seals for Stages I–VI */}
-        <div className="stage-clear-badge-row ledger-wax-seals" aria-label="Stages Progression">
-          {['I', 'II', 'III', 'IV', 'V', 'VI'].map((roman, idx) => {
-            const stg = idx + 1;
-            const cleared = stg <= stagesCleared;
+        {/* 3. 6-STAGE CREATURE PURIFICATION STRIP */}
+        <div className="results-stage-strip" aria-label="Stage Purification Progress">
+          {STAGE_SEALS.map((s) => {
+            const cleared = s.stage <= stagesCleared;
             return (
-              <span
-                key={stg}
-                className={`stage-badge-pip wax-seal-pip ${cleared ? 'cleared' : 'incomplete'}`}
-                title={`Stage ${stg}: ${cleared ? 'Purified' : 'Incomplete'}`}
+              <div
+                key={s.stage}
+                className={`stage-shield-pip ${cleared ? 'shield-cleared' : 'shield-incomplete'}`}
+                style={{ '--stage-color': s.color }}
+                title={`Stage ${s.stage} (${s.name}): ${cleared ? 'Purified' : 'Unreached'}`}
               >
-                <span className="seal-roman">{roman}</span>
-                <span className="seal-mark">{cleared ? '✓' : '—'}</span>
-              </span>
+                <div className="shield-header">
+                  <span className="shield-roman">{s.roman}</span>
+                </div>
+                <div className="shield-seal">
+                  {cleared ? (
+                    <span className="shield-check">✓</span>
+                  ) : (
+                    <span className="shield-dash">—</span>
+                  )}
+                </div>
+                <span className="shield-name">{s.name.split('-')[0]}</span>
+              </div>
             );
           })}
         </div>
 
-        <div className="result-grid ledger-grid">
-          <div className="result-item ledger-item">
-            <span className="result-value">{stagesCleared} / 6</span>
-            <span className="result-label">STAGES PURIFIED</span>
+        {/* 4. CLEAN 3×2 TELEMETRY GRID */}
+        <div className="results-telemetry-grid">
+          <div className="telemetry-tile">
+            <span className="telemetry-val">{stagesCleared} / 6</span>
+            <span className="telemetry-lbl">STAGES PURIFIED</span>
           </div>
-          <div className="result-item ledger-item">
-            <span className="result-value">+{result.fragmentsEarned ?? 0}</span>
-            <span className="result-label">CARDS ASSEMBLED</span>
+          <div className="telemetry-tile">
+            <span className="telemetry-val">+{result.fragmentsEarned ?? 0}</span>
+            <span className="telemetry-lbl">CARDS ASSEMBLED</span>
           </div>
-          <div className="result-item ledger-item">
-            <span className="result-value">{result.survivalSeconds.toFixed(1)}s</span>
-            <span className="result-label">TIME SURVIVED</span>
+          <div className="telemetry-tile">
+            <span className="telemetry-val">{result.survivalSeconds.toFixed(1)}s</span>
+            <span className="telemetry-lbl">TIME SURVIVED</span>
           </div>
-          <div className="result-item ledger-item">
-            <span className="result-value">+{result.shardsEarned}</span>
-            <span className="result-label">SHARDS EXTRACTED</span>
+          <div className="telemetry-tile">
+            <span className="telemetry-val">+{result.shardsEarned}</span>
+            <span className="telemetry-lbl">SHARDS EARNED</span>
           </div>
-          <div className="result-item ledger-item">
-            <span className="result-value">{result.wallet?.shardsBalance ?? 0}</span>
-            <span className="result-label">SHARD BALANCE</span>
+          <div className="telemetry-tile">
+            <span className="telemetry-val">{result.wallet?.shardsBalance ?? 0}</span>
+            <span className="telemetry-lbl">WALLET SHARDS</span>
           </div>
-          <div className="result-item ledger-item">
-            <span className="result-value">{(result.bestScore ?? result.score).toLocaleString()}</span>
-            <span className="result-label">PERSONAL BEST</span>
+          <div className="telemetry-tile">
+            <span className="telemetry-val">{(result.bestScore ?? result.score).toLocaleString()}</span>
+            <span className="telemetry-lbl">PERSONAL BEST</span>
           </div>
         </div>
 
         {result.unlockedCards?.length > 0 && (
           <div className="new-card-alert">
-            NEW POKÉDEX ENTRY ASSEMBLED · READY TO INSPECT IN CARD BINDER
+            ★ NEW POKÉDEX ENTRY ASSEMBLED · READY TO INSPECT IN CARD BINDER
           </div>
         )}
 

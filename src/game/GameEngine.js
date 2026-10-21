@@ -757,7 +757,6 @@ export class GameEngine {
     this.stageCardsCollected = 0;
     this.scheduledCardIndex = 0;
     this.upcomingCardLane = null;
-    startBackgroundMusic(completedStageNum + 1);
 
     // Checkpoint heal
     if (this.health < (GAME_CONFIG.maxHealth ?? 3)) {
@@ -984,13 +983,15 @@ export class GameEngine {
       this.updateObjects(deltaMs, speed);
       if (!this.running) return;
 
-      // 60FPS Direct DOM callback for smooth progress bar transform without React re-renders!
+      // 60FPS Direct DOM callback for smooth progress bar transform & 3D speech bubble tracking
       const stageProgressRatio = Math.min(1, this.stageElapsedMs / (stageDuration * 1000));
+      const pursuerSpeechPos = this.pursuerEntity?.getSpeechBubbleScreenCoords(this.world.camera);
       this.onFrameTick?.({
         stageProgressRatio,
         speed,
         stageElapsedSeconds: this.stageElapsedMs / 1000,
         stageDurationSeconds: stageDuration,
+        pursuerSpeechPos,
       });
 
       // Throttled Telemetry Sync: Dispatch to React at 8.3Hz (~120ms) instead of 60Hz thrashing
