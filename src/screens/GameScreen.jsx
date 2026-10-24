@@ -278,6 +278,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   const [flyingCardAnim, setFlyingCardAnim] = useState(null);
   const [recentDockSlot, setRecentDockSlot] = useState(null);
   const [savedRunResult, setSavedRunResult] = useState(null);
+  const savingPromiseRef = useRef(null);
 
   // Demise Cutscene Phase Tracking (0.0s to 5.2s)
   const [demiseCutscene, setDemiseCutscene] = useState({
@@ -407,6 +408,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     setCompletedCardModal(null);
     setJumpscareActive(false);
     setSavedRunResult(null);
+    savingPromiseRef.current = null;
     startSession(playerId, token, GAME_CONFIG.version)
       .then((data) => {
         setSession(data);
@@ -442,30 +444,63 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     };
   }, [sessionState]);
 
+  const persistRunQuietly = useCallback((summary) => {
+    if (!session) return null;
+    const savePromise = (async () => {
+      try {
+        const result = await finishSession(session.sessionId, { runToken, ...summary });
+        const enriched = { ...result, telemetry: summary.telemetry || engineState.telemetry, summary };
+        setSavedRunResult(enriched);
+        return enriched;
+      } catch (err) {
+        console.warn('Quiet run persistence error:', err);
+        setSessionState('save_error');
+        return null;
+      }
+    })();
+    savingPromiseRef.current = savePromise;
+    return savePromise;
+  }, [session, runToken, engineState.telemetry]);
+
   const submitSummary = useCallback(async (summary) => {
-    if (!session) return;
     setSessionState('saving');
     try {
-      const result = await finishSession(session.sessionId, { runToken, ...summary });
-      setSessionState('finished');
-      onFinished({ ...result, telemetry: summary.telemetry || engineState.telemetry, summary });
-    } catch {
+      if (savingPromiseRef.current) {
+        const existing = await savingPromiseRef.current;
+        if (existing) {
+          setSessionState('finished');
+          onFinished(existing);
+          return;
+        }
+      }
+      if (session) {
+        const result = await finishSession(session.sessionId, { runToken, ...summary });
+        const enriched = { ...result, telemetry: summary.telemetry || engineState.telemetry, summary };
+        setSavedRunResult(enriched);
+        setSessionState('finished');
+        onFinished(enriched);
+        return;
+      }
+    } catch (err) {
+      console.warn('Explicit run submission error:', err);
       setSessionState('save_error');
     }
-  }, [session, runToken, onFinished, engineState.telemetry]);
-
-  const persistRunQuietly = useCallback(async (summary) => {
-    if (!session) return null;
-    try {
-      const result = await finishSession(session.sessionId, { runToken, ...summary });
-      const enriched = { ...result, telemetry: summary.telemetry || engineState.telemetry, summary };
-      setSavedRunResult(enriched);
-      return enriched;
-    } catch {
-      setSessionState('save_error');
-      return null;
-    }
-  }, [session, runToken, engineState.telemetry]);
+    // Graceful fallback navigation so the player is never trapped on a dead button
+    const fallback = {
+      score: engineState.score || 0,
+      survivalSeconds: Math.round((summary?.durationMs || 0) / 1000),
+      stagesCleared: Math.max(0, (lossModal?.stage || engineState.stageNumber || 1) - 1),
+      fragmentsEarned: 0,
+      shardsEarned: engineState.shards || 0,
+      wallet: player?.wallet || { shardsBalance: 0 },
+      bestScore: Math.max(player?.bestScore || 0, engineState.score || 0),
+      telemetry: summary?.telemetry || engineState.telemetry,
+      summary,
+      endReason: summary?.endReason || lossModal?.reason || 'hit_points_zero',
+      saved: false,
+    };
+    onFinished(fallback);
+  }, [session, runToken, onFinished, engineState.telemetry, engineState.score, engineState.stageNumber, engineState.shards, lossModal, player]);
 
   const onRunEnd = useCallback((summary) => {
     setPendingSummary(summary);
@@ -1021,10 +1056,19 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               <button
                 className="text-button cabinet-btn-secondary"
                 onClick={() => {
+                  playButtonClickSfx();
                   if (savedRunResult) {
                     onFinished(savedRunResult);
                   } else if (lossModal?.summary) {
                     submitSummary(lossModal.summary);
+                  } else {
+                    submitSummary({
+                      durationMs: Math.round((engineState.elapsedSeconds || 0) * 1000),
+                      distanceM: 0,
+                      endReason: lossModal?.reason || 'hit_points_zero',
+                      events: [],
+                      telemetry: engineState.telemetry,
+                    });
                   }
                 }}
               >

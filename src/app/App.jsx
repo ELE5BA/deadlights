@@ -261,23 +261,14 @@ export default function App() {
               )}
               <span className="home-link-divider">·</span>
               <button
-                className="text-button home-dash-link"
-                onClick={() => {
-                  playButtonClickSfx();
-                  setScreen('analytics');
-                }}
-              >
-                <DashboardIcon /> DASHBOARD
-              </button>
-              <span className="home-link-divider">·</span>
-              <button
-                className="text-button"
+                className="text-button home-admin-link"
                 onClick={() => {
                   playButtonClickSfx();
                   setScreen('admin-login');
                 }}
+                title="Booth Administration & Analytics Dashboard"
               >
-                ADMIN
+                <DashboardIcon /> ADMIN
               </button>
             </nav>
 

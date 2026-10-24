@@ -126,6 +126,7 @@ export function runMonteCarloSimulation({
 
       survivalSeconds += stageDuration;
       stageClearCounts[currentStageIndex]++;
+      health = Math.min(5, health + 1); // Checkpoint vitality recovery (+1 Heart on stage clear)
       currentStageIndex++;
     }
 

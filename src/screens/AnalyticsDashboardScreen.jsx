@@ -315,8 +315,8 @@ export default function AnalyticsDashboardScreen({ onExit }) {
         {/* ── TOP CABINET HEADER & CONTROLS ── */}
         <header className="cabinet-card dashboard-main-header">
           <div className="cabinet-modal-header">
-            <span className="dashboard-eyebrow">GRIMDEX ARCHIVES · ASIA/MANILA BOOTH TELEMETRY</span>
-            <h1 className="cabinet-modal-title dashboard-headline">GRIMDEX ANALYTICS & TELEMETRY SUITE</h1>
+            <span className="dashboard-eyebrow">ADMIN PORTAL · BOOTH TELEMETRY & ARCHIVES</span>
+            <h1 className="cabinet-modal-title dashboard-headline">ADMIN ANALYTICS & TELEMETRY DASHBOARD</h1>
             <p className="cabinet-modal-sub">4-TIER ARCADE DATA SCIENCE SUITE & MONTE CARLO BALANCE SIMULATOR</p>
           </div>
 

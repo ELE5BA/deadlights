@@ -269,11 +269,13 @@ export class GameEngine {
     const ringMat = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.75,
       side: THREE.DoubleSide,
+      depthWrite: false,
     });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.position.set(GAME_CONFIG.laneCenters[lane], 0.03, -18);
+    const spawnZ = -GAME_CONFIG.spawnDistance;
+    ringMesh.position.set(GAME_CONFIG.laneCenters[lane], 0.04, spawnZ);
     this.world.scene.add(ringMesh);
     return ringMesh;
   }
@@ -497,6 +499,7 @@ export class GameEngine {
     // Immediately remove all track objects and pickup animations so giant cards don't block the camera lens
     if (this.objects) {
       for (const obj of this.objects) {
+        this.disposeWarningRing(obj);
         if (obj?.mesh) {
           this.world.scene.remove(obj.mesh);
         }
@@ -598,7 +601,7 @@ export class GameEngine {
     if (lane === null || lane === undefined) {
       const occupiedLanes = new Set(
         this.objects
-          .filter((obj) => obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 6.0)
+          .filter((obj) => obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 14.0)
           .map((obj) => obj.lane)
       );
       const freeLanes = [0, 1, 2].filter((l) => !occupiedLanes.has(l));
@@ -609,7 +612,8 @@ export class GameEngine {
     mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.15, spawnZ);
     this.world.scene.add(mesh);
 
-    this.cardSpawnSafeGuardMs = 900;
+    // 2.4s buffer so the card has clean runway towards the player without hazards thrown directly behind it
+    this.cardSpawnSafeGuardMs = 2400;
 
     this.objects.push({
       mesh,
@@ -643,24 +647,39 @@ export class GameEngine {
         return;
       }
 
-      // Check if any uncollected card is within 9.5 Z-units
+      // Check if any uncollected card is currently active anywhere on the track
+      const activeCards = this.objects.filter(
+        (obj) => (obj.isCard || obj.isFragment) && !obj.consumed && obj.mesh.position.z < 2.0
+      );
+      const isCardActiveOnTrack = activeCards.length > 0;
+
+      // Check if any card is within an extended 18.0 Z-unit buffer of spawn position
       const cardNearby = this.objects.some(
-        (obj) => (obj.isCard || obj.isFragment) && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5
+        (obj) => (obj.isCard || obj.isFragment) && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 18.0
       );
 
-      const cardLanesOccupied = new Set(
-        this.objects
-          .filter((obj) => (obj.isCard || obj.isFragment) && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 9.5)
-          .map((obj) => obj.lane)
-      );
+      // Collect all lanes currently occupied by active/nearby cards or reserved for upcoming card
+      const cardLanesOccupied = new Set();
+      activeCards.forEach((c) => cardLanesOccupied.add(c.lane));
       if (isPredictiveCardWindow) {
         cardLanesOccupied.add(this.upcomingCardLane);
       }
 
-      // If a card is nearby or in predictive card window, forbid double_blockade and swaying_specter
-      const canDoDouble = !isPredictiveCardWindow && !cardNearby && allowedHazards.includes('double_blockade') && Math.random() < 0.28;
-      const canDoSway = !isPredictiveCardWindow && !cardNearby && allowedHazards.includes('swaying_specter') && Math.random() < 0.35;
-      const canDoWave = allowedHazards.includes('shadow_wave') && Math.random() < 0.40;
+      // If a card is active and nearby, skip hazard spawn to guarantee fair runway
+      if (isCardActiveOnTrack && cardNearby) {
+        return;
+      }
+
+      // Scaled progressive hazard chances
+      const doubleChance = 0.16 + Math.max(0, this.currentStageIndex - 2) * 0.05; // 0.16 in S3, 0.21 in S4, 0.26 in S5, 0.31 in S6
+      const swayChance = 0.18 + Math.max(0, this.currentStageIndex - 1) * 0.05; // 0.18 in S2 (gentle introduction!), 0.23 in S3, etc.
+      const waveChance = 0.32 + this.currentStageIndex * 0.03;
+
+      // If a card is active on track, nearby, or in predictive card window:
+      // STRICTLY FORBID double_blockade and swaying_specter!
+      const canDoDouble = !isCardActiveOnTrack && !isPredictiveCardWindow && !cardNearby && allowedHazards.includes('double_blockade') && Math.random() < doubleChance;
+      const canDoSway = !isCardActiveOnTrack && !isPredictiveCardWindow && !cardNearby && allowedHazards.includes('swaying_specter') && Math.random() < swayChance;
+      const canDoWave = allowedHazards.includes('shadow_wave') && Math.random() < waveChance;
 
       if (canDoDouble) {
         const openLane = Math.floor(Math.random() * 3);
@@ -703,7 +722,7 @@ export class GameEngine {
         return;
       }
 
-      // Choose a lane that excludes any nearby card's lane and the reserved upcoming card lane
+      // Choose a lane that excludes any active/nearby card's lane and the reserved upcoming card lane
       const availableLanes = [0, 1, 2].filter((l) => !cardLanesOccupied.has(l));
       if (availableLanes.length === 0) return;
       const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
@@ -754,7 +773,7 @@ export class GameEngine {
       const handPos = this.pursuerEntity?.getHandWorldPosition?.(hand) || { x: GAME_CONFIG.laneCenters[lane], y: 5.4, z: spawnZ };
 
       const mesh = isWave ? createShadowWave(stageNum) : createBlockerCrate(stageNum);
-      const landingY = isWave ? 0.08 : 0.72;
+      const landingY = isWave ? 0.22 : 0.72;
       mesh.position.set(handPos.x, handPos.y, handPos.z);
       mesh.scale.set(0.35, 0.35, 0.35);
       this.world.scene.add(mesh);
@@ -785,9 +804,9 @@ export class GameEngine {
       if (this.attackStats) this.attackStats[entityKey].spawns += 1;
       this.emit(EVENT_TYPES.OBSTACLE_SPAWN, entityKey, 0, lane);
 
-      // In Stages 3 to 6, when spawning a single-lane blocker_crate (and no card is nearby),
+      // In Stages 3 to 6, when spawning a single-lane blocker_crate (and no card is active/nearby),
       // allow a (25% + stageIndex * 6%) chance to simultaneously spawn a jumpable shadow_wave in an adjacent safe lane
-      if (!isWave && !cardNearby && !isPredictiveCardWindow && this.currentStageIndex >= 2 && allowedHazards.includes('shadow_wave')) {
+      if (!isWave && !isCardActiveOnTrack && !cardNearby && !isPredictiveCardWindow && this.currentStageIndex >= 2 && allowedHazards.includes('shadow_wave')) {
         const comboChance = 0.25 + this.currentStageIndex * 0.06;
         if (Math.random() < comboChance) {
           const adjCandidates = lane === 1 ? [0, 2] : [1];
@@ -810,7 +829,7 @@ export class GameEngine {
               lane: adjLane,
               baseX: GAME_CONFIG.laneCenters[adjLane],
               targetLaneX: GAME_CONFIG.laneCenters[adjLane],
-              landingY: 0.08,
+              landingY: 0.22,
               isHazard: true,
               isWave: true,
               isSway: false,
@@ -916,24 +935,30 @@ export class GameEngine {
           object.mesh.scale.set(s, s, s);
         } else {
           object.mesh.position.y = object.landingY;
-          if (object.isWave) {
-            object.mesh.rotation.y += dt * 11;
-          } else if (!object.isSway) {
-            object.mesh.rotation.x += dt * 7.5;
+          if (!object.isSway) {
+            object.mesh.position.x = object.targetLaneX;
+            object.mesh.rotation.set(0, 0, 0);
           }
+          object.mesh.scale.set(1, 1, 1);
         }
       }
 
       if (object.warningRing) {
-        object.warningRing.position.set(object.mesh.position.x, 0.03, object.mesh.position.z);
+        // Warning rings strictly indicate approaching threats - dispose immediately once reaching/passing player
+        if (object.mesh.position.z > 0.5) {
+          this.disposeWarningRing(object);
+        } else {
+          object.warningRing.position.set(object.mesh.position.x, 0.04, object.mesh.position.z);
+        }
       }
 
       if (object.isSway) {
-        object.swayTime += deltaMs * (0.0032 + this.currentStageIndex * 0.0008);
-        const offset = Math.sin(object.swayTime) * 1.85;
+        object.swayTime += deltaMs * (0.0020 + this.currentStageIndex * 0.0005);
+        const maxOffset = 1.05 + this.currentStageIndex * 0.16;
+        const offset = Math.sin(object.swayTime) * maxOffset;
         if (!object.isThrownProjectile || object.throwElapsedMs >= object.throwDurationMs) {
           object.mesh.position.x = Math.max(-3.5, Math.min(3.5, object.baseX + offset));
-          object.mesh.rotation.z = Math.cos(object.swayTime) * 0.25;
+          object.mesh.rotation.z = Math.cos(object.swayTime) * 0.20;
         }
 
         let closestLane = 1;
@@ -977,7 +1002,7 @@ export class GameEngine {
           if (this.health <= 0) {
             this.fatalProjectile = object.entityKey;
           }
-          this.invulnerableMs = 900;
+          this.invulnerableMs = 1400;
           playCollisionHitSfx();
           this.emit(EVENT_TYPES.COLLISION, object.entityKey, 0, object.lane);
           this.updateHudImmediate({ hit: true });
@@ -1028,7 +1053,7 @@ export class GameEngine {
       // Zero-miss enforcement: If a card floats past the player (z > 2.0) uncollected, run fails immediately!
       if ((object.isFragment || object.isCard) && !object.consumed && object.mesh.position.z > 2.0) {
         object.consumed = true;
-        this.emit(EVENT_TYPES.CARD_MISSED, ENTITY_KEYS.CARD_FRAGMENT, 1, object.lane);
+        this.emit(EVENT_TYPES.CARD_MISSED, ENTITY_KEYS.CARD_FRAGMENT, 0, object.lane);
         this.triggerLossSequence('card_missed');
         return;
       }
@@ -1071,7 +1096,18 @@ export class GameEngine {
     this.scheduledCardIndex = 0;
     this.upcomingCardLane = null;
 
-    // Persistent health: NO checkpoint heal! Health carries over exactly.
+    // Clean up any remaining warning rings from the previous stage
+    if (this.objects) {
+      for (const obj of this.objects) {
+        this.disposeWarningRing(obj);
+      }
+    }
+
+    // Progressive checkpoint recovery: Restore +1 Heart on stage clear (capped at maxHealth)
+    const maxHp = GAME_CONFIG.maxHealth || 5;
+    if (this.health < maxHp) {
+      this.health = Math.min(maxHp, this.health + 1);
+    }
 
     if (this.currentStageIndex < GAME_STAGES.length - 1) {
       this.currentStageIndex += 1;
@@ -1111,6 +1147,7 @@ export class GameEngine {
     // Clear all remaining track hazards and pickup meshes
     if (this.objects) {
       for (const obj of this.objects) {
+        this.disposeWarningRing(obj);
         if (obj?.mesh) {
           this.world.scene.remove(obj.mesh);
         }
@@ -1361,9 +1398,16 @@ export class GameEngine {
       const schedule = GAME_CONFIG.cardSpawnSchedule || [8, 20, 32, 44, 54];
       const nextCardSec = schedule[this.scheduledCardIndex];
 
-      if (nextCardSec !== undefined && (nextCardSec - stageSeconds) <= 1.25 && (nextCardSec - stageSeconds) >= -0.35) {
+      if (nextCardSec !== undefined && (nextCardSec - stageSeconds) <= 1.6 && (nextCardSec - stageSeconds) >= -0.35) {
         if (this.upcomingCardLane === null) {
-          this.upcomingCardLane = Math.floor(Math.random() * 3);
+          const spawnZ = -GAME_CONFIG.spawnDistance;
+          const hazardLanesNearSpawn = new Set(
+            this.objects
+              .filter((obj) => obj.isHazard && !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 14.0)
+              .map((obj) => obj.lane)
+          );
+          const freeLanes = [0, 1, 2].filter((l) => !hazardLanesNearSpawn.has(l));
+          this.upcomingCardLane = freeLanes.length > 0 ? freeLanes[Math.floor(Math.random() * freeLanes.length)] : Math.floor(Math.random() * 3);
         }
       }
 
@@ -1380,7 +1424,7 @@ export class GameEngine {
       // Stage progression (60 seconds per level - requires all 5 cards)
       if (this.stageElapsedMs >= stageDuration * 1000) {
         if (this.stageCardsCollected < (GAME_CONFIG.cardsRequiredPerStage || 5)) {
-          this.emit(EVENT_TYPES.CARD_MISSED, ENTITY_KEYS.CARD_FRAGMENT, 1, this.laneIndex);
+          this.emit(EVENT_TYPES.CARD_MISSED, ENTITY_KEYS.CARD_FRAGMENT, 0, this.laneIndex);
           this.triggerLossSequence('card_missed');
           return;
         }
