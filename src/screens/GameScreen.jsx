@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GAME_CONFIG } from '../../shared/gameConfig.js';
 import GameCanvas from '../game/GameCanvas.jsx';
 import PokedexCardArt from '../components/PokedexCardArt.jsx';
+import ForensicRunAutopsy from '../components/ForensicRunAutopsy.jsx';
 import { finishSession, startSession } from '../services/apiClient.js';
 import {
   isMuted,
@@ -164,24 +165,63 @@ function FacetedRiftShardSvg() {
   );
 }
 
-const PENNYWISE_LINES = [
+export const PENNYWISE_LINES = [
   'WE ALL FLOAT DOWN HERE... EVEN YOUR POKÉMON!',
   "GOTTA CATCH 'EM ALL? I'LL CATCH YOU FIRST!",
   'TAKE A POKÉ-BALLOON, RUNNER... IT FLOATS!',
-  "YOUR POKÉDEX CAN'T SAVE YOU FROM THE DEADLIGHTS!",
+  "YOUR GRIMDEX CAN'T SAVE YOU FROM THE GRIMLIGHT!",
   "HEE-HEE! MISS ONE CARD AND YOU'RE MINE!",
 ];
 
 export const PENNYWISE_DEMISE_LINES = [
   "WHAT?! ALL SIX POKÉDEX CARDS?! MY BALLOONS ARE POPPING!",
-  "NOOO! THE HEXEDEX SEAL IS SHATTERING MY DEADLIGHTS!",
+  "NOOO! THE GRIMDEX SEAL IS SHATTERING MY GRIMLIGHT!",
   "THE ABYSS IS PULLING ME UNDER... I'M FADING INTO DARKNESSSS!",
 ];
 
+/**
+ * Deterministic real-time villain taunt analyzer based on live telemetry
+ */
+export function getDiagnosticTaunt(telemetry, fallbackIndex = 0) {
+  if (!telemetry) return PENNYWISE_LINES[fallbackIndex % PENNYWISE_LINES.length];
+  const [leftPct = 33, centerPct = 34, rightPct = 33] = telemetry.laneOccupancyPct || [];
+  const { blocker_crate, shadow_wave, swaying_specter, double_blockade } = telemetry.attackStats || {};
+  const meanMs = telemetry.meanReactionMs;
+  const eff = telemetry.dodgeEfficiencyPct;
+  const surv = telemetry.survivalProbPct;
+
+  if (leftPct > 50) {
+    return `CAMPING IN THE LEFT LANE? ${leftPct}% OCCUPANCY WON'T SAVE YOU FROM MY GRIMLIGHT!`;
+  }
+  if (rightPct > 50) {
+    return `HUGGING THE RIGHT WALL? ${rightPct}% BIAS MAKES YOU EASY PREY FOR MY THROWS!`;
+  }
+  if (shadow_wave && shadow_wave.hits > 0 && shadow_wave.dodgePct < 65) {
+    return `CAN'T JUMP MY LOW SKIMMERS? ${100 - shadow_wave.dodgePct}% HIT RATE ON YOUR FEET!`;
+  }
+  if (swaying_specter && swaying_specter.hits > 0 && swaying_specter.dodgePct < 65) {
+    return `MY CURVEBALL PITCHES CRUSH YOU! ${100 - swaying_specter.dodgePct}% BREACH RATE ON SINE ARCS!`;
+  }
+  if (double_blockade && double_blockade.hits > 0) {
+    return `TWIN BARRAGES TRAP YOU IN THE FUNNEL! ZERO ROOM TO BREATHE!`;
+  }
+  if (typeof meanMs === 'number' && meanMs > 265) {
+    return `${meanMs}MS REFLEXES?! YOUR SLUGGISH REACTION FEEDS THE CARNIVAL!`;
+  }
+  if (typeof surv === 'number' && surv < 35) {
+    return `ONLY ${surv}% SURVIVAL ODDS! THE GRIMLIGHT ALREADY TASTES YOUR FEAR!`;
+  }
+  if (typeof eff === 'number' && eff < 70) {
+    return `ONLY ${eff}% EVASION EFFICIENCY! YOUR GRIMDEX IS FALLING APART!`;
+  }
+  return PENNYWISE_LINES[fallbackIndex % PENNYWISE_LINES.length];
+}
+
 function formatDialogue(text) {
   const keywords = [
-    'FLOAT', 'POKÉMON', 'CATCH', 'POKÉ-BALLOON', 'POKÉDEX', 'DEADLIGHTS', 'MINE!',
-    'CARDS?!', 'BALLOONS', 'POPPING!', 'HEXEDEX', 'SEAL', 'SHATTERING', 'ABYSS', 'DARKNESSSS!'
+    'FLOAT', 'POKÉMON', 'CATCH', 'POKÉ-BALLOON', 'POKÉDEX', 'GRIMDEX', 'GRIMLIGHT', 'DEADLIGHTS', 'MINE!',
+    'CARDS?!', 'BALLOONS', 'POPPING!', 'HEXEDEX', 'SEAL', 'SHATTERING', 'ABYSS', 'DARKNESSSS!',
+    'CAMPING', 'OCCUPANCY', 'SKIMMERS', 'CURVEBALL', 'BARRAGES', 'REFLEXES', 'EFFICIENCY', 'SLUGGISH'
   ];
   const parts = text.split(/(\b[A-ZÉ\-'!?]+\b)/g);
   return parts.map((part, idx) => {
@@ -407,23 +447,25 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     setSessionState('saving');
     try {
       const result = await finishSession(session.sessionId, { runToken, ...summary });
-      onFinished(result);
+      setSessionState('finished');
+      onFinished({ ...result, telemetry: summary.telemetry || engineState.telemetry, summary });
     } catch {
       setSessionState('save_error');
     }
-  }, [session, runToken, onFinished]);
+  }, [session, runToken, onFinished, engineState.telemetry]);
 
   const persistRunQuietly = useCallback(async (summary) => {
     if (!session) return null;
     try {
       const result = await finishSession(session.sessionId, { runToken, ...summary });
-      setSavedRunResult(result);
-      return result;
+      const enriched = { ...result, telemetry: summary.telemetry || engineState.telemetry, summary };
+      setSavedRunResult(enriched);
+      return enriched;
     } catch {
       setSessionState('save_error');
       return null;
     }
-  }, [session, runToken]);
+  }, [session, runToken, engineState.telemetry]);
 
   const onRunEnd = useCallback((summary) => {
     setPendingSummary(summary);
@@ -576,6 +618,38 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               <span className="shard-val">{engineState.shards}</span>
             </div>
           </div>
+
+          {/* Sunken Grimdex Telemetry Strip (Survival Odds, Reflex, Evasion) */}
+          <div className="grimdex-telemetry-strip" aria-label="Grimdex Live Telemetry Scanner">
+            <div className="telem-strip-cell">
+              <span className="telem-strip-label">SURVIVAL ODDS</span>
+              <span
+                className={`telem-strip-val ${
+                  (engineState.telemetry?.survivalProbPct ?? 75) >= 65
+                    ? 'val-emerald'
+                    : (engineState.telemetry?.survivalProbPct ?? 75) >= 35
+                    ? 'val-amber'
+                    : 'val-crimson'
+                }`}
+              >
+                {engineState.telemetry?.survivalProbPct ?? 75}%
+              </span>
+            </div>
+            <div className="telem-strip-sep" />
+            <div className="telem-strip-cell">
+              <span className="telem-strip-label">REFLEX</span>
+              <span className="telem-strip-val val-cyan">
+                {engineState.telemetry?.meanReactionMs ?? 220}ms
+              </span>
+            </div>
+            <div className="telem-strip-sep" />
+            <div className="telem-strip-cell">
+              <span className="telem-strip-label">EVASION</span>
+              <span className="telem-strip-val val-gold">
+                {engineState.telemetry?.dodgeEfficiencyPct ?? 85}%
+              </span>
+            </div>
+          </div>
         </aside>
       )}
 
@@ -629,7 +703,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         >
           <div className="speech-bubble-tail" />
           <p className="speech-bubble-text">
-            {formatDialogue(PENNYWISE_LINES[dialogueIndex])}
+            {formatDialogue(getDiagnosticTaunt(engineState.telemetry, dialogueIndex))}
           </p>
         </aside>
       )}
@@ -896,7 +970,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       {jumpscareActive && (
         <div className="jumpscare-vignette-overlay" aria-hidden="true">
           <div className="jumpscare-glitch-border" />
-          <div className="jumpscare-deadlights-text">THE DEADLIGHTS CONSUME YOU</div>
+          <div className="jumpscare-deadlights-text">THE GRIMLIGHT CONSUMES YOU</div>
         </div>
       )}
 
@@ -932,6 +1006,14 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                 <b className="stat-val">{engineState.score?.toLocaleString() || engineState.score}</b>
               </div>
             </div>
+
+            {/* 4-Tier Forensic Run Autopsy in Loss Modal */}
+            <ForensicRunAutopsy
+              telemetry={lossModal.summary?.telemetry || engineState.telemetry}
+              currentStage={lossModal.stage}
+              currentScore={engineState.score}
+            />
+
             <div className="loss-actions">
               <button className="primary-button loss-retry-btn cabinet-btn-primary" onClick={restartRun}>
                 TRY AGAIN [PRESS R]
@@ -972,7 +1054,15 @@ export default function GameScreen({ player, onFinished, runnerId }) {
 
       {sessionState === 'countdown' && (
         <div className="countdown-overlay">
-          {countdown > 0 ? countdown : 'SURVIVE!'}
+          <div className="countdown-number">{countdown > 0 ? countdown : 'SURVIVE!'}</div>
+          <div className="oracle-forecast-pill" role="status" aria-label="Pre-Stage Oracle Telemetry Forecast">
+            <div className="oracle-pill-badge">STAGE {engineState.stageNumber} · ORACLE FORECAST</div>
+            <div className="oracle-pill-stats">
+              <span>SPEED: <strong>{(11.0 + (engineState.stageNumber - 1) * 1.5).toFixed(1)} m/s</strong></span>
+              <span>PROJECTILE VELOCITY: <strong>{(14.0 + (engineState.stageNumber - 1) * 2.1).toFixed(1)} m/s</strong></span>
+              <span>EST. SURVIVAL: <strong className="oracle-green">{Math.max(45, 96 - (engineState.stageNumber - 1) * 9)}%</strong></span>
+            </div>
+          </div>
         </div>
       )}
 

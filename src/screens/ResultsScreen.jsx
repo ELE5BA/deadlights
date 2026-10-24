@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import ForensicRunAutopsy from '../components/ForensicRunAutopsy.jsx';
 
 const STAGE_SEALS = [
   { stage: 1, roman: 'I', name: 'Bulba-Moss', color: '#10b981' },
@@ -49,8 +50,8 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
             {isFlawless
               ? 'VICTORY · ALL 6 STAGES PURIFIED'
               : isCardMissed
-              ? 'STAGE CARD MISSED · CLAIMED BY DEADLIGHTS'
-              : 'GAUNTLET TERMINATED · CLAIMED BY DEADLIGHTS'}
+              ? 'STAGE CARD MISSED · CLAIMED BY THE GRIMLIGHT'
+              : 'GAUNTLET TERMINATED · CLAIMED BY THE GRIMLIGHT'}
           </span>
         </div>
 
@@ -122,6 +123,13 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
             <span className="telemetry-lbl stat-label">PERSONAL BEST</span>
           </div>
         </div>
+
+        {/* 4-Tier Forensic Run Autopsy */}
+        <ForensicRunAutopsy
+          telemetry={result.telemetry || result.summary?.telemetry}
+          currentStage={stagesCleared + 1}
+          currentScore={result.score}
+        />
 
         {result.unlockedCards?.length > 0 && (
           <div className="new-card-alert">

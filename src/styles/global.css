@@ -4960,4 +4960,401 @@ h1 span {
   font-size: 0.85rem;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   GRIMDEX COMPACT IN-RUN TELEMETRY STRIP (HUD PLATE LEFT)
+══════════════════════════════════════════════════════════════════ */
+.grimdex-telemetry-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 5px 8px;
+  background: rgba(12, 7, 24, 0.88);
+  border: 1.5px solid rgba(139, 92, 246, 0.35);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.7);
+  gap: 6px;
+}
+
+.telem-strip-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.telem-strip-label {
+  font-family: var(--font-sans, system-ui);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.telem-strip-val {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.telem-strip-sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.val-emerald { color: #10b981; text-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
+.val-amber { color: #f59e0b; text-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
+.val-crimson { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+.val-cyan { color: #06b6d4; text-shadow: 0 0 6px rgba(6, 182, 212, 0.5); }
+.val-gold { color: #fbbf24; text-shadow: 0 0 6px rgba(251, 191, 36, 0.5); }
+
+/* ══════════════════════════════════════════════════════════════════
+   PRE-STAGE ORACLE TELEMETRY FORECAST PILL (COUNTDOWN)
+══════════════════════════════════════════════════════════════════ */
+.oracle-forecast-pill {
+  margin-top: 18px;
+  padding: 10px 18px;
+  background: rgba(15, 10, 30, 0.94);
+  border: 1.8px solid #a855f7;
+  border-radius: 999px;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), inset 0 1px 6px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  animation: oraclePulse 2s infinite ease-in-out;
+}
+
+@keyframes oraclePulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(168, 85, 247, 0.35); }
+  50% { box-shadow: 0 0 28px rgba(168, 85, 247, 0.65); }
+}
+
+.oracle-pill-badge {
+  font-family: var(--font-sans, system-ui);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #c084fc;
+  text-transform: uppercase;
+}
+
+.oracle-pill-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  color: #e2e8f0;
+}
+
+.oracle-pill-stats strong {
+  color: #38bdf8;
+}
+
+.oracle-pill-stats .oracle-green {
+  color: #34d399;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   4-TIER FORENSIC RUN AUTOPSY COMPONENT
+══════════════════════════════════════════════════════════════════ */
+.forensic-autopsy-well {
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: rgba(10, 6, 20, 0.95);
+  border: 2px solid rgba(139, 92, 246, 0.4);
+  border-radius: 8px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(139, 92, 246, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.autopsy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 6px;
+}
+
+.autopsy-badge {
+  background: #7e22ce;
+  color: #f5d0fe;
+  font-size: 0.62rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+}
+
+.autopsy-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #f8fafc;
+}
+
+.autopsy-status {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.62rem;
+  color: #34d399;
+  letter-spacing: 0.06em;
+}
+
+.autopsy-tier {
+  background: rgba(22, 14, 40, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tier-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tier-tag {
+  background: #0284c7;
+  color: #e0f2fe;
+  font-size: 0.58rem;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.tier-name {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  letter-spacing: 0.05em;
+}
+
+.telemetry-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.occupancy-track-bar {
+  display: flex;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #181126;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.occupancy-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ffffff;
+  transition: width 0.3s ease;
+}
+
+.seg-left { background: #3b82f6; }
+.seg-center { background: #10b981; }
+.seg-right { background: #8b5cf6; }
+
+.metric-chips-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.metric-chip {
+  background: rgba(10, 6, 20, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.chip-label {
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.chip-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.highlight-cyan { color: #38bdf8; }
+.highlight-gold { color: #fbbf24; }
+.highlight-green { color: #34d399; }
+.highlight-amber { color: #f59e0b; }
+.highlight-red { color: #ef4444; }
+
+.attack-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.attack-matrix-cell {
+  background: rgba(10, 6, 20, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 5px 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.attack-cell-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+
+.attack-icon { font-size: 0.8rem; }
+.attack-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.attack-cell-numbers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  font-family: var(--font-mono, monospace);
+  color: #94a3b8;
+}
+
+.attack-mini-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.attack-mini-fill {
+  height: 100%;
+  background: #06b6d4;
+  border-radius: 2px;
+}
+
+.fatal-projectile-callout {
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: rgba(220, 38, 38, 0.18);
+  border-left: 3px solid #ef4444;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  display: flex;
+  gap: 6px;
+}
+
+.fatal-label { color: #fca5a5; font-weight: 800; }
+.fatal-value { color: #fee2e2; font-weight: 700; }
+
+.predictive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.predictive-card {
+  background: rgba(10, 6, 20, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pred-label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.pred-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.95rem;
+  font-weight: 900;
+  margin: 2px 0;
+}
+
+.pred-sub {
+  font-size: 0.58rem;
+  color: #64748b;
+}
+
+.tier-prescriptive {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.prescription-box {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid #f59e0b;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.prescription-badge {
+  background: #f59e0b;
+  color: #120b1d;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.prescription-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prescription-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #fbbf24;
+  letter-spacing: 0.04em;
+}
+
+.prescription-detail {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+}
+
+.text-danger { color: #ef4444; }
+.text-ok { color: #10b981; }
+.text-cyan { color: #38bdf8; }
+
+
 

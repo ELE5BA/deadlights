@@ -170,10 +170,10 @@ export default function App() {
 
           <section className="hero-panel arcade-title-panel" aria-labelledby="title">
             <PokeBalloonEmblem />
-            <span className="cartoon-pill-badge">CURSED CARNIVAL POKÉDEX</span>
-            <h1 id="title" className="brand-title floating-title">HEXEDEX</h1>
+            <span className="cartoon-pill-badge">CURSED CARNIVAL CODEX</span>
+            <h1 id="title" className="brand-title floating-title">GRIMDEX</h1>
             <p className="summary">
-              Survive the haunted fairgrounds. Assemble all 5 stage cards within 60 seconds to unlock each entity in the Lost Pokédex before the Deadlights claim you.
+              Survive the haunted fairgrounds. Assemble all 5 stage cards within 60 seconds to unlock each entity in the Lost Codex before the Grimlight consumes you.
             </p>
 
             {/* Interactive Runner Selector Strip */}

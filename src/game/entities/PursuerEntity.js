@@ -208,6 +208,10 @@ export class PursuerEntity {
     this.fingersL = [];
     this.fingersR = [];
 
+    // 3D Thrown Projectile System Animation State
+    this.throwAnim = { active: false, type: 'single', hand: 'right', elapsed: 0, duration: 0.34, targetLane: 1 };
+    this.lastThrowHand = 'left';
+
     this.buildPennywiseRig();
   }
 
@@ -903,6 +907,39 @@ export class PursuerEntity {
     }
   }
 
+  triggerThrowAnimation(attackType, targetLane = 1) {
+    let hand = 'right';
+    let type = 'single';
+    if (attackType === 'double_blockade') {
+      hand = 'both';
+      type = 'double';
+    } else {
+      this.lastThrowHand = this.lastThrowHand === 'right' ? 'left' : 'right';
+      hand = this.lastThrowHand;
+      type = 'single';
+    }
+    this.throwAnim = {
+      active: true,
+      type,
+      hand,
+      elapsed: 0,
+      duration: 0.34,
+      targetLane,
+    };
+  }
+
+  getHandWorldPosition(hand = 'right') {
+    let handX = this.root.position.x;
+    if (hand === 'left') {
+      handX = this.root.position.x - 1.15;
+    } else if (hand === 'right') {
+      handX = this.root.position.x + 1.15;
+    }
+    const handY = (this.root.position.y || 0) + (this.bodyGroup?.position.y || 4.35) + 1.1;
+    const handZ = this.root.position.z + 0.9;
+    return { x: handX, y: handY, z: handZ };
+  }
+
   resetJumpscare() {
     if (this.defeatVfxGroup) {
       this.root.remove(this.defeatVfxGroup);
@@ -1527,20 +1564,82 @@ export class PursuerEntity {
       this.auraHalo.rotation.z += dt * 0.6;
     }
 
-    // Menacing rhythmic claw reach & finger twitch
-    this.leftArm.rotation.x = -0.55 + Math.sin(this.time * 1.4) * 0.15;
-    this.leftArm.rotation.z = -0.15 + Math.cos(this.time * 0.8) * 0.08;
+    // 3D Thrown Projectile Animation vs Ambient Stalking Poses
+    if (this.throwAnim && this.throwAnim.active) {
+      this.throwAnim.elapsed += dt;
+      if (this.throwAnim.elapsed >= this.throwAnim.duration) {
+        this.throwAnim.active = false;
+        if (this.faceMat) this.faceMat.emissiveIntensity = 0.8;
+      } else {
+        const t = this.throwAnim.elapsed;
+        const hand = this.throwAnim.hand;
+        const affectL = hand === 'left' || hand === 'both';
+        const affectR = hand === 'right' || hand === 'both';
 
-    this.rightArm.rotation.x = -0.70 + Math.sin(this.time * 1.6) * 0.22;
-    this.rightArm.rotation.y = 0.12 + Math.cos(this.time * 1.1) * 0.14;
-    this.rightArm.rotation.z = 0.10 + Math.sin(this.time * 0.7) * 0.06;
+        if (t < 0.12) {
+          // Wind-up (0.0s - 0.12s): Lean back slightly, cock arms high behind shoulder, flare eyes
+          const p = t / 0.12;
+          this.bodyGroup.rotation.x = THREE.MathUtils.lerp(0, 0.22, p);
+          if (affectL) {
+            this.leftArm.rotation.x = THREE.MathUtils.lerp(-0.55, -2.4, p);
+            this.leftArm.rotation.y = THREE.MathUtils.lerp(0, -0.5, p);
+          }
+          if (affectR) {
+            this.rightArm.rotation.x = THREE.MathUtils.lerp(-0.70, -2.4, p);
+            this.rightArm.rotation.y = THREE.MathUtils.lerp(0.12, 0.5, p);
+          }
+          if (this.faceMat) {
+            this.faceMat.emissiveIntensity = THREE.MathUtils.lerp(0.8, 2.5, p);
+          }
+        } else if (t < 0.24) {
+          // Hurl Release (0.12s - 0.24s): Snap torso violently forward toward target lane, splay claws
+          const p = (t - 0.12) / 0.12;
+          this.bodyGroup.rotation.x = THREE.MathUtils.lerp(0.22, -0.28, p);
+          if (affectL) {
+            this.leftArm.rotation.x = THREE.MathUtils.lerp(-2.4, -0.15, p);
+            this.leftArm.rotation.y = THREE.MathUtils.lerp(-0.5, 0.2, p);
+            this.fingersL?.forEach((f) => { f.rotation.z = THREE.MathUtils.lerp(0, 0.45, p); });
+          }
+          if (affectR) {
+            this.rightArm.rotation.x = THREE.MathUtils.lerp(-2.4, -0.15, p);
+            this.rightArm.rotation.y = THREE.MathUtils.lerp(0.5, -0.2, p);
+            this.fingersR?.forEach((f) => { f.rotation.z = THREE.MathUtils.lerp(0, -0.45, p); });
+          }
+        } else {
+          // Follow-through (0.24s - 0.34s): Smoothly blend back to stalking hover pose
+          const p = (t - 0.24) / 0.10;
+          this.bodyGroup.rotation.x = THREE.MathUtils.lerp(-0.28, 0, p);
+          if (affectL) {
+            this.leftArm.rotation.x = THREE.MathUtils.lerp(-0.15, -0.55, p);
+            this.leftArm.rotation.y = THREE.MathUtils.lerp(0.2, 0, p);
+            this.fingersL?.forEach((f) => { f.rotation.z = THREE.MathUtils.lerp(0.45, 0, p); });
+          }
+          if (affectR) {
+            this.rightArm.rotation.x = THREE.MathUtils.lerp(-0.15, -0.70, p);
+            this.rightArm.rotation.y = THREE.MathUtils.lerp(-0.2, 0.12, p);
+            this.fingersR?.forEach((f) => { f.rotation.z = THREE.MathUtils.lerp(-0.45, 0, p); });
+          }
+          if (this.faceMat) {
+            this.faceMat.emissiveIntensity = THREE.MathUtils.lerp(2.5, 0.8, p);
+          }
+        }
+      }
+    } else {
+      // Menacing rhythmic claw reach & finger twitch
+      this.leftArm.rotation.x = -0.55 + Math.sin(this.time * 1.4) * 0.15;
+      this.leftArm.rotation.z = -0.15 + Math.cos(this.time * 0.8) * 0.08;
 
-    this.fingersL?.forEach((f, idx) => {
-      f.rotation.z = Math.sin(this.time * 2.5 + idx * 0.7) * 0.18;
-    });
-    this.fingersR?.forEach((f, idx) => {
-      f.rotation.z = Math.cos(this.time * 3.2 + idx * 0.8) * 0.24;
-    });
+      this.rightArm.rotation.x = -0.70 + Math.sin(this.time * 1.6) * 0.22;
+      this.rightArm.rotation.y = 0.12 + Math.cos(this.time * 1.1) * 0.14;
+      this.rightArm.rotation.z = 0.10 + Math.sin(this.time * 0.7) * 0.06;
+
+      this.fingersL?.forEach((f, idx) => {
+        f.rotation.z = Math.sin(this.time * 2.5 + idx * 0.7) * 0.18;
+      });
+      this.fingersR?.forEach((f, idx) => {
+        f.rotation.z = Math.cos(this.time * 3.2 + idx * 0.8) * 0.24;
+      });
+    }
 
     // Marionette leg dangle
     this.shoeGroups?.forEach((sg, idx) => {

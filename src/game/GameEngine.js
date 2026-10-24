@@ -43,7 +43,7 @@ export const POKEMON_CARD_ROSTER = [
       { name: 'Solar Bloom Cataclysm', damage: '100', desc: 'Gathers stored photosynthetic energy in its bulb, unleashing a radiant beam that purifies dark carnival mist.' },
     ],
     rarity: 'Holo Rare',
-    illustrator: 'HEXEDEX ARCHIVES',
+    illustrator: 'GRIMDEX ARCHIVES',
     lore: 'A cybernetic bulb Pokémon fused with ancient carnival moss. The flower blooming on its back absorbs spectral energy and radiates a soothing emerald aura.',
   },
   {
@@ -60,7 +60,7 @@ export const POKEMON_CARD_ROSTER = [
       { name: 'Volt Overdrive Tackle', damage: '110', desc: 'Cloaks itself in blinding golden electricity and charges headlong through enemy barricades.' },
     ],
     rarity: 'Ultra Rare',
-    illustrator: 'HEXEDEX ARCHIVES',
+    illustrator: 'GRIMDEX ARCHIVES',
     lore: 'An energetic electric mouse leaping across ticket booths in a protective yellow slicker. Its lightning tail lantern guides lost runners through the dark.',
   },
   {
@@ -77,7 +77,7 @@ export const POKEMON_CARD_ROSTER = [
       { name: 'Thunder Vortex Hurricane', damage: '120', desc: 'Beats its charged storm wings to summon a deafening hurricane that scatters nearby spectral hazards.' },
     ],
     rarity: 'Secret Rare',
-    illustrator: 'HEXEDEX ARCHIVES',
+    illustrator: 'GRIMDEX ARCHIVES',
     lore: 'An electrified storm moth whose vibrating wings generate thousands of volts. It glides fearlessly along high-tension circus wires.',
   },
   {
@@ -94,7 +94,7 @@ export const POKEMON_CARD_ROSTER = [
       { name: 'Nightmare Dream Eater', damage: '115', desc: 'Feeds upon the sinister fairground illusions spun by Pennywise, siphoning life back into the runner.' },
     ],
     rarity: 'Holo Rare',
-    illustrator: 'HEXEDEX ARCHIVES',
+    illustrator: 'GRIMDEX ARCHIVES',
     lore: 'A shadowy phantom trickster lurking behind the haunted Ferris wheel. Its iconic wide grin gleams with eldritch purple flames.',
   },
   {
@@ -111,7 +111,7 @@ export const POKEMON_CARD_ROSTER = [
       { name: 'Clockwork Cog Overclock', damage: '130', desc: 'Rotates interlocking brass saw gears inside its chest cavity to shred reinforced obsidian blockades.' },
     ],
     rarity: 'Ultra Rare',
-    illustrator: 'HEXEDEX ARCHIVES',
+    illustrator: 'GRIMDEX ARCHIVES',
     lore: 'An imposing raven warrior forged from clockwork brass gears and gunmetal steel armor. It perches atop the carousel roof, ever vigilant.',
   },
   {
@@ -128,7 +128,7 @@ export const POKEMON_CARD_ROSTER = [
       { name: 'Apex Dragon Deluge', damage: '150', desc: 'Opens its three-crested fanged maw and roars with untamed aquatic fury, shattering Pennywise’s barrier.' },
     ],
     rarity: 'Apex Legendary',
-    illustrator: 'HEXEDEX ARCHIVES',
+    illustrator: 'GRIMDEX ARCHIVES',
     lore: 'A colossal sea dragon surging through the flooded subterranean flumes of Derry. Its ancient roar reverberates across dimensions.',
   },
   {
@@ -145,7 +145,7 @@ export const POKEMON_CARD_ROSTER = [
       { name: 'Lunar Hyper Beam', damage: '160', desc: 'Harnesses moonlight to fire an apocalyptic cosmic beam that obliterates reality along the center lane.' },
     ],
     rarity: 'Cosmic Secret',
-    illustrator: 'HEXEDEX ARCHIVES',
+    illustrator: 'GRIMDEX ARCHIVES',
     lore: 'A prehistoric apex juggernaut encased in black diamond carapace. It awakens only when the lunar eclipse bathes the fairground in silver.',
   },
   {
@@ -158,12 +158,13 @@ export const POKEMON_CARD_ROSTER = [
     symbol: 'MYTH',
     hp: 200,
     attacks: [
-      { name: 'Deadlights Hypnosis', damage: '100', desc: 'Summons three spinning glowing red balloons from beyond the stars, paralyzing all who behold them.' },
-      { name: 'Infinite Funhouse Collapse', damage: '170', desc: 'Traps the entire dimensional rift in a twisted hall of mirrors until shattered by all six Pokédex seals.' },
+      { name: 'Grimlight Hypnosis', damage: '100', desc: 'Summons three spinning glowing red balloons from beyond the stars, paralyzing all who behold them.' },
+      { name: 'Grimlight Ray', damage: '150', desc: 'Focuses blinding apocalyptic cosmic rays from beyond the stars, cutting through reality along the center lane.' },
+      { name: 'Grimlight Tsunami', damage: '170', desc: 'Traps the entire dimensional rift in a twisted deluge of grim mirrors until shattered by all six Codex seals.' },
     ],
     rarity: 'Apex Mythic',
-    illustrator: 'HEXEDEX ARCHIVES',
-    lore: 'The primordial shape-shifting cosmic jester inhabiting the abyss beneath Derry. Wields floating Poké-Balloons to lure runners into the eternal Deadlights.',
+    illustrator: 'GRIMDEX ARCHIVES',
+    lore: 'The primordial shape-shifting cosmic jester inhabiting the abyss beneath Derry. Wields floating Poké-Balloons to lure runners into the eternal Grimlight.',
   },
 ];
 
@@ -215,6 +216,18 @@ export class GameEngine {
     this.running = false;
     this.paused = false;
 
+    // 100% Functioning Deterministic Telemetry Engine
+    this.laneTimeMs = [0, 1, 0];
+    this.activeThreats = [];
+    this.evasionLatencies = [];
+    this.attackStats = {
+      blocker_crate: { spawns: 0, hits: 0, dodges: 0 },
+      shadow_wave: { spawns: 0, hits: 0, dodges: 0 },
+      swaying_specter: { spawns: 0, hits: 0, dodges: 0 },
+      double_blockade: { spawns: 0, hits: 0, dodges: 0 },
+    };
+    this.fatalProjectile = null;
+
     this.frame = this.frame.bind(this);
     this.resize = this.resize.bind(this);
     this.keydown = this.keydown.bind(this);
@@ -250,6 +263,102 @@ export class GameEngine {
     this.updateHud(extra);
   }
 
+  createWarningRing(lane, color) {
+    const ringGeo = new THREE.RingGeometry(0.55, 0.75, 24);
+    ringGeo.rotateX(-Math.PI / 2);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.65,
+      side: THREE.DoubleSide,
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.position.set(GAME_CONFIG.laneCenters[lane], 0.03, -18);
+    this.world.scene.add(ringMesh);
+    return ringMesh;
+  }
+
+  disposeWarningRing(object) {
+    if (object && object.warningRing) {
+      this.world.scene.remove(object.warningRing);
+      object.warningRing.geometry?.dispose();
+      object.warningRing.material?.dispose();
+      object.warningRing = null;
+    }
+  }
+
+  getTelemetryState() {
+    const totalLaneMs = Math.max(1, (this.laneTimeMs?.[0] || 0) + (this.laneTimeMs?.[1] || 0) + (this.laneTimeMs?.[2] || 0));
+    const laneOccupancyPct = (this.laneTimeMs || [0, 1, 0]).map((t) => Math.round((t / totalLaneMs) * 100));
+
+    const sumPct = laneOccupancyPct[0] + laneOccupancyPct[1] + laneOccupancyPct[2];
+    if (sumPct !== 100) {
+      laneOccupancyPct[1] += 100 - sumPct;
+    }
+
+    const currentSpeed = Math.max(1, this.currentSpeed || 11.0);
+    const spawnDist = Math.abs(this.pursuerEntity ? this.pursuerEntity.root.position.z : -19);
+    let meanReactionMs;
+    if (this.evasionLatencies && this.evasionLatencies.length > 0) {
+      meanReactionMs = Math.round(this.evasionLatencies.reduce((a, b) => a + b, 0) / this.evasionLatencies.length);
+    } else {
+      meanReactionMs = Math.round((spawnDist / (2 * currentSpeed)) * 1000);
+    }
+
+    let totalSpawns = 0;
+    let totalHits = 0;
+    const attackStatsCopy = {};
+    if (this.attackStats) {
+      Object.entries(this.attackStats).forEach(([k, v]) => {
+        totalSpawns += v.spawns;
+        totalHits += v.hits;
+        const dodges = Math.max(0, v.spawns - v.hits);
+        const dodgePct = v.spawns > 0 ? Math.round((dodges / v.spawns) * 100) : 100;
+        attackStatsCopy[k] = { ...v, dodges, dodgePct };
+      });
+    }
+    const dodgeEfficiencyPct = Math.round((Math.max(0, totalSpawns - totalHits) / Math.max(1, totalSpawns)) * 100);
+
+    // Closed-Form Poisson Survival Probability P_survive
+    const stageSecs = (this.stageElapsedMs || 0) / 1000;
+    const tRem = Math.max(0, 60 - stageSecs);
+    const spawnInterval = Math.max(0.2, this.currentSpawnInterval || 0.8);
+    const currentStage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
+    const hazardChance = currentStage.hazardChance || 0.75;
+    const nRem = (tRem / spawnInterval) * hazardChance;
+    const stageNum = this.currentStageIndex + 1;
+    const pHit = ((totalHits + 5 * (0.06 + 0.02 * stageNum)) / (totalSpawns + 5)) * Math.sqrt(currentSpeed / 11.0);
+    const lambda = nRem * pHit;
+
+    let pSurviveSum = 0;
+    const h = Math.max(0, this.health);
+    if (h <= 0) {
+      pSurviveSum = 0;
+    } else if (tRem <= 0) {
+      pSurviveSum = 0.99;
+    } else {
+      for (let k = 0; k < h; k++) {
+        let term = Math.exp(-lambda);
+        for (let j = 1; j <= k; j++) {
+          term *= lambda / j;
+        }
+        pSurviveSum += term;
+      }
+    }
+    const survivalProbPct = h <= 0 ? 0 : Math.min(99, Math.max(1, Math.round(pSurviveSum * 100)));
+
+    return {
+      laneOccupancyPct,
+      meanReactionMs,
+      dodgeEfficiencyPct,
+      survivalProbPct,
+      attackStats: attackStatsCopy,
+      totalSpawns,
+      totalHits,
+      fatalProjectile: this.fatalProjectile || null,
+    };
+  }
+
   /**
    * Primary HUD state builder dispatched to React onStateChange.
    */
@@ -283,6 +392,7 @@ export class GameEngine {
       lane: this.laneIndex,
       jumping: this.jumpElapsedMs > 0,
       paused: this.paused,
+      telemetry: this.getTelemetryState(),
       ...extra,
     });
   }
@@ -296,6 +406,7 @@ export class GameEngine {
     // Force-clear any leftover meshes from prior run
     if (this.objects) {
       for (const obj of this.objects) {
+        this.disposeWarningRing(obj);
         if (obj?.mesh) {
           this.world.scene.remove(obj.mesh);
         }
@@ -345,6 +456,16 @@ export class GameEngine {
       distanceM: 0,
       cameraTiltZ: 0,
       upcomingCardLane: null,
+      laneTimeMs: [0, 1, 0],
+      activeThreats: [],
+      evasionLatencies: [],
+      attackStats: {
+        blocker_crate: { spawns: 0, hits: 0, dodges: 0 },
+        shadow_wave: { spawns: 0, hits: 0, dodges: 0 },
+        swaying_specter: { spawns: 0, hits: 0, dodges: 0 },
+        double_blockade: { spawns: 0, hits: 0, dodges: 0 },
+      },
+      fatalProjectile: null,
     });
     this.world.camera.fov = 53;
     this.world.camera.position.set(0, 5.2, 8.5);
@@ -421,12 +542,28 @@ export class GameEngine {
   }
 
   moveLane(direction) {
+    const prevLane = this.laneIndex;
     const next = Math.max(0, Math.min(2, this.laneIndex + direction));
     if (next !== this.laneIndex) {
       this.laneIndex = next;
       this.targetX = GAME_CONFIG.laneCenters[next];
       playLaneSwitchSfx(next);
       this.emit(EVENT_TYPES.LANE_CHANGE, laneKey[next], 0, next);
+
+      // Track evasion reaction latencies for threats in previous lane
+      if (this.activeThreats) {
+        this.activeThreats.forEach((threat) => {
+          if (!threat.dodged && threat.lane === prevLane) {
+            threat.dodged = true;
+            const latencyMs = Math.max(80, Math.round(this.elapsedMs - threat.spawnAtMs));
+            this.evasionLatencies.push(latencyMs);
+            if (this.attackStats && this.attackStats[threat.key]) {
+              this.attackStats[threat.key].dodges += 1;
+            }
+          }
+        });
+      }
+
       this.updateHudImmediate();
     }
   }
@@ -436,6 +573,21 @@ export class GameEngine {
       this.jumpElapsedMs = 1;
       playJumpSfx();
       this.emit(EVENT_TYPES.JUMP, ENTITY_KEYS.PLAYER_JUMP);
+
+      // Track evasion reaction latencies for jumpable low skimmers in current lane
+      if (this.activeThreats) {
+        this.activeThreats.forEach((threat) => {
+          if (!threat.dodged && threat.key === ENTITY_KEYS.SHADOW_WAVE && threat.lane === this.laneIndex) {
+            threat.dodged = true;
+            const latencyMs = Math.max(80, Math.round(this.elapsedMs - threat.spawnAtMs));
+            this.evasionLatencies.push(latencyMs);
+            if (this.attackStats && this.attackStats[threat.key]) {
+              this.attackStats[threat.key].dodges += 1;
+            }
+          }
+        });
+      }
+
       this.updateHudImmediate();
     }
   }
@@ -514,19 +666,38 @@ export class GameEngine {
         const openLane = Math.floor(Math.random() * 3);
         const blockedLanes = [0, 1, 2].filter((l) => l !== openLane);
 
+        this.pursuerEntity?.triggerThrowAnimation?.('double_blockade', openLane);
+        const handPos = this.pursuerEntity?.getHandWorldPosition?.('both') || { x: 0, y: 5.4, z: spawnZ };
+
         blockedLanes.forEach((lane) => {
           const mesh = createDoubleBlockadeSingle(lane, openLane, stageNum);
-          mesh.position.set(GAME_CONFIG.laneCenters[lane], 0, spawnZ);
+          mesh.position.set(handPos.x, handPos.y, handPos.z);
+          mesh.scale.set(0.35, 0.35, 0.35);
           this.world.scene.add(mesh);
+
+          const warningRing = this.createWarningRing(lane, 0xef4444);
+
           this.objects.push({
             mesh,
+            warningRing,
             lane,
+            targetLaneX: GAME_CONFIG.laneCenters[lane],
+            landingY: 0.72,
             isHazard: true,
             isWave: false,
             isSway: false,
             entityKey: ENTITY_KEYS.DOUBLE_BLOCKADE,
             consumed: false,
+            isThrownProjectile: true,
+            throwElapsedMs: 0,
+            throwDurationMs: 280,
+            startX: handPos.x,
+            startY: handPos.y,
+            startZ: handPos.z,
           });
+
+          this.activeThreats.push({ spawnAtMs: this.elapsedMs, lane, key: ENTITY_KEYS.DOUBLE_BLOCKADE, dodged: false });
+          if (this.attackStats) this.attackStats.double_blockade.spawns += 1;
         });
         this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.DOUBLE_BLOCKADE, 0, openLane);
         return;
@@ -538,39 +709,80 @@ export class GameEngine {
       const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
 
       if (canDoSway) {
+        this.pursuerEntity?.triggerThrowAnimation?.('swaying_specter', lane);
+        const hand = this.pursuerEntity?.lastThrowHand || 'right';
+        const handPos = this.pursuerEntity?.getHandWorldPosition?.(hand) || { x: GAME_CONFIG.laneCenters[lane], y: 5.4, z: spawnZ };
+
         const mesh = createSwayingSpecter(stageNum);
-        mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.25, spawnZ);
+        mesh.position.set(handPos.x, handPos.y, handPos.z);
+        mesh.scale.set(0.35, 0.35, 0.35);
         this.world.scene.add(mesh);
+
+        const warningRing = this.createWarningRing(lane, 0xa855f7);
+
         this.objects.push({
           mesh,
+          warningRing,
           lane,
           baseX: GAME_CONFIG.laneCenters[lane],
+          targetLaneX: GAME_CONFIG.laneCenters[lane],
+          landingY: 1.25,
           swayTime: Math.random() * 10,
           isHazard: true,
           isWave: false,
           isSway: true,
           entityKey: ENTITY_KEYS.SWAYING_SPECTER,
           consumed: false,
+          isThrownProjectile: true,
+          throwElapsedMs: 0,
+          throwDurationMs: 280,
+          startX: handPos.x,
+          startY: handPos.y,
+          startZ: handPos.z,
         });
+
+        this.activeThreats.push({ spawnAtMs: this.elapsedMs, lane, key: ENTITY_KEYS.SWAYING_SPECTER, dodged: false });
+        if (this.attackStats) this.attackStats.swaying_specter.spawns += 1;
         this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.SWAYING_SPECTER, 0, lane);
         return;
       }
 
       const isWave = canDoWave;
+      const entityKey = isWave ? ENTITY_KEYS.SHADOW_WAVE : ENTITY_KEYS.BLOCKER_CRATE;
+      this.pursuerEntity?.triggerThrowAnimation?.(entityKey, lane);
+      const hand = this.pursuerEntity?.lastThrowHand || 'right';
+      const handPos = this.pursuerEntity?.getHandWorldPosition?.(hand) || { x: GAME_CONFIG.laneCenters[lane], y: 5.4, z: spawnZ };
+
       const mesh = isWave ? createShadowWave(stageNum) : createBlockerCrate(stageNum);
-      mesh.position.set(GAME_CONFIG.laneCenters[lane], isWave ? 0.05 : 0.72, spawnZ);
+      const landingY = isWave ? 0.08 : 0.72;
+      mesh.position.set(handPos.x, handPos.y, handPos.z);
+      mesh.scale.set(0.35, 0.35, 0.35);
       this.world.scene.add(mesh);
 
-      const entityKey = isWave ? ENTITY_KEYS.SHADOW_WAVE : ENTITY_KEYS.BLOCKER_CRATE;
+      const warningRing = this.createWarningRing(lane, isWave ? 0x06b6d4 : 0xef4444);
+
       this.objects.push({
         mesh,
+        warningRing,
         lane,
+        baseX: GAME_CONFIG.laneCenters[lane],
+        targetLaneX: GAME_CONFIG.laneCenters[lane],
+        landingY,
         isHazard: true,
         isWave,
         isSway: false,
         entityKey,
         consumed: false,
+        isThrownProjectile: true,
+        throwElapsedMs: 0,
+        throwDurationMs: 280,
+        startX: handPos.x,
+        startY: handPos.y,
+        startZ: handPos.z,
       });
+
+      this.activeThreats.push({ spawnAtMs: this.elapsedMs, lane, key: entityKey, dodged: false });
+      if (this.attackStats) this.attackStats[entityKey].spawns += 1;
       this.emit(EVENT_TYPES.OBSTACLE_SPAWN, entityKey, 0, lane);
 
       // In Stages 3 to 6, when spawning a single-lane blocker_crate (and no card is nearby),
@@ -582,18 +794,38 @@ export class GameEngine {
           const validAdj = adjCandidates.filter((l) => !cardLanesOccupied.has(l));
           if (validAdj.length > 0) {
             const adjLane = validAdj[Math.floor(Math.random() * validAdj.length)];
+            const otherHand = hand === 'right' ? 'left' : 'right';
+            const comboHandPos = this.pursuerEntity?.getHandWorldPosition?.(otherHand) || { x: GAME_CONFIG.laneCenters[adjLane], y: 5.4, z: spawnZ };
+
             const waveMesh = createShadowWave(stageNum);
-            waveMesh.position.set(GAME_CONFIG.laneCenters[adjLane], 0.05, spawnZ);
+            waveMesh.position.set(comboHandPos.x, comboHandPos.y, comboHandPos.z);
+            waveMesh.scale.set(0.35, 0.35, 0.35);
             this.world.scene.add(waveMesh);
+
+            const comboRing = this.createWarningRing(adjLane, 0x06b6d4);
+
             this.objects.push({
               mesh: waveMesh,
+              warningRing: comboRing,
               lane: adjLane,
+              baseX: GAME_CONFIG.laneCenters[adjLane],
+              targetLaneX: GAME_CONFIG.laneCenters[adjLane],
+              landingY: 0.08,
               isHazard: true,
               isWave: true,
               isSway: false,
               entityKey: ENTITY_KEYS.SHADOW_WAVE,
               consumed: false,
+              isThrownProjectile: true,
+              throwElapsedMs: 0,
+              throwDurationMs: 280,
+              startX: comboHandPos.x,
+              startY: comboHandPos.y,
+              startZ: comboHandPos.z,
             });
+
+            this.activeThreats.push({ spawnAtMs: this.elapsedMs, lane: adjLane, key: ENTITY_KEYS.SHADOW_WAVE, dodged: false });
+            if (this.attackStats) this.attackStats.shadow_wave.spawns += 1;
             this.emit(EVENT_TYPES.OBSTACLE_SPAWN, ENTITY_KEYS.SHADOW_WAVE, 0, adjLane);
           }
         }
@@ -673,11 +905,36 @@ export class GameEngine {
     for (const object of this.objects) {
       object.mesh.position.z += speed * dt;
 
+      // Ballistic Lob Trajectory for Thrown Projectiles
+      if (object.isThrownProjectile) {
+        if (object.throwElapsedMs < object.throwDurationMs) {
+          object.throwElapsedMs += deltaMs;
+          const u = Math.min(1, object.throwElapsedMs / object.throwDurationMs);
+          object.mesh.position.x = THREE.MathUtils.lerp(object.startX, object.targetLaneX, u);
+          object.mesh.position.y = THREE.MathUtils.lerp(object.startY, object.landingY, u) + Math.sin(u * Math.PI) * 1.65;
+          const s = 0.35 + 0.65 * u;
+          object.mesh.scale.set(s, s, s);
+        } else {
+          object.mesh.position.y = object.landingY;
+          if (object.isWave) {
+            object.mesh.rotation.y += dt * 11;
+          } else if (!object.isSway) {
+            object.mesh.rotation.x += dt * 7.5;
+          }
+        }
+      }
+
+      if (object.warningRing) {
+        object.warningRing.position.set(object.mesh.position.x, 0.03, object.mesh.position.z);
+      }
+
       if (object.isSway) {
         object.swayTime += deltaMs * (0.0032 + this.currentStageIndex * 0.0008);
         const offset = Math.sin(object.swayTime) * 1.85;
-        object.mesh.position.x = Math.max(-3.5, Math.min(3.5, object.baseX + offset));
-        object.mesh.rotation.z = Math.cos(object.swayTime) * 0.25;
+        if (!object.isThrownProjectile || object.throwElapsedMs >= object.throwDurationMs) {
+          object.mesh.position.x = Math.max(-3.5, Math.min(3.5, object.baseX + offset));
+          object.mesh.rotation.z = Math.cos(object.swayTime) * 0.25;
+        }
 
         let closestLane = 1;
         let minDiff = 999;
@@ -712,7 +969,14 @@ export class GameEngine {
       if (!object.consumed && close && object.lane === this.laneIndex) {
         if (object.isHazard && this.invulnerableMs <= 0 && (!object.isWave || this.jumpElapsedMs === 0)) {
           object.consumed = true;
+          this.disposeWarningRing(object);
+          if (this.attackStats && this.attackStats[object.entityKey]) {
+            this.attackStats[object.entityKey].hits += 1;
+          }
           this.health -= 1;
+          if (this.health <= 0) {
+            this.fatalProjectile = object.entityKey;
+          }
           this.invulnerableMs = 900;
           playCollisionHitSfx();
           this.emit(EVENT_TYPES.COLLISION, object.entityKey, 0, object.lane);
@@ -773,12 +1037,14 @@ export class GameEngine {
     // Zero-GC Removal: Remove mesh from scene when behind camera (> 12.5) or non-card consumed
     this.objects = this.objects.filter((object) => {
       if (object.consumed) {
+        this.disposeWarningRing(object);
         if (!object.isFragment && !object.isCard) {
           this.world.scene.remove(object.mesh);
         }
         return false;
       }
       if (object.mesh.position.z > 12.5) {
+        this.disposeWarningRing(object);
         this.world.scene.remove(object.mesh);
         return false;
       }
@@ -1173,6 +1439,7 @@ export class GameEngine {
       distanceM: Math.round(this.distanceM * 100) / 100,
       endReason,
       events: [...this.events],
+      telemetry: this.getTelemetryState(),
     });
   }
 
@@ -1219,7 +1486,9 @@ export class GameEngine {
     this.pursuerEntity?.dispose();
 
     // Clean up scene objects
-    this.objects.forEach(({ mesh }) => {
+    this.objects.forEach((obj) => {
+      this.disposeWarningRing(obj);
+      const mesh = obj.mesh;
       this.world.scene.remove(mesh);
       mesh.traverse((child) => {
         if (child.geometry && !child.geometry.userData?.shared) {

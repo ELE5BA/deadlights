@@ -28,6 +28,7 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
     <main className="overlay-screen">
       <form className="setup-card cabinet-card" onSubmit={submit}>
         <div className="cabinet-modal-header">
+          <span className="cabinet-modal-sub" style={{ letterSpacing: '0.14em', color: '#38bdf8', fontWeight: 700 }}>GRIMDEX · CURSED CARNIVAL CODEX</span>
           <h2 className="cabinet-modal-title">{returning ? 'RESTORE ARCHIVE' : 'ENTER CALL-SIGN'}</h2>
           <p className="cabinet-modal-sub">{returning ? 'RECOVERY CREDENTIALS · RETRIEVE BINDER' : 'PROFILE REGISTRATION · LEADERBOARD'}</p>
         </div>

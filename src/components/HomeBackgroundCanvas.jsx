@@ -54,7 +54,7 @@ const STAGE_THEMES = [
   },
   {
     stage: 6,
-    name: 'The Deadlights Core',
+    name: 'The Grimlight Core',
     bg: new THREE.Color('#220014'),
     fog: new THREE.Color('#220014'),
     rail: new THREE.Color('#FF2A55'),

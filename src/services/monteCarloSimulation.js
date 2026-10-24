@@ -2,7 +2,7 @@ import { GAME_STAGES, GAME_CONFIG } from '../../shared/gameConfig.js';
 import { calculateScore, calculateShardAward } from '../../shared/scoreRules.js';
 
 /**
- * Monte Carlo Booth & Balance Simulation Engine for Hexedex.
+ * Monte Carlo Booth & Balance Simulation Engine for Grimdex.
  * Dynamically simulates N full 6-stage arcade gauntlet runs using canonical stage curves,
  * hazard distributions, and scoring formulas to predict booth throughput and balance.
  */
@@ -183,6 +183,13 @@ export function runMonteCarloSimulation({
   }));
 
   // Diagnostic Analytics (Tier 2): Obstacle Table & Termination Split
+  const PROJECTILE_DISPLAY_NAMES = {
+    blocker_crate: 'Heavy Lob (blocker_crate)',
+    shadow_wave: 'Low Skimmer (shadow_wave)',
+    swaying_specter: 'Curveball Pitch (swaying_specter)',
+    double_blockade: 'Twin Barrage (double_blockade)',
+  };
+
   const obstacleStats = Object.entries(obstacleStatsMap).map(([key, stat]) => {
     const rate = stat.spawns > 0 ? (stat.collisions / stat.spawns) * 100 : 0;
     let primaryWipeStage = 1;
@@ -195,7 +202,7 @@ export function runMonteCarloSimulation({
     });
     return {
       entityKey: key,
-      displayName: key.replace(/_/g, ' ').toUpperCase(),
+      displayName: PROJECTILE_DISPLAY_NAMES[key] || key.replace(/_/g, ' ').toUpperCase(),
       spawns: stat.spawns,
       collisions: stat.collisions,
       collisionRate: Number(rate.toFixed(1)),
@@ -270,7 +277,7 @@ export function runMonteCarloSimulation({
       id: 'P-04',
       sample: cohortSize,
       observed: `Stage 6 Clear Rate: ${stage6ClearRate}% (Above 30% Target)`,
-      text: 'Slightly tighten late-stage speed scaling or increase Double Blockade spawn density in Stage 5–6.',
+      text: 'Slightly tighten late-stage speed scaling or increase Twin Barrage (double_blockade) spawn density in Stage 5–6.',
       projectedImpact: 'Balances Apex Achievement Rarity',
     });
   }

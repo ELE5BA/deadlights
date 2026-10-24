@@ -104,8 +104,8 @@ export default function LeaderboardScreen({ player, onBack, onPlay }) {
               <TrophyEmblemSvg />
             </div>
             <div>
-              <h2 className="hall-title cabinet-modal-title">ARCADE LEADERBOARD</h2>
-              <p className="hall-marquee-badge cabinet-modal-sub">HALL OF CHAMPIONS · TOP 10 RUNNERS</p>
+              <h2 className="hall-title cabinet-modal-title">GRIMDEX LEADERBOARD</h2>
+              <p className="hall-marquee-badge cabinet-modal-sub">CURSED CARNIVAL CODEX · TOP 10 RUNNERS</p>
             </div>
           </div>
           <div className="hall-header-actions">

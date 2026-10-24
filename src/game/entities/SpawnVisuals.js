@@ -90,6 +90,14 @@ export const SHARED_ASSETS = {
     guillotineBlade: tagShared(new THREE.BoxGeometry(1.2, 0.4, 0.08)),
     guillotineCross: tagShared(new THREE.BoxGeometry(1.45, 0.2, 0.3)),
 
+    // Thrown Projectile Geometries
+    chakramRing: tagShared(new THREE.TorusGeometry(0.72, 0.1, 6, 16)),
+    chakramBlade: tagShared(new THREE.ConeGeometry(0.14, 0.45, 4)),
+    seedBombSpike: tagShared(new THREE.ConeGeometry(0.16, 0.55, 5)),
+    chatterKey: tagShared(new THREE.TorusGeometry(0.18, 0.05, 6, 8)),
+    chatterStem: tagShared(new THREE.CylinderGeometry(0.04, 0.04, 0.28, 6)),
+    grimlightOrb: tagShared(new THREE.SphereGeometry(0.24, 8, 8)),
+
     // Generic / Fallback Crate & Wave
     crateBody: tagShared(new THREE.BoxGeometry(1.25, 1.35, 1.1)),
     crateEdgeH: tagShared(new THREE.BoxGeometry(1.32, 0.14, 1.16)),
@@ -168,11 +176,12 @@ export const SHARED_ASSETS = {
     crimsonEyeGlow: tagShared(new THREE.MeshStandardMaterial({ color: '#dc2626', emissive: '#dc2626', emissiveIntensity: 3.5 })),
     shieldGold: tagShared(new THREE.MeshStandardMaterial({ color: '#ca8a04', metalness: 0.6, roughness: 0.3 })),
 
-    // Stage 6: Deadlights Core
+    // Stage 6: Grimlight Core
     carnivalRed: tagShared(new THREE.MeshStandardMaterial({ color: '#ef4444', flatShading: true })),
     carnivalWhite: tagShared(new THREE.MeshStandardMaterial({ color: '#ffffff', flatShading: true })),
     carnivalBlack: tagShared(new THREE.MeshStandardMaterial({ color: '#09090b', flatShading: true })),
     deadlightsAmberCore: tagShared(new THREE.MeshStandardMaterial({ color: '#ffaa00', emissive: '#ffaa00', emissiveIntensity: 3.5 })),
+    grimlightAmberCore: tagShared(new THREE.MeshStandardMaterial({ color: '#ffaa00', emissive: '#ffaa00', emissiveIntensity: 3.5 })),
     porcelainWhite: tagShared(new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.2, flatShading: true })),
     paperBoatWhite: tagShared(new THREE.MeshStandardMaterial({ color: '#f1f5f9', roughness: 0.9, flatShading: true })),
 
@@ -213,7 +222,7 @@ export function createBlockerCrate(stageNum = 1) {
 
   switch (stageNum) {
     case 1: {
-      // Trevenant Cursed Tree Stump & Tangling Vines
+      // Stage 1 (Twilight Mist): Thrown Thorn-Briar Seed Bomb
       const stump = new THREE.Mesh(G.trevStump, M.trevBark);
       addHullOutline(stump, 1.08);
       group.add(stump);
@@ -228,6 +237,15 @@ export function createBlockerCrate(stageNum = 1) {
         horn.rotation.z = hx > 0 ? -0.4 : 0.4;
         addHullOutline(horn, 1.1);
         group.add(horn);
+      });
+
+      // Radiating briar thorn spikes
+      [0, Math.PI / 3, (2 * Math.PI) / 3, Math.PI, (4 * Math.PI) / 3, (5 * Math.PI) / 3].forEach((ang) => {
+        const spike = new THREE.Mesh(G.seedBombSpike, M.vineGreen);
+        spike.position.set(Math.cos(ang) * 0.65, 0.1, Math.sin(ang) * 0.65);
+        spike.rotation.z = Math.cos(ang) * 0.5;
+        addHullOutline(spike, 1.1);
+        group.add(spike);
       });
 
       const vine = new THREE.Mesh(G.trevVineWrap, M.vineGreen);
@@ -388,16 +406,23 @@ export function createShadowWave(stageNum = 1) {
 
   switch (stageNum) {
     case 1: {
-      // Vine Whip Thorny Root Surge (Emerald vines + cyan spores)
+      // Stage 1 (Twilight Mist): Spinning Razor-Vine Ground Chakram
+      const chakram = new THREE.Mesh(G.chakramRing, M.trevBark);
+      chakram.rotation.x = Math.PI / 2;
+      chakram.position.y = 0.08;
+      addHullOutline(chakram, 1.08);
+      group.add(chakram);
+
       const baseLine = new THREE.Mesh(G.vineRootBase, M.trevBark);
       baseLine.position.y = 0.05;
       addBoxOutline(baseLine);
       group.add(baseLine);
 
       const thornPositions = [-0.85, -0.5, -0.15, 0.2, 0.55, 0.85];
-      thornPositions.forEach((tx) => {
+      thornPositions.forEach((tx, idx) => {
         const spike = new THREE.Mesh(G.vineThornSpike, M.vineGreen);
         spike.position.set(tx, 0.21, 0);
+        spike.rotation.z = idx % 2 === 0 ? 0.2 : -0.2;
         addHullOutline(spike, 1.12);
         group.add(spike);
 
@@ -477,8 +502,8 @@ export function createShadowWave(stageNum = 1) {
 
     case 6:
     default: {
-      // Deadlights Razor-Teeth Maw (Snapping porcelain clown fangs & blazing orange energy)
-      const mawBar = new THREE.Mesh(G.mawBase, M.carnivalBlack);
+      // Stage 6 (Grimlight Core): Snapping Mechanical Chatter-Teeth
+      const mawBar = new THREE.Mesh(G.mawBase, M.carnivalRed);
       mawBar.position.y = 0.05;
       addBoxOutline(mawBar);
       group.add(mawBar);
@@ -493,6 +518,17 @@ export function createShadowWave(stageNum = 1) {
         addHullOutline(fang, 1.12);
         group.add(fang);
       });
+
+      // Clockwork Wind-up Key
+      const keyStem = new THREE.Mesh(G.chatterStem, M.steelGearMat);
+      keyStem.position.set(0, 0.18, -0.22);
+      keyStem.rotation.x = Math.PI / 2;
+      group.add(keyStem);
+
+      const windupKey = new THREE.Mesh(G.chatterKey, M.shieldGold);
+      windupKey.position.set(0, 0.18, -0.36);
+      windupKey.rotation.y = Math.PI / 2;
+      group.add(windupKey);
       break;
     }
   }
@@ -609,14 +645,14 @@ export function createSwayingSpecter(stageNum = 2) {
 
     case 6:
     default: {
-      // Deadlights Trio Cluster & Georgie Paper Boat
+      // Stage 6 (Grimlight Core): Orbiting Grimlight Tri-Orb Cluster
       const mask = new THREE.Mesh(G.pennyClownHead, M.porcelainWhite);
       addHullOutline(mask, 1.08);
       group.add(mask);
 
-      // 3 glowing Deadlights orbs
+      // 3 glowing Grimlight orbs
       [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3].forEach((angle) => {
-        const orb = new THREE.Mesh(G.deadlightsOrb, M.deadlightsAmberCore);
+        const orb = new THREE.Mesh(G.grimlightOrb || G.deadlightsOrb, M.grimlightAmberCore || M.deadlightsAmberCore);
         orb.position.set(Math.cos(angle) * 0.65, Math.sin(angle) * 0.65, 0);
         group.add(orb);
       });

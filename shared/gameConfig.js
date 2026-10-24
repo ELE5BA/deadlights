@@ -106,8 +106,8 @@ export const GAME_STAGES = Object.freeze([
   },
   {
     stage: 6,
-    name: 'The Deadlights Core',
-    subtitle: 'Apex Nightmare Chase',
+    name: 'The Grimlight Core',
+    subtitle: 'Apex Jester Barrage',
     durationSeconds: 60,
     speed: { base: 23.5, perSecond: 0.05, maximum: 26.5 },
     spawnInterval: { base: 0.70, perSecond: 0.003, minimum: 0.52 },

@@ -19,5 +19,5 @@ export default function GameCanvas({ onEngine, onStateChange, onRunEnd, reducedE
   }, [onEngine]);
   useEffect(() => { engineRef.current?.setReducedEffects(reducedEffects); }, [reducedEffects]);
   useEffect(() => { engineRef.current?.setRunnerType(runnerId); }, [runnerId]);
-  return <canvas className="game-canvas" ref={canvasRef} aria-label="HEXEDEX game scene" />;
+  return <canvas className="game-canvas" ref={canvasRef} aria-label="GRIMDEX 3D game scene" />;
 }

@@ -84,7 +84,7 @@ const POKEMON_CARD_META = {
     lore: 'A colossal sea dragon surging through the flooded subterranean flumes of Derry. Its ancient roar reverberates across dimensions.',
     element: 'WATER / DARK',
     elementTag: 'WATER',
-    stageOrigin: 'Stage 6: Deadlights Core',
+    stageOrigin: 'Stage 6: Grimlight Core',
     hp: 160,
     attacks: [
       { name: 'Tidal Flume Surge', dmg: '75', desc: 'Swings an armored serpentine tail to wash away track debris in a torrential neon deluge.' },
@@ -111,14 +111,15 @@ const POKEMON_CARD_META = {
   'the-tethered': {
     name: 'Penny-Mime EX',
     displayName: 'Penny-Mime EX',
-    lore: 'The primordial shape-shifting cosmic jester inhabiting the abyss beneath Derry. Wields floating Poké-Balloons to lure runners into the eternal Deadlights.',
+    lore: 'The primordial shape-shifting cosmic jester inhabiting the abyss beneath Derry. Wields floating Poké-Balloons to lure runners into the eternal Grimlight.',
     element: 'PSYCHIC / VOID',
     elementTag: 'MYTH',
     stageOrigin: 'Apex Entity',
     hp: 200,
     attacks: [
-      { name: 'Deadlights Hypnosis', dmg: '100', desc: 'Summons three spinning glowing red balloons from beyond the stars, paralyzing all who behold them.' },
-      { name: 'Infinite Funhouse Collapse', dmg: '170', desc: 'Traps the entire dimensional rift in a twisted hall of mirrors until shattered by all six Pokédex seals.' },
+      { name: 'Grimlight Hypnosis', dmg: '100', desc: 'Summons three spinning glowing red balloons from beyond the stars, paralyzing all who behold them.' },
+      { name: 'Grimlight Ray', dmg: '150', desc: 'Focuses blinding apocalyptic cosmic rays from beyond the stars, cutting through reality along the center lane.' },
+      { name: 'Grimlight Tsunami', dmg: '170', desc: 'Traps the entire dimensional rift in a twisted deluge of grim mirrors until shattered by all six Codex seals.' },
     ],
     weakness: 'NONE',
     retreatCost: 3,
@@ -204,8 +205,8 @@ export default function CollectionScreen({ player, onBack, onPlayerUpdate }) {
       <section className="collection-panel cabinet-card">
         <header className="binder-header cabinet-modal-header">
           <div className="binder-title-block">
-            <h2 className="cabinet-modal-title">{player.nickname.toUpperCase()}’S CARD BINDER</h2>
-            <p className="cabinet-modal-sub">ARCHIVAL CODEX · THE LOST POKÉDEX</p>
+            <h2 className="cabinet-modal-title">{player.nickname.toUpperCase()}’S GRIMDEX BINDER</h2>
+            <p className="cabinet-modal-sub">GRIMDEX · CURSED CARNIVAL CODEX</p>
             <div className="binder-counters cabinet-telemetry-well">
               <span className="balance-pill">
                 <span className="stat-label">RIFT SHARDS: </span>

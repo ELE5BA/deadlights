@@ -610,7 +610,7 @@ export const STAGE_MUSIC_THEMES = [
   // Stage 6 (188 BPM - Deadlights Core): Blistering A Minor / Tritone apex boss finale
   {
     stageNumber: 6,
-    name: 'Deadlights Core',
+    name: 'Grimlight Core',
     bpm: 188,
     leadTimbre: 'sawtooth',
     filterFreq: 3600,
