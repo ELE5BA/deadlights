@@ -41,6 +41,9 @@ export function setMuted(val) {
   if (bgmGainNode && audioCtx) {
     bgmGainNode.gain.setValueAtTime(muted ? 0 : 0.22, audioCtx.currentTime);
   }
+  if (windGain && audioCtx && muted) {
+    windGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  }
   listeners.forEach(cb => {
     try { cb(muted); } catch (e) { /* ignore */ }
   });
@@ -1026,5 +1029,57 @@ export function playVictoryCelebrationSfx() {
     bassOsc.start(noteStart);
     bassOsc.stop(noteStart + dur + 0.02);
   });
+}
+
+// ── Dynamic Wind Rush Audio for Speed Immersion ──
+let windSource = null;
+let windGain = null;
+let windFilter = null;
+
+export function updateWindAudio(speed = 15) {
+  if (muted) {
+    if (windGain && audioCtx) windGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    return;
+  }
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  if (!windSource) {
+    try {
+      const buffer = createNoiseBuffer(ctx, 2.5);
+      windSource = ctx.createBufferSource();
+      windSource.buffer = buffer;
+      windSource.loop = true;
+
+      windFilter = ctx.createBiquadFilter();
+      windFilter.type = 'lowpass';
+      windFilter.frequency.setValueAtTime(260, ctx.currentTime);
+
+      windGain = ctx.createGain();
+      windGain.gain.setValueAtTime(0, ctx.currentTime);
+
+      windSource.connect(windFilter);
+      windFilter.connect(windGain);
+      windGain.connect(ctx.destination);
+      windSource.start(0);
+    } catch {
+      // Audio autoplay policy
+    }
+  }
+
+  if (windGain && windFilter) {
+    const ratio = Math.min(1, Math.max(0, (speed - 14) / 24));
+    const now = ctx.currentTime;
+    const targetVol = ratio * 0.12;
+    const targetFreq = 220 + ratio * 850;
+    windGain.gain.setTargetAtTime(targetVol, now, 0.15);
+    windFilter.frequency.setTargetAtTime(targetFreq, now, 0.15);
+  }
+}
+
+export function stopWindAudio() {
+  if (windGain && audioCtx) {
+    windGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  }
 }
 

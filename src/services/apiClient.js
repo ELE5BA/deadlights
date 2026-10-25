@@ -1,12 +1,12 @@
 async function request(path) {
-  const response = await fetch(path, { headers: { Accept: 'application/json' } });
+  const response = await fetch(path, { headers: { Accept: 'application/json' }, credentials: 'include' });
   const body = await response.json();
   if (!response.ok || !body.ok) throw new Error(body.error?.code || 'REQUEST_FAILED');
   return body.data;
 }
 
 async function send(path, body) {
-  const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) });
+  const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
   const payload = await response.json();
   if (!response.ok || !payload.ok) {
     const error = new Error(payload.error?.message || 'Request failed');

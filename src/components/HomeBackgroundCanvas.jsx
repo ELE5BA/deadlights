@@ -181,12 +181,12 @@ export default function HomeBackgroundCanvas({ runnerId = 'pika-georgie', onStag
         }
       }
 
-      // Ground fog & Cobblestone drift
+      // Ground fog & Cobblestone drift - 1:1 world unit speed
       if (world.groundFogTex) {
-        world.groundFogTex.offset.y -= speed * dt * 0.055;
+        world.groundFogTex.offset.y -= speed * dt * 0.16;
       }
       if (world.cobbleTex) {
-        world.cobbleTex.offset.y -= speed * dt * 0.055;
+        world.cobbleTex.offset.y -= speed * dt * 0.16;
       }
 
       // Distant carnival attractions
@@ -195,6 +195,10 @@ export default function HomeBackgroundCanvas({ runnerId = 'pika-georgie', onStag
       }
       if (world.carouselGroup) {
         world.carouselGroup.rotation.y += deltaMs * 0.00045;
+      }
+      if (world.coasterTrain) {
+        world.coasterTrain.position.y = Math.sin(elapsed * 4.5) * 0.35;
+        world.coasterTrain.position.x = Math.cos(elapsed * 4.5) * 0.25;
       }
 
       // Floating spores & carnival particles
@@ -303,8 +307,8 @@ export default function HomeBackgroundCanvas({ runnerId = 'pika-georgie', onStag
         invulnerableMs: 0,
       });
 
-      // Animate pursuer in background
-      pursuer.update(deltaMs, 3, player.root.position.x);
+      // Animate pursuer in background with decor obstacles for dynamic dodging and spins
+      pursuer.update(deltaMs, 3, player.root.position.x, decorObjects);
 
       // Low-angle cinematic camera sway
       world.camera.position.x = Math.sin(elapsed * 0.45) * 1.8;

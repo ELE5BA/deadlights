@@ -4,6 +4,7 @@ import GameCanvas from '../game/GameCanvas.jsx';
 import PokedexCardArt from '../components/PokedexCardArt.jsx';
 import ForensicRunAutopsy from '../components/ForensicRunAutopsy.jsx';
 import { finishSession, startSession } from '../services/apiClient.js';
+import { broadcastRunEvent } from '../services/telemetryBroadcast.js';
 import {
   isMuted,
   toggleMute,
@@ -173,7 +174,7 @@ export const PENNYWISE_LINES = [
   "HEE-HEE! MISS ONE CARD AND YOU'RE MINE!",
 ];
 
-export const PENNYWISE_DEMISE_LINES = [
+const PENNYWISE_DEMISE_LINES = [
   "WHAT?! ALL SIX POKÉDEX CARDS?! MY BALLOONS ARE POPPING!",
   "NOOO! THE GRIMDEX SEAL IS SHATTERING MY GRIMLIGHT!",
   "THE ABYSS IS PULLING ME UNDER... I'M FADING INTO DARKNESSSS!",
@@ -451,6 +452,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         const result = await finishSession(session.sessionId, { runToken, ...summary });
         const enriched = { ...result, telemetry: summary.telemetry || engineState.telemetry, summary };
         setSavedRunResult(enriched);
+        broadcastRunEvent(enriched);
         return enriched;
       } catch (err) {
         console.warn('Quiet run persistence error:', err);
@@ -469,6 +471,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         const existing = await savingPromiseRef.current;
         if (existing) {
           setSessionState('finished');
+          broadcastRunEvent(existing);
           onFinished(existing);
           return;
         }
@@ -477,6 +480,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         const result = await finishSession(session.sessionId, { runToken, ...summary });
         const enriched = { ...result, telemetry: summary.telemetry || engineState.telemetry, summary };
         setSavedRunResult(enriched);
+        broadcastRunEvent(enriched);
         setSessionState('finished');
         onFinished(enriched);
         return;

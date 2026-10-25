@@ -222,6 +222,25 @@ export function createScene(canvas) {
     emissive: '#E94462',
     emissiveIntensity: 2.0,
   });
+  const cyanBulbMat = new THREE.MeshStandardMaterial({
+    color: '#38bdf8',
+    emissive: '#0284c7',
+    emissiveIntensity: 2.4,
+  });
+  const purpleBulbMat = new THREE.MeshStandardMaterial({
+    color: '#c084fc',
+    emissive: '#9333ea',
+    emissiveIntensity: 2.4,
+  });
+  const emeraldBulbMat = new THREE.MeshStandardMaterial({
+    color: '#34d399',
+    emissive: '#059669',
+    emissiveIntensity: 2.4,
+  });
+  const woodPlankMat = new THREE.MeshStandardMaterial({ color: '#78350f', roughness: 0.85, flatShading: true });
+  const barrelMat = new THREE.MeshStandardMaterial({ color: '#3f1a07', roughness: 0.9, flatShading: true });
+  const bannerPinkMat = new THREE.MeshStandardMaterial({ color: '#f43f5e', roughness: 0.6, flatShading: true });
+  const bannerCyanMat = new THREE.MeshStandardMaterial({ color: '#06b6d4', roughness: 0.6, flatShading: true });
 
   const tentTex = createTentTexture();
   tentTex.wrapS = THREE.RepeatWrapping;
@@ -290,11 +309,24 @@ export function createScene(canvas) {
       addHullOutline(flame, 1.15);
       parent.add(flame);
 
-      // Festoon bulb catenary
-      const stringBulb = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 6), goldBulbMat);
-      stringBulb.position.set(sideX, 2.35, zLocal - 5);
-      addHullOutline(stringBulb, 1.12);
-      parent.add(stringBulb);
+      // Festoon bulb catenary strings with vibrant carnival bulbs & bunting flags
+      const festoonBulbZ = [-7.5, -2.5, 2.5, 7.5];
+      const festoonMats = [goldBulbMat, redBulbMat, cyanBulbMat, purpleBulbMat];
+      const flagMats = [bannerPinkMat, bannerCyanMat, goldBulbMat, purpleBulbMat];
+
+      festoonBulbZ.forEach((bz, bIdx) => {
+        const catenaryDip = Math.sin(((bz + 7.5) / 15) * Math.PI) * 0.42;
+        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.13, 6, 6), festoonMats[bIdx % festoonMats.length]);
+        bulb.position.set(sideX, 2.3 - catenaryDip, zLocal + bz);
+        addHullOutline(bulb, 1.12);
+        parent.add(bulb);
+
+        // Triangular pennant bunting
+        const pennant = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.38, 3), flagMats[bIdx % flagMats.length]);
+        pennant.position.set(sideX, 1.75 - catenaryDip, zLocal + bz);
+        pennant.rotation.z = Math.PI;
+        parent.add(pennant);
+      });
     });
   }
 
@@ -369,11 +401,36 @@ export function createScene(canvas) {
     routeSign.add(plank1);
     chunk0.add(routeSign);
 
+    // Grand Carnival Marquee Overhead Truss Arch spanning over the road
+    const grandArch = new THREE.Group();
+    [-6.8, 6.8].forEach((colX) => {
+      const tower = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6.2, 0.45), lampPostMat);
+      tower.position.set(colX, 3.1, 0);
+      addBoxOutline(tower);
+      grandArch.add(tower);
+    });
+    const archBeam = new THREE.Mesh(new THREE.BoxGeometry(14.2, 0.6, 0.5), lampPostMat);
+    archBeam.position.set(0, 6.1, 0);
+    addBoxOutline(archBeam);
+    grandArch.add(archBeam);
+
+    const signBoard = new THREE.Mesh(new THREE.BoxGeometry(7.5, 1.1, 0.18), tentMat);
+    signBoard.position.set(0, 6.1, 0.35);
+    addBoxOutline(signBoard);
+    grandArch.add(signBoard);
+
+    for (let bx = -5.8; bx <= 5.8; bx += 1.45) {
+      const bMesh = new THREE.Mesh(new THREE.SphereGeometry(0.16, 6, 6), (Math.abs(bx) % 2.9 < 1.0) ? goldBulbMat : redBulbMat);
+      bMesh.position.set(bx, 6.75, 0.4);
+      grandArch.add(bMesh);
+    }
+    chunk0.add(grandArch);
+
     scene.add(chunk0);
     scrollingProps.push(chunk0);
   }
 
-  // Chunk 1: Trevenant & Pumpkaboo Haunted Grove (Z = -6)
+  // Chunk 1: Trevenant & Pumpkaboo Haunted Grove (Left) & Ring-Toss Bottle Knockdown Stall (Right) (Z = -6)
   {
     const chunk1 = new THREE.Group();
     chunk1.position.z = -6;
@@ -423,20 +480,17 @@ export function createScene(canvas) {
       const pumpkaboo = new THREE.Group();
       pumpkaboo.position.set(p.x, 0.4, p.z);
 
-      // Segmented pumpkin body
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.38, 8, 8), p.mat);
       pBody.scale.set(1.15, 0.85, 1.15);
       addHullOutline(pBody, 1.1);
       pumpkaboo.add(pBody);
 
-      // Glowing carved eyes
       [-0.12, 0.12].forEach((ex) => {
         const pEye = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), pumpkinGlowMat);
         pEye.position.set(ex, 0.05, 0.36);
         pumpkaboo.add(pEye);
       });
 
-      // Cute Bat-Ear Stems on top
       [-0.16, 0.16].forEach((bx) => {
         const ear = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.22, 4), batEarMat);
         ear.position.set(bx, 0.42, 0);
@@ -446,6 +500,37 @@ export function createScene(canvas) {
 
       chunk1.add(pumpkaboo);
     });
+
+    // RIGHT SIDE (X = +11.2): Carnival Ring-Toss & Milk Bottle Knockdown Stall
+    const ringStall = new THREE.Group();
+    ringStall.position.set(11.2, 0, 0);
+    ringStall.rotation.y = -Math.PI / 2;
+
+    const stallBase = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.1, 2.4), fenceMat);
+    stallBase.position.y = 0.55;
+    addBoxOutline(stallBase);
+    ringStall.add(stallBase);
+
+    const stallAwning = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.22, 2.8), tentMat);
+    stallAwning.position.set(0, 3.3, 0);
+    stallAwning.rotation.x = 0.12;
+    addBoxOutline(stallAwning);
+    ringStall.add(stallAwning);
+
+    // Tiered milk bottle knockdown pyramid
+    const bottleMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.3 });
+    [[-0.6, 1.35], [0, 1.35], [0.6, 1.35], [-0.3, 1.8], [0.3, 1.8], [0, 2.25]].forEach(([bx, by]) => {
+      const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.45, 6), bottleMat);
+      bottle.position.set(bx, by, 0.15);
+      addBoxOutline(bottle);
+      ringStall.add(bottle);
+    });
+
+    const barrel1 = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 0.9, 8), barrelMat);
+    barrel1.position.set(2.4, 0.45, 0.2);
+    ringStall.add(barrel1);
+
+    chunk1.add(ringStall);
 
     scene.add(chunk1);
     scrollingProps.push(chunk1);
@@ -534,8 +619,54 @@ export function createScene(canvas) {
     mimikyu.add(earBent);
 
     booth.add(mimikyu);
-
     chunk2.add(booth);
+
+    // RIGHT SIDE (X = +11.5): Carnival Popcorn & Pretzel Cart Wagon
+    const popcornCart = new THREE.Group();
+    popcornCart.position.set(11.5, 0, 0);
+    popcornCart.rotation.y = -Math.PI / 2;
+
+    const cartBox = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.4, 2.2), tentMat);
+    cartBox.position.y = 1.0;
+    addBoxOutline(cartBox);
+    popcornCart.add(cartBox);
+
+    // Glass display case
+    const glassCase = new THREE.Mesh(
+      new THREE.BoxGeometry(3.2, 1.3, 1.9),
+      new THREE.MeshStandardMaterial({ color: '#fef08a', transparent: true, opacity: 0.55, roughness: 0.1 })
+    );
+    glassCase.position.set(0, 2.35, 0);
+    popcornCart.add(glassCase);
+
+    // Warm popcorn glow core
+    const popcornGlow = new THREE.Mesh(new THREE.DodecahedronGeometry(0.7), goldBulbMat);
+    popcornGlow.position.set(0, 2.2, 0);
+    popcornCart.add(popcornGlow);
+
+    // Curved cart canopy roof
+    const cartRoof = new THREE.Mesh(new THREE.ConeGeometry(2.5, 1.2, 4), tentMat);
+    cartRoof.position.y = 3.6;
+    cartRoof.rotation.y = Math.PI / 4;
+    addHullOutline(cartRoof, 1.06);
+    popcornCart.add(cartRoof);
+
+    // 4 Vintage wagon wheels
+    const wheelMat = new THREE.MeshStandardMaterial({ color: '#78350f', metalness: 0.4, roughness: 0.6 });
+    [[-1.4, -1.0], [1.4, -1.0], [-1.4, 1.0], [1.4, 1.0]].forEach(([wx, wz]) => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.14, 8), wheelMat);
+      wheel.position.set(wx, 0.48, wz);
+      wheel.rotation.z = Math.PI / 2;
+      popcornCart.add(wheel);
+    });
+
+    // Hanging pretzel sign
+    const pretzelSign = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.1, 6, 12), woodPlankMat);
+    pretzelSign.position.set(0, 3.1, 1.15);
+    popcornCart.add(pretzelSign);
+
+    chunk2.add(popcornCart);
+
     scene.add(chunk2);
     scrollingProps.push(chunk2);
   }
@@ -637,8 +768,55 @@ export function createScene(canvas) {
     });
 
     wagon.add(pikaBalloon);
-
     chunk3.add(wagon);
+
+    // LEFT SIDE (X = -11.5): Cursed Fortune Teller Gypsy Caravan Tent & Crystal Orb
+    const fortuneTent = new THREE.Group();
+    fortuneTent.position.set(-11.5, 0, 0);
+    fortuneTent.rotation.y = Math.PI / 2;
+
+    const tentPlatform = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.6, 3.6), woodPlankMat);
+    tentPlatform.position.y = 0.3;
+    addBoxOutline(tentPlatform);
+    fortuneTent.add(tentPlatform);
+
+    // Ornate purple draped canopy tent
+    const fortuneDrapeMat = new THREE.MeshStandardMaterial({ color: '#4c1d95', roughness: 0.7, flatShading: true });
+    const tentCanopy = new THREE.Mesh(new THREE.ConeGeometry(2.6, 3.2, 6), fortuneDrapeMat);
+    tentCanopy.position.y = 2.4;
+    addHullOutline(tentCanopy, 1.06);
+    fortuneTent.add(tentCanopy);
+
+    // Pedestal table
+    const tableMat = new THREE.MeshStandardMaterial({ color: '#18181b', roughness: 0.5 });
+    const table = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.55, 0.9, 8), tableMat);
+    table.position.y = 1.05;
+    fortuneTent.add(table);
+
+    // Glowing Crystal Orb
+    const crystalMat = new THREE.MeshStandardMaterial({
+      color: '#c084fc',
+      emissive: '#9333ea',
+      emissiveIntensity: 3.5,
+      roughness: 0.2,
+    });
+    const crystalOrb = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 10), crystalMat);
+    crystalOrb.position.set(0, 1.7, 0);
+    fortuneTent.add(crystalOrb);
+
+    // Brass corner lanterns
+    [-1.6, 1.6].forEach((lx) => {
+      const lanternPole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 5), lampPostMat);
+      lanternPole.position.set(lx, 1.4, 1.4);
+      fortuneTent.add(lanternPole);
+
+      const lanternBulb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 6), purpleBulbMat);
+      lanternBulb.position.set(lx, 2.5, 1.4);
+      fortuneTent.add(lanternBulb);
+    });
+
+    chunk3.add(fortuneTent);
+
     scene.add(chunk3);
     scrollingProps.push(chunk3);
   }
@@ -757,8 +935,55 @@ export function createScene(canvas) {
     });
 
     gengarShrine.add(totem);
-
     chunk4.add(gengarShrine);
+
+    // RIGHT SIDE (X = +11.2): Carnival High Striker ("Ring The Bell" Test of Strength)
+    const highStriker = new THREE.Group();
+    highStriker.position.set(11.2, 0, 0);
+    highStriker.rotation.y = -Math.PI / 2;
+
+    const baseStump = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.6, 8), barrelMat);
+    baseStump.position.y = 0.3;
+    addBoxOutline(baseStump);
+    highStriker.add(baseStump);
+
+    // Tall vertical score tower
+    const towerMast = new THREE.Mesh(new THREE.BoxGeometry(0.55, 6.2, 0.55), woodPlankMat);
+    towerMast.position.set(0, 3.4, 0);
+    addBoxOutline(towerMast);
+    highStriker.add(towerMast);
+
+    // Score gradation rungs with alternating lights
+    for (let r = 0; r < 7; r++) {
+      const rung = new THREE.Mesh(
+        new THREE.BoxGeometry(0.85, 0.12, 0.18),
+        r % 2 === 0 ? redBulbMat : goldBulbMat
+      );
+      rung.position.set(0, 1.2 + r * 0.72, 0.32);
+      highStriker.add(rung);
+    }
+
+    // Top Brass Bell
+    const bellMat = new THREE.MeshStandardMaterial({ color: '#fbbf24', metalness: 0.85, roughness: 0.25 });
+    const bell = new THREE.Mesh(new THREE.SphereGeometry(0.48, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), bellMat);
+    bell.rotation.x = Math.PI;
+    bell.position.set(0, 6.6, 0);
+    highStriker.add(bell);
+
+    // Striker mallet
+    const hammerMat = new THREE.MeshStandardMaterial({ color: '#475569', metalness: 0.7, roughness: 0.4 });
+    const malletHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 6), woodPlankMat);
+    malletHandle.position.set(0.9, 0.8, 0.4);
+    malletHandle.rotation.z = -0.55;
+    highStriker.add(malletHandle);
+
+    const malletHead = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.5, 6), hammerMat);
+    malletHead.position.set(1.4, 0.4, 0.4);
+    malletHead.rotation.x = Math.PI / 2;
+    highStriker.add(malletHead);
+
+    chunk4.add(highStriker);
+
     scene.add(chunk4);
     scrollingProps.push(chunk4);
   }
@@ -817,6 +1042,50 @@ export function createScene(canvas) {
     });
 
     chunk5.add(gallery);
+
+    // LEFT SIDE (X = -11.0): Vintage Carnival Ticket Kiosk & Hall of Mirrors facade
+    const ticketKiosk = new THREE.Group();
+    ticketKiosk.position.set(-11.0, 0, 0);
+    ticketKiosk.rotation.y = Math.PI / 2;
+
+    const kioskBase = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 2.2, 8), tentMat);
+    kioskBase.position.y = 1.1;
+    addBoxOutline(kioskBase);
+    ticketKiosk.add(kioskBase);
+
+    // Octagonal baroque spire roof
+    const kioskRoof = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.9, 8), woodPlankMat);
+    kioskRoof.position.y = 3.15;
+    addHullOutline(kioskRoof, 1.05);
+    ticketKiosk.add(kioskRoof);
+
+    // Glowing "TICKETS" beacon lamp on roof
+    const ticketLamp = new THREE.Mesh(new THREE.SphereGeometry(0.32, 6, 6), goldBulbMat);
+    ticketLamp.position.set(0, 4.3, 0);
+    ticketKiosk.add(ticketLamp);
+
+    // Ticket service window aperture
+    const windowAperture = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, 0.7, 0.25),
+      new THREE.MeshStandardMaterial({ color: '#09090b', roughness: 0.9 })
+    );
+    windowAperture.position.set(0, 1.35, 1.6);
+    ticketKiosk.add(windowAperture);
+
+    // Distorted carnival funhouse mirror panel
+    const mirrorMat = new THREE.MeshStandardMaterial({
+      color: '#38bdf8',
+      metalness: 0.95,
+      roughness: 0.05,
+    });
+    const mirrorPanel = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.4, 0.12), mirrorMat);
+    mirrorPanel.position.set(-2.2, 1.2, 0.4);
+    mirrorPanel.rotation.y = 0.2;
+    addBoxOutline(mirrorPanel);
+    ticketKiosk.add(mirrorPanel);
+
+    chunk5.add(ticketKiosk);
+
     scene.add(chunk5);
     scrollingProps.push(chunk5);
   }
@@ -879,6 +1148,53 @@ export function createScene(canvas) {
     });
 
     chunk6.add(pavilion);
+
+    // RIGHT SIDE (X = +11.5): Carnival Cotton Candy & Giant Swirl Candy Lollipop Stand
+    const candyStand = new THREE.Group();
+    candyStand.position.set(11.5, 0, 0);
+    candyStand.rotation.y = -Math.PI / 2;
+
+    const candyCounter = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.1, 2.2), bannerPinkMat);
+    candyCounter.position.y = 0.55;
+    addBoxOutline(candyCounter);
+    candyStand.add(candyCounter);
+
+    const candyRoof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.6, 6), bannerCyanMat);
+    candyRoof.position.y = 2.8;
+    addHullOutline(candyRoof, 1.05);
+    candyStand.add(candyRoof);
+
+    // Giant Swirl Lollipops on poles
+    [[-1.1, 2.6], [1.1, 2.6]].forEach(([lx, ly], idx) => {
+      const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.2, 5), woodPlankMat);
+      stick.position.set(lx, ly - 0.7, 0.8);
+      candyStand.add(stick);
+
+      const popDisc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.55, 0.55, 0.12, 12),
+        idx === 0 ? bannerPinkMat : bannerCyanMat
+      );
+      popDisc.position.set(lx, ly + 0.4, 0.8);
+      popDisc.rotation.x = Math.PI / 2;
+      addHullOutline(popDisc, 1.08);
+      candyStand.add(popDisc);
+    });
+
+    // Spun-Sugar Cotton Candy Clouds on sticks
+    const cottonMat = new THREE.MeshStandardMaterial({
+      color: '#f472b6',
+      roughness: 0.95,
+      transparent: true,
+      opacity: 0.88,
+    });
+    [-0.45, 0.45].forEach((cx, idx) => {
+      const cloud = new THREE.Mesh(new THREE.SphereGeometry(0.38, 7, 7), idx === 0 ? cottonMat : cyanBulbMat);
+      cloud.position.set(cx, 1.5, 0.4);
+      candyStand.add(cloud);
+    });
+
+    chunk6.add(candyStand);
+
     scene.add(chunk6);
     scrollingProps.push(chunk6);
   }
@@ -1107,6 +1423,8 @@ export function createScene(canvas) {
   const haunterPurpleMat = new THREE.MeshStandardMaterial({ color: '#581c87', roughness: 0.5, flatShading: true });
   const haunterEyeMat = new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#dc2626', emissiveIntensity: 3.5 });
 
+  const coasterTrain = new THREE.Group();
+
   const trainLead = new THREE.Group();
   trainLead.position.set(-1.8, 10.8, 12.5);
   trainLead.rotation.x = -0.45;
@@ -1122,7 +1440,7 @@ export function createScene(canvas) {
     eye.position.set(ex, 0.15, 0.72);
     trainLead.add(eye);
   });
-  coasterGroup.add(trainLead);
+  coasterTrain.add(trainLead);
 
   // Second coaster car
   const trainCar2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.65, 1.2), coasterMat);
@@ -1130,7 +1448,9 @@ export function createScene(canvas) {
   trainCar2.rotation.x = -0.45;
   trainCar2.rotation.y = 0.35;
   addBoxOutline(trainCar2);
-  coasterGroup.add(trainCar2);
+  coasterTrain.add(trainCar2);
+
+  coasterGroup.add(coasterTrain);
 
   distantLandmarks.add(coasterGroup);
 
@@ -1195,6 +1515,27 @@ export function createScene(canvas) {
   const particles = new THREE.Points(particleGeo, particleMat);
   scene.add(particles);
 
+  // High-velocity 3D streak lines (speed lines) around the carnival track corridor
+  const speedLines = new THREE.Group();
+  const speedLineMat = new THREE.MeshBasicMaterial({
+    color: '#43D9F2',
+    transparent: true,
+    opacity: 0.0,
+  });
+
+  const speedLineGeo = new THREE.BoxGeometry(0.06, 0.06, 3.2);
+  const SPEED_LINE_COUNT = 48;
+  for (let i = 0; i < SPEED_LINE_COUNT; i++) {
+    const sMesh = new THREE.Mesh(speedLineGeo, speedLineMat);
+    const side = (i % 2 === 0) ? 1 : -1;
+    const px = side * (4.2 + Math.random() * 4.0);
+    const py = 0.6 + Math.random() * 4.4;
+    const pz = -Math.random() * 95 + 10;
+    sMesh.position.set(px, py, pz);
+    speedLines.add(sMesh);
+  }
+  scene.add(speedLines);
+
   // 6-Stage Atmosphere Controller
   const STAGE_ATMOSPHERES = {
     1: { bg: '#0A1622', fogDensity: 0.022, railColor: '#43D9F2', light: '#43D9F2' },
@@ -1219,11 +1560,13 @@ export function createScene(canvas) {
 
     hemiLight.color.set(config.light);
     particleMat.color.set(config.railColor);
+    speedLineMat.color.set(config.railColor);
   }
 
   function setLowEffectsMode(enabled) {
     renderer.setPixelRatio(enabled ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
     particles.visible = !enabled;
+    speedLines.visible = !enabled;
     groundFogRibbon.visible = !enabled;
   }
 
@@ -1239,7 +1582,10 @@ export function createScene(canvas) {
     distantLandmarks,
     ferrisWheelGroup,
     carouselGroup,
+    coasterTrain,
     particles,
+    speedLines,
+    speedLineMat,
     cobbleTex,
     rails,
     hemiLight,

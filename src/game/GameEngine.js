@@ -26,6 +26,8 @@ import {
   playVictoryCelebrationSfx,
   startBackgroundMusic,
   stopBackgroundMusic,
+  updateWindAudio,
+  stopWindAudio,
 } from './soundEffects.js';
 
 export const POKEMON_CARD_ROSTER = [
@@ -515,8 +517,9 @@ export class GameEngine {
       this.pickupAnimations = [];
     }
 
-    // Stop background music during jumpscare
+    // Stop background music and wind audio during jumpscare
     stopBackgroundMusic();
+    stopWindAudio();
 
     // Trigger action-reactive Web Audio jumpscare SFX
     playJumpscareSfx();
@@ -1142,6 +1145,7 @@ export class GameEngine {
     }
 
     stopBackgroundMusic();
+    stopWindAudio();
     playVictoryCelebrationSfx();
 
     // Clear all remaining track hazards and pickup meshes
@@ -1304,13 +1308,35 @@ export class GameEngine {
 
       // Ground fog drift ribbon scrolling
       if (this.world.groundFogTex) {
-        this.world.groundFogTex.offset.y -= speed * dt * 0.055;
+        this.world.groundFogTex.offset.y -= speed * dt * 0.16;
       }
 
-      // Road cobblestone texture scrolling
+      // Road cobblestone texture scrolling - matched 1:1 with road geometry
       if (this.world.cobbleTex) {
-        this.world.cobbleTex.offset.y -= speed * dt * 0.055;
+        this.world.cobbleTex.offset.y -= speed * dt * 0.16;
       }
+
+      // High-velocity 3D streak lines (speed lines) around track corridor
+      if (this.world.speedLines) {
+        const lineSpeed = speed * 1.35;
+        const speedRatio = Math.min(1, Math.max(0, (speed - 15) / (38 - 15)));
+        for (const line of this.world.speedLines.children) {
+          line.position.z += lineSpeed * dt;
+          if (line.position.z > 14) {
+            line.position.z = -85 - Math.random() * 20;
+            const side = Math.random() > 0.5 ? 1 : -1;
+            line.position.x = side * (4.2 + Math.random() * 4.0);
+            line.position.y = 0.6 + Math.random() * 4.4;
+          }
+          line.scale.z = 1.0 + speedRatio * 2.2;
+        }
+        if (this.world.speedLineMat) {
+          this.world.speedLineMat.opacity = Math.max(0, (speedRatio - 0.12) * 0.75);
+        }
+      }
+
+      // Dynamic low-pass wind rush audio loop
+      updateWindAudio(speed);
 
       // Distant landmarks subtle animation
       if (this.world.ferrisWheelGroup) {
@@ -1318,6 +1344,10 @@ export class GameEngine {
       }
       if (this.world.carouselGroup) {
         this.world.carouselGroup.rotation.y += deltaMs * 0.00045;
+      }
+      if (this.world.coasterTrain) {
+        this.world.coasterTrain.position.y = Math.sin(this.elapsedMs * 0.005) * 0.35;
+        this.world.coasterTrain.position.x = Math.cos(this.elapsedMs * 0.005) * 0.25;
       }
 
       // Particles drift
@@ -1362,10 +1392,10 @@ export class GameEngine {
         invulnerableMs: this.invulnerableMs,
       });
 
-      // Update Pursuer Villain Entity
-      this.pursuerEntity.update(deltaMs, this.health, this.currentX);
+      // Update Pursuer Villain Entity with live obstacles for dynamic dodging and spins
+      this.pursuerEntity.update(deltaMs, this.health, this.currentX, this.objects);
 
-      // Spring-Damper Camera Follow, Dutch Banking & FOV Speed Ramp
+      // Spring-Damper Camera Follow, Dutch Banking, Dynamic FOV Speed Ramp & Micro-Rumble
       const { camera } = this.world;
       camera.position.x = THREE.MathUtils.damp(camera.position.x, this.currentX * 0.32, 6.5, dt);
       this.cameraTiltZ = THREE.MathUtils.damp(this.cameraTiltZ || 0, (this.currentX - this.targetX) * 0.022, 8.0, dt);
@@ -1373,11 +1403,20 @@ export class GameEngine {
       camera.lookAt(this.currentX * 0.15, 1.35, -7);
       camera.rotation.z += this.cameraTiltZ;
 
-      const speedRatio = Math.min(1, Math.max(0, (speed - 12) / (32 - 12)));
-      const targetFov = 53 + speedRatio * 8.0;
+      const speedRatio = Math.min(1, Math.max(0, (speed - 15) / (38 - 15)));
+      const targetFov = 54 + speedRatio * 16.0;
       if (Math.abs(camera.fov - targetFov) > 0.05) {
         camera.fov = THREE.MathUtils.damp(camera.fov, targetFov, 4.0, dt);
         camera.updateProjectionMatrix();
+      }
+
+      // High-speed camera micro-rumble
+      if (speedRatio > 0.35) {
+        const rumbleAmp = (speedRatio - 0.35) * 0.035;
+        camera.position.y = 5.2 - speedRatio * 0.15 + (Math.random() - 0.5) * rumbleAmp;
+        camera.position.x += (Math.random() - 0.5) * rumbleAmp * 0.8;
+      } else {
+        camera.position.y = THREE.MathUtils.damp(camera.position.y, 5.2, 5.0, dt);
       }
 
       // Milestones
@@ -1478,6 +1517,7 @@ export class GameEngine {
     this.running = false;
     cancelAnimationFrame(this.animationFrame);
     stopBackgroundMusic();
+    stopWindAudio();
     this.onRunEnd?.({
       durationMs: Math.round(Math.min(this.elapsedMs, GAME_CONFIG.roundCapSeconds * 1000)),
       distanceM: Math.round(this.distanceM * 100) / 100,
@@ -1491,6 +1531,7 @@ export class GameEngine {
     if (this.running) {
       this.paused = true;
       stopBackgroundMusic();
+      stopWindAudio();
       this.updateHudImmediate();
     }
   }
@@ -1523,6 +1564,7 @@ export class GameEngine {
     this.running = false;
     cancelAnimationFrame(this.animationFrame);
     stopBackgroundMusic();
+    stopWindAudio();
     window.removeEventListener('resize', this.resize);
     window.removeEventListener('keydown', this.keydown);
 

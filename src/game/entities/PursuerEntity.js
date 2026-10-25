@@ -212,6 +212,27 @@ export class PursuerEntity {
     this.throwAnim = { active: false, type: 'single', hand: 'right', elapsed: 0, duration: 0.34, targetLane: 1 };
     this.lastThrowHand = 'left';
 
+    // 3D Acrobatic Spin State (Rare, elegant, eerie pirouettes - NO spam)
+    this.spinTimer = 0;
+    this.nextSpinInterval = 18.0 + Math.random() * 8.0;
+    this.spinAnim = {
+      active: false,
+      elapsed: 0,
+      duration: 1.25,
+      direction: 1,
+      type: 'theatrical',
+    };
+
+    // Fluid Obstacle Avoidance & Aerodynamic Banking
+    this.dodgeActive = false;
+    this.dodgeTimer = 0;
+    this.lastDodgeTime = 0;
+    this.clownTargetX = 0;
+    this.currentClownX = 0;
+    this.clownLiftY = 0;
+    this.currentBankZ = 0;
+    this.currentPitchX = 0;
+
     this.buildPennywiseRig();
   }
 
@@ -926,6 +947,34 @@ export class PursuerEntity {
       duration: 0.34,
       targetLane,
     };
+
+  }
+
+  triggerSpin(direction = 1, duration = 1.25, type = 'theatrical') {
+    if (this.isJumpscare || this.isDefeated || this.spinAnim.active) return;
+    this.spinAnim = {
+      active: true,
+      elapsed: 0,
+      duration,
+      direction: direction >= 0 ? 1 : -1,
+      type,
+    };
+  }
+
+  triggerObstacleDodge(obstacleX, clownX) {
+    if (this.isJumpscare || this.isDefeated) return;
+    this.lastDodgeTime = this.time;
+    const laneWidth = 2.8;
+
+    // Determine dodge direction away from the oncoming obstacle, staying within road bounds [-3.2, 3.2]
+    let dodgeDir = clownX >= obstacleX ? 1 : -1;
+    if (clownX + dodgeDir * laneWidth > 3.2) dodgeDir = -1;
+    if (clownX + dodgeDir * laneWidth < -3.2) dodgeDir = 1;
+
+    // Set new target lane for smooth, spring-damped floating transition (NO spin, NO snapping)
+    this.clownTargetX = THREE.MathUtils.clamp(clownX + dodgeDir * laneWidth, -3.0, 3.0);
+    this.dodgeActive = true;
+    this.dodgeTimer = 1.4;
   }
 
   getHandWorldPosition(hand = 'right') {
@@ -948,6 +997,13 @@ export class PursuerEntity {
     }
     this.isJumpscare = false;
     this.jumpscareElapsed = 0;
+    this.spinAnim.active = false;
+    this.dodgeActive = false;
+    this.clownTargetX = 0;
+    this.currentClownX = 0;
+    this.clownLiftY = 0;
+    this.currentBankZ = 0;
+    this.currentPitchX = 0;
     this.root.scale.set(1.36, 1.36, 1.36);
     this.root.position.set(0, 0, this.currentZ);
     this.root.rotation.set(0, 0, 0);
@@ -1403,7 +1459,7 @@ export class PursuerEntity {
     }
   }
 
-  update(deltaMs, playerHearts, targetLaneX = 0) {
+  update(deltaMs, playerHearts, targetLaneX = 0, activeObstacles = []) {
     const dt = deltaMs / 1000;
     this.time += dt * 3.2;
 
@@ -1513,32 +1569,115 @@ export class PursuerEntity {
       return;
     }
 
+    // ── HAZARD DETECTION & FLUID EVASIVE DODGING ─────────────────
+    if (
+      !this.dodgeActive &&
+      (this.time - this.lastDodgeTime > 3.8) &&
+      activeObstacles &&
+      activeObstacles.length > 0
+    ) {
+      const clownZ = this.root.position.z;
+      const clownX = this.root.position.x;
+
+      for (const obj of activeObstacles) {
+        if (!obj?.mesh) continue;
+        const objZ = obj.mesh.position.z;
+        const objX = obj.mesh.position.x;
+
+        // Check if an obstacle is in the clown's direct forward flight path
+        const dz = Math.abs(objZ - clownZ);
+        const dx = Math.abs(objX - clownX);
+
+        if (dz < 3.8 && dx < 1.25) {
+          this.triggerObstacleDodge(objX, clownX);
+          break;
+        }
+      }
+    }
+
+    if (this.dodgeActive) {
+      this.dodgeTimer -= dt;
+      if (this.dodgeTimer <= 0) {
+        this.dodgeActive = false;
+      }
+    }
+
+    // Gentle, buoyant evasive lift during dodge
+    const targetLiftY = this.dodgeActive ? 0.75 : 0;
+    this.clownLiftY = THREE.MathUtils.damp(this.clownLiftY, targetLiftY, 3.2, dt);
+
+    // Rare, deliberate theatrical pirouette (every 18 - 26 seconds, NO SPAM)
+    this.spinTimer += dt;
+    if (this.spinTimer >= this.nextSpinInterval && !this.dodgeActive && !this.throwAnim.active) {
+      this.spinTimer = 0;
+      this.nextSpinInterval = 18.0 + Math.random() * 8.0;
+      const dir = Math.random() > 0.5 ? 1 : -1;
+      this.triggerSpin(dir, 1.25, 'theatrical');
+    }
+
+    // Update Spin Animation State with smooth cosine ease
+    let spinAngleY = 0;
+    let spinProgress = 0;
+    if (this.spinAnim.active) {
+      this.spinAnim.elapsed += dt;
+      if (this.spinAnim.elapsed >= this.spinAnim.duration) {
+        this.spinAnim.active = false;
+      } else {
+        spinProgress = this.spinAnim.elapsed / this.spinAnim.duration;
+        // Silky smooth cosine ease-in-out
+        const ease = (1 - Math.cos(spinProgress * Math.PI)) / 2;
+        spinAngleY = this.spinAnim.direction * Math.PI * 2 * ease;
+      }
+    }
+
     // ── IN-GAME AMBIENT STALKING ANIMATION ─────────────────────────
     this.headTwitchTimer += dt;
-    if (this.headTwitchTimer > 2.6) {
+    if (this.headTwitchTimer > 3.2) {
       this.headTwitchTimer = 0;
-      this.targetHeadTilt = (Math.random() > 0.5 ? 1 : -1) * (0.24 + Math.random() * 0.22);
-      this.targetHeadRotY = (Math.random() - 0.5) * 0.38;
+      this.targetHeadTilt = (Math.random() > 0.5 ? 1 : -1) * (0.18 + Math.random() * 0.16);
+      this.targetHeadRotY = (Math.random() - 0.5) * 0.28;
     }
 
-    this.currentHeadTilt += (this.targetHeadTilt - this.currentHeadTilt) * Math.min(1, dt * 7.5);
-    this.targetHeadTilt *= Math.max(0, 1 - dt * 1.9);
+    this.currentHeadTilt += (this.targetHeadTilt - this.currentHeadTilt) * Math.min(1, dt * 5.0);
+    this.targetHeadTilt *= Math.max(0, 1 - dt * 1.5);
 
-    if (this.headGroup) {
-      const subtleWobble = Math.sin(this.time * 0.9) * 0.06;
-      this.headGroup.rotation.z = this.currentHeadTilt + subtleWobble;
-      this.headGroup.rotation.y = (this.targetHeadRotY || 0) * 0.85 + Math.cos(this.time * 0.6) * 0.09;
-      this.headGroup.rotation.x = Math.sin(this.time * 1.1) * 0.05;
-    }
-
-    // Sinusoidal hover bobbing framed at Y = 4.35 (cleanly below top HUD)
+    // Sinusoidal hover bobbing + buoyant lift
     const targetHoverY = playerHearts <= 1 ? 4.05 : 4.35;
     this.baseHoverY += (targetHoverY - this.baseHoverY) * Math.min(1, dt * 2.5);
 
-    const hoverY = this.baseHoverY + Math.sin(this.time) * 0.32;
+    const hoverY = this.baseHoverY + Math.sin(this.time * 0.75) * 0.22 + this.clownLiftY;
     this.bodyGroup.position.y = hoverY;
-    this.bodyGroup.rotation.z = Math.sin(this.time * 0.6) * 0.05;
-    this.bodyGroup.rotation.y = Math.sin(this.time * 0.4) * 0.06;
+
+    // Fluid lateral traversal with smooth spring damping
+    const prevX = this.root.position.x;
+    // Base tracking follows player smoothly when not dodging
+    if (!this.dodgeActive) {
+      const slowWeave = Math.sin(this.time * 0.45) * 0.35; // gentle, hypnotic patrol drift
+      this.clownTargetX = targetLaneX * 0.75 + slowWeave;
+    }
+    this.currentClownX = THREE.MathUtils.damp(this.currentClownX || 0, this.clownTargetX, 2.8, dt);
+    this.root.position.x = this.currentClownX;
+
+    // Aerodynamic banking based on actual lateral velocity
+    const lateralVel = (this.root.position.x - prevX) / Math.max(0.001, dt);
+    const targetBankZ = THREE.MathUtils.clamp(-lateralVel * 0.065, -0.28, 0.28);
+    this.currentBankZ = THREE.MathUtils.damp(this.currentBankZ, targetBankZ, 4.0, dt);
+
+    // Torso pitch damp
+    const targetPitchX = THREE.MathUtils.clamp(this.clownLiftY * 0.15, -0.2, 0.2);
+    this.currentPitchX = THREE.MathUtils.damp(this.currentPitchX, targetPitchX, 4.0, dt);
+
+    this.bodyGroup.rotation.x = this.currentPitchX;
+    this.bodyGroup.rotation.y = Math.sin(this.time * 0.35) * 0.05 + spinAngleY;
+    this.bodyGroup.rotation.z = this.currentBankZ + Math.sin(this.time * 0.5) * 0.035;
+
+    // Head counters the body bank to stay eerily level and focused on the player
+    if (this.headGroup) {
+      const subtleWobble = Math.sin(this.time * 0.8) * 0.04;
+      this.headGroup.rotation.z = this.currentHeadTilt + subtleWobble - this.currentBankZ * 0.6;
+      this.headGroup.rotation.y = (this.targetHeadRotY || 0) * 0.85 + Math.cos(this.time * 0.5) * 0.06;
+      this.headGroup.rotation.x = Math.sin(this.time * 0.9) * 0.04;
+    }
 
     // 3D Eye Tracking: Rotate / shift pupils and glowing Deadlights irises toward player's lane!
     if (this.eyeIrises) {
@@ -1577,7 +1716,6 @@ export class PursuerEntity {
         const affectR = hand === 'right' || hand === 'both';
 
         if (t < 0.12) {
-          // Wind-up (0.0s - 0.12s): Lean back slightly, cock arms high behind shoulder, flare eyes
           const p = t / 0.12;
           this.bodyGroup.rotation.x = THREE.MathUtils.lerp(0, 0.22, p);
           if (affectL) {
@@ -1592,7 +1730,6 @@ export class PursuerEntity {
             this.faceMat.emissiveIntensity = THREE.MathUtils.lerp(0.8, 2.5, p);
           }
         } else if (t < 0.24) {
-          // Hurl Release (0.12s - 0.24s): Snap torso violently forward toward target lane, splay claws
           const p = (t - 0.12) / 0.12;
           this.bodyGroup.rotation.x = THREE.MathUtils.lerp(0.22, -0.28, p);
           if (affectL) {
@@ -1606,7 +1743,6 @@ export class PursuerEntity {
             this.fingersR?.forEach((f) => { f.rotation.z = THREE.MathUtils.lerp(0, -0.45, p); });
           }
         } else {
-          // Follow-through (0.24s - 0.34s): Smoothly blend back to stalking hover pose
           const p = (t - 0.24) / 0.10;
           this.bodyGroup.rotation.x = THREE.MathUtils.lerp(-0.28, 0, p);
           if (affectL) {
@@ -1624,44 +1760,57 @@ export class PursuerEntity {
           }
         }
       }
+    } else if (this.spinAnim.active) {
+      // Graceful slow pirouette arm flourish
+      const arch = Math.sin(spinProgress * Math.PI);
+      this.leftArm.rotation.x = THREE.MathUtils.lerp(-0.55, -1.45, arch);
+      this.rightArm.rotation.x = THREE.MathUtils.lerp(-0.70, -1.45, arch);
+      this.leftArm.rotation.y = THREE.MathUtils.lerp(0, -0.25, arch);
+      this.rightArm.rotation.y = THREE.MathUtils.lerp(0.12, 0.25, arch);
+      this.leftArm.rotation.z = THREE.MathUtils.lerp(-0.15, -1.15 * this.spinAnim.direction, arch);
+      this.rightArm.rotation.z = THREE.MathUtils.lerp(0.10, 1.15 * this.spinAnim.direction, arch);
+      this.fingersL?.forEach((f) => { f.rotation.z = arch * 0.35; });
+      this.fingersR?.forEach((f) => { f.rotation.z = -arch * 0.35; });
     } else {
-      // Menacing rhythmic claw reach & finger twitch
-      this.leftArm.rotation.x = -0.55 + Math.sin(this.time * 1.4) * 0.15;
-      this.leftArm.rotation.z = -0.15 + Math.cos(this.time * 0.8) * 0.08;
+      // Slow, hypnotic claw reach & finger twitch
+      this.leftArm.rotation.x = -0.55 + Math.sin(this.time * 1.1) * 0.10;
+      this.leftArm.rotation.z = -0.15 - this.currentBankZ * 0.35;
 
-      this.rightArm.rotation.x = -0.70 + Math.sin(this.time * 1.6) * 0.22;
-      this.rightArm.rotation.y = 0.12 + Math.cos(this.time * 1.1) * 0.14;
-      this.rightArm.rotation.z = 0.10 + Math.sin(this.time * 0.7) * 0.06;
+      this.rightArm.rotation.x = -0.70 + Math.sin(this.time * 1.2) * 0.12;
+      this.rightArm.rotation.y = 0.12 + Math.cos(this.time * 0.9) * 0.08;
+      this.rightArm.rotation.z = 0.10 - this.currentBankZ * 0.35;
 
       this.fingersL?.forEach((f, idx) => {
-        f.rotation.z = Math.sin(this.time * 2.5 + idx * 0.7) * 0.18;
+        f.rotation.z = Math.sin(this.time * 1.8 + idx * 0.6) * 0.12;
       });
       this.fingersR?.forEach((f, idx) => {
-        f.rotation.z = Math.cos(this.time * 3.2 + idx * 0.8) * 0.24;
+        f.rotation.z = Math.cos(this.time * 2.0 + idx * 0.7) * 0.14;
       });
     }
 
-    // Marionette leg dangle
+    // Marionette leg dangle with smooth pendulum lag
     this.shoeGroups?.forEach((sg, idx) => {
       const legPhase = idx === 0 ? 0 : Math.PI * 0.75;
-      sg.rotation.x = Math.sin(this.time * 1.2 + legPhase) * 0.18;
-      sg.rotation.z = (idx === 0 ? -1 : 1) * 0.08 + Math.cos(this.time * 0.8 + legPhase) * 0.08;
+      sg.rotation.x = Math.sin(this.time * 1.0 + legPhase) * 0.12 - this.currentBankZ * 0.2;
+      sg.rotation.z = (idx === 0 ? -1 : 1) * 0.06 - this.currentBankZ * 0.4;
     });
 
-    // Breathing Elizabethan Collar
+    // Breathing Elizabethan Collar (gentle flutter during spins)
     this.breathePhase += dt * 2.2;
-    const breathe = 1 + Math.sin(this.breathePhase) * 0.025;
+    const collarSpinScale = this.spinAnim.active ? 1.08 : 1.0;
+    const breathe = (1 + Math.sin(this.breathePhase) * 0.025) * collarSpinScale;
     if (this.collarGroup) {
       this.collarGroup.scale.set(breathe, 1, breathe);
     }
 
-    // Floating balloons
+    // Floating balloons trailing softly with fluid inertia
     this.balloons.forEach((b) => {
-      b.group.position.y = (hoverY + 0.2) + b.base.y * 0.45 + Math.sin(this.time * 1.3 + b.phase) * 0.32;
-      b.group.position.x = b.base.x + Math.cos(this.time * 0.85 + b.phase) * 0.22;
-      b.group.position.z = b.base.z + Math.sin(this.time * 0.7 + b.phase) * 0.18;
-      b.group.rotation.z = Math.sin(this.time * 0.9 + b.phase) * 0.14;
-      b.group.rotation.x = Math.cos(this.time * 0.75 + b.phase) * 0.10;
+      const spinLag = this.spinAnim.active ? -this.spinAnim.direction * Math.sin(spinProgress * Math.PI) * 0.45 : 0;
+      b.group.position.y = (hoverY + 0.2) + b.base.y * 0.45 + Math.sin(this.time * 1.1 + b.phase) * 0.25;
+      b.group.position.x = b.base.x + Math.cos(this.time * 0.7 + b.phase) * 0.16 + spinLag - this.currentBankZ * 0.9;
+      b.group.position.z = b.base.z + Math.sin(this.time * 0.6 + b.phase) * 0.14;
+      b.group.rotation.z = Math.sin(this.time * 0.7 + b.phase) * 0.10 + this.currentBankZ * 0.5;
+      b.group.rotation.x = Math.cos(this.time * 0.6 + b.phase) * 0.08 + this.currentPitchX * 0.5;
     });
 
     // Distance reactivity
@@ -1669,17 +1818,14 @@ export class PursuerEntity {
     this.currentZ += (this.targetZ - this.currentZ) * Math.min(1, dt * 2.5);
     this.root.position.z = this.currentZ;
 
-    // Soft lateral tracking
-    this.root.position.x += (targetLaneX * 0.78 - this.root.position.x) * Math.min(1, dt * 2.4);
-
     // Dynamic jaw drop
     if (this.jawGroup) {
-      const targetJawOpen = playerHearts <= 1 ? -0.28 : -0.05;
+      const targetJawOpen = (this.dodgeActive || playerHearts <= 1) ? -0.25 : -0.05;
       this.jawGroup.rotation.x += (targetJawOpen - this.jawGroup.rotation.x) * Math.min(1, dt * 3.0);
     }
 
     // Deadlights sulfur-yellow & amber emissive pulsing
-    const baseEmissive = playerHearts <= 1 ? 3.8 : 1.8;
+    const baseEmissive = (this.dodgeActive || playerHearts <= 1) ? 3.8 : 1.8;
     const pulse = Math.abs(Math.sin(this.time * 3.5)) * 0.9;
     if (this.faceMat) {
       this.faceMat.emissiveIntensity = baseEmissive + pulse;

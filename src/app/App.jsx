@@ -38,8 +38,28 @@ const RUNNER_TRAITS = {
 };
 
 export default function App() {
+  const isStandaloneAdmin = typeof window !== 'undefined' && (
+    new URLSearchParams(window.location.search).has('admin') ||
+    window.location.pathname.startsWith('/admin')
+  );
+
+  if (isStandaloneAdmin) {
+    return (
+      <AnalyticsDashboardScreen
+        onExit={() => {
+          if (window.opener && !window.opener.closed) {
+            window.close();
+          } else {
+            window.location.href = window.location.pathname.replace(/\/admin.*$/, '') || '/';
+          }
+        }}
+      />
+    );
+  }
+
   const [health, setHealth] = useState({ state: 'checking' });
   const [screen, setScreen] = useState('attract');
+  const [adminToast, setAdminToast] = useState(null);
   const [player, setPlayer] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('deadlights.activePlayer'));
@@ -53,6 +73,30 @@ export default function App() {
   const [soundMuted, setSoundMuted] = useState(() => isMuted());
   const [result, setResult] = useState(null);
   const [attractStage, setAttractStage] = useState({ stage: 1, name: 'The Twilight Mist' });
+
+  const handleOpenAdminWindow = () => {
+    playButtonClickSfx();
+    const adminUrl = `${window.location.origin}${window.location.pathname}?admin=true`;
+    const win = window.open(
+      adminUrl,
+      'GrimdexAdminDashboard',
+      'width=1440,height=920,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes'
+    );
+    if (win) {
+      win.focus();
+      setAdminToast({
+        type: 'opened',
+        message: 'Admin console opened in a separate window. You can play the game and monitor live telemetry simultaneously!',
+      });
+      setTimeout(() => setAdminToast(null), 8000);
+    } else {
+      setAdminToast({
+        type: 'blocked',
+        message: 'Popup window was blocked by your browser. Click here to open Admin Console in a new tab.',
+        url: adminUrl,
+      });
+    }
+  };
 
   useEffect(() => {
     getHealth()
@@ -262,13 +306,10 @@ export default function App() {
               <span className="home-link-divider">·</span>
               <button
                 className="text-button home-admin-link"
-                onClick={() => {
-                  playButtonClickSfx();
-                  setScreen('admin-login');
-                }}
-                title="Booth Administration & Analytics Dashboard"
+                onClick={handleOpenAdminWindow}
+                title="Open Booth Administration & Analytics Dashboard in Separate Window"
               >
-                <DashboardIcon /> ADMIN
+                <DashboardIcon /> ADMIN CONSOLE
               </button>
             </nav>
 
@@ -277,6 +318,32 @@ export default function App() {
               <span className="attract-dot" /> ATTRACT PREVIEW · STAGE {attractStage.stage}: {attractStage.name.toUpperCase()}
             </div>
           </section>
+
+          {/* Cross-Window Admin Launch Toast */}
+          {adminToast && (
+            <div className="admin-launch-toast" role="status">
+              <div className="toast-text">
+                <strong>⚡ BOOTH OPS:</strong> {adminToast.message}
+              </div>
+              {adminToast.url && (
+                <a
+                  href={adminToast.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="toast-action-btn"
+                >
+                  OPEN IN NEW TAB
+                </a>
+              )}
+              <button
+                className="toast-close-btn"
+                onClick={() => setAdminToast(null)}
+                aria-label="Dismiss message"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </main>
       )}
     </div>
