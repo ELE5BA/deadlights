@@ -129,6 +129,14 @@ export const SHARED_ASSETS = {
     cardBorderLR: tagShared(new THREE.BoxGeometry(0.08, 0.95, 0.10)),
     cardEmblem: tagShared(new THREE.CylinderGeometry(0.18, 0.18, 0.12, 8)),
     cardSparkle: tagShared(new THREE.BoxGeometry(0.08, 0.08, 0.08)),
+    pokeCardFrame: tagShared(new THREE.BoxGeometry(0.82, 1.15, 0.08)),
+    pokeCardFace: tagShared(new THREE.BoxGeometry(0.72, 1.04, 0.085)),
+    pokeCardBeacon: tagShared(new THREE.TorusGeometry(0.72, 0.045, 8, 24)),
+    pokeBallTop: tagShared(new THREE.CylinderGeometry(0.24, 0.24, 0.06, 16, 1, false, 0, Math.PI)),
+    pokeBallBottom: tagShared(new THREE.CylinderGeometry(0.24, 0.24, 0.06, 16, 1, false, Math.PI, Math.PI)),
+    pokeBallBand: tagShared(new THREE.BoxGeometry(0.50, 0.04, 0.065)),
+    pokeBallButtonOuter: tagShared(new THREE.CylinderGeometry(0.08, 0.08, 0.075, 16)),
+    pokeBallButtonCore: tagShared(new THREE.CylinderGeometry(0.045, 0.045, 0.085, 16)),
     shieldOcta: tagShared(new THREE.OctahedronGeometry(0.38, 0)),
     shieldRingInner: tagShared(new THREE.TorusGeometry(0.54, 0.045, 6, 16)),
     shieldRingOuter: tagShared(new THREE.TorusGeometry(0.70, 0.04, 6, 16)),
@@ -215,6 +223,13 @@ export const SHARED_ASSETS = {
     goldBorder: tagShared(new THREE.MeshStandardMaterial({ color: '#FFD000', emissive: '#FFD000', emissiveIntensity: 2.0 })),
     cardEmblem: tagShared(new THREE.MeshStandardMaterial({ color: '#43D9F2', emissive: '#43D9F2', emissiveIntensity: 2.5, flatShading: true })),
     cardSparkle: tagShared(new THREE.MeshStandardMaterial({ color: '#f8fafc', emissive: '#ffffff', emissiveIntensity: 3.0 })),
+    pokeCardFrameMat: tagShared(new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#ca8a04', emissiveIntensity: 1.6, roughness: 0.2, metalness: 0.6, flatShading: true })),
+    pokeCardFaceMat: tagShared(new THREE.MeshStandardMaterial({ color: '#1e1b4b', roughness: 0.3, flatShading: true })),
+    pokeBallRedMat: tagShared(new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#b91c1c', emissiveIntensity: 1.2, roughness: 0.2, flatShading: true })),
+    pokeBallWhiteMat: tagShared(new THREE.MeshStandardMaterial({ color: '#f8fafc', emissive: '#94a3b8', emissiveIntensity: 0.5, roughness: 0.2, flatShading: true })),
+    pokeBallBlackMat: tagShared(new THREE.MeshStandardMaterial({ color: '#120b1d', roughness: 0.6, flatShading: true })),
+    pokeBallCyanCoreMat: tagShared(new THREE.MeshStandardMaterial({ color: '#06b6d4', emissive: '#38bdf8', emissiveIntensity: 2.8, roughness: 0.1 })),
+    pokeBeaconRingMat: tagShared(new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#eab308', emissiveIntensity: 2.2, roughness: 0.2 })),
     shieldCoreMat: tagShared(new THREE.MeshStandardMaterial({ color: '#38bdf8', emissive: '#0284c7', emissiveIntensity: 2.2, roughness: 0.15, metalness: 0.2, flatShading: true })),
     shieldRingInnerMat: tagShared(new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#eab308', emissiveIntensity: 2.0 })),
     shieldRingOuterMat: tagShared(new THREE.MeshStandardMaterial({ color: '#38bdf8', emissive: '#0ea5e9', emissiveIntensity: 2.0 })),
@@ -839,34 +854,52 @@ export function createCardFragment() {
   const group = new THREE.Group();
   const { geometries: G, materials: M } = SHARED_ASSETS;
 
-  const slab = new THREE.Mesh(G.cardSlab, M.cardSlab);
-  addBoxOutline(slab);
-  group.add(slab);
+  // 1. Golden outer frame with cartoon ink outline
+  const outerFrame = new THREE.Mesh(G.pokeCardFrame, M.pokeCardFrameMat);
+  addBoxOutline(outerFrame, 1.05);
+  group.add(outerFrame);
 
-  const borderTop = new THREE.Mesh(G.cardBorderTB, M.goldBorder);
-  borderTop.position.y = 0.48;
-  addBoxOutline(borderTop);
-  group.add(borderTop);
+  // 2. Deep violet-indigo card face
+  const cardFace = new THREE.Mesh(G.pokeCardFace, M.pokeCardFaceMat);
+  group.add(cardFace);
 
-  const borderBottom = new THREE.Mesh(G.cardBorderTB, M.goldBorder);
-  borderBottom.position.y = -0.48;
-  addBoxOutline(borderBottom);
-  group.add(borderBottom);
+  // 3. 3D Pokéball Center Emblem with glowing cyan/gold core
+  const emblemGroup = new THREE.Group();
+  emblemGroup.position.set(0, 0.06, 0.048);
 
-  const borderLeft = new THREE.Mesh(G.cardBorderLR, M.goldBorder);
-  borderLeft.position.set(-0.35, 0, 0);
-  addBoxOutline(borderLeft);
-  group.add(borderLeft);
+  const ballTop = new THREE.Mesh(G.pokeBallTop, M.pokeBallRedMat);
+  ballTop.rotation.x = Math.PI / 2;
+  emblemGroup.add(ballTop);
 
-  const borderRight = new THREE.Mesh(G.cardBorderLR, M.goldBorder);
-  borderRight.position.set(0.35, 0, 0);
-  addBoxOutline(borderRight);
-  group.add(borderRight);
+  const ballBottom = new THREE.Mesh(G.pokeBallBottom, M.pokeBallWhiteMat);
+  ballBottom.rotation.x = Math.PI / 2;
+  emblemGroup.add(ballBottom);
 
-  const emblem = new THREE.Mesh(G.cardEmblem, M.cardEmblem);
-  emblem.rotation.x = Math.PI / 2;
-  group.add(emblem);
+  const centerBand = new THREE.Mesh(G.pokeBallBand, M.pokeBallBlackMat);
+  centerBand.position.set(0, 0, 0.005);
+  emblemGroup.add(centerBand);
 
+  const buttonOuter = new THREE.Mesh(G.pokeBallButtonOuter, M.pokeBallBlackMat);
+  buttonOuter.rotation.x = Math.PI / 2;
+  buttonOuter.position.set(0, 0, 0.012);
+  emblemGroup.add(buttonOuter);
+
+  const buttonCore = new THREE.Mesh(G.pokeBallButtonCore, M.pokeBallCyanCoreMat);
+  buttonCore.rotation.x = Math.PI / 2;
+  buttonCore.position.set(0, 0, 0.018);
+  emblemGroup.add(buttonCore);
+
+  group.add(emblemGroup);
+
+  // 4. Rotating golden ground beacon ring so players can clearly spot the lane from a distance
+  const beaconRing = new THREE.Mesh(G.pokeCardBeacon, M.pokeBeaconRingMat);
+  beaconRing.rotation.x = Math.PI / 2;
+  beaconRing.position.set(0, -1.05, 0);
+  addHullOutline(beaconRing, 1.14);
+  group.add(beaconRing);
+  group.userData.beaconRing = beaconRing;
+
+  // 5. Orbiting diamond sparkles
   const sparkles = [];
   for (let s = 0; s < 3; s++) {
     const sp = new THREE.Mesh(G.cardSparkle, M.cardSparkle);

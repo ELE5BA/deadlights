@@ -651,38 +651,264 @@ export class PlayerCharacter {
     if (this.isShieldActive) {
       if (!this.shieldMesh) {
         const shieldGroup = new THREE.Group();
-        const geo = new THREE.IcosahedronGeometry(1.28, 1);
-        const mat = new THREE.MeshBasicMaterial({
-          color: 0x38bdf8,
-          wireframe: true,
-          transparent: true,
-          opacity: 0.65,
-        });
-        const wireSphere = new THREE.Mesh(geo, mat);
+        shieldGroup.position.set(0, 1.38, 0);
 
-        const innerGeo = new THREE.SphereGeometry(1.15, 16, 16);
-        const innerMat = new THREE.MeshStandardMaterial({
-          color: 0x0284c7,
+        // 1. Inner Translucent Arcane Dome (spanning Y = -0.41 to Y = 3.17, completely enclosing head and flame/ears!)
+        const domeGeo = this.trackDisposable(new THREE.SphereGeometry(1.18, 18, 16));
+        const domeMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+          color: 0x06b6d4,
           emissive: 0x38bdf8,
-          emissiveIntensity: 0.5,
+          emissiveIntensity: 0.65,
           transparent: true,
-          opacity: 0.22,
-          roughness: 0.2,
-        });
-        const innerSphere = new THREE.Mesh(innerGeo, innerMat);
+          opacity: 0.20,
+          roughness: 0.15,
+        }));
+        const innerDome = new THREE.Mesh(domeGeo, domeMat);
+        innerDome.scale.set(1.12, 1.52, 1.12);
+        shieldGroup.add(innerDome);
+        shieldGroup.userData.innerDome = innerDome;
 
-        shieldGroup.add(wireSphere);
-        shieldGroup.add(innerSphere);
-        shieldGroup.position.set(0, 1.05, 0);
+        // 2. Cartoon Rim Contour Shell (BackSide cel-shaded rim contour glow)
+        const rimGeo = this.trackDisposable(new THREE.SphereGeometry(1.18, 18, 16));
+        const rimMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+          color: 0x38bdf8,
+          emissive: 0x38bdf8,
+          emissiveIntensity: 0.38,
+          side: THREE.BackSide,
+          transparent: true,
+          opacity: 0.38,
+        }));
+        const rimShell = new THREE.Mesh(rimGeo, rimMat);
+        rimShell.scale.set(1.12 * 1.04, 1.52 * 1.04, 1.12 * 1.04);
+        shieldGroup.add(rimShell);
+
+        // 3. Counter-Rotating Golden Rune Rings
+        const ring1Geo = this.trackDisposable(new THREE.TorusGeometry(1.38, 0.035, 6, 24));
+        const ring1Mat = this.trackDisposable(new THREE.MeshStandardMaterial({
+          color: 0xfacc15,
+          emissive: 0xeab308,
+          emissiveIntensity: 2.2,
+        }));
+        const ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
+        ring1.rotation.x = Math.PI / 4;
+        addHullOutline(ring1, 1.15);
+        shieldGroup.add(ring1);
+        shieldGroup.userData.ring1 = ring1;
+
+        const ring2Geo = this.trackDisposable(new THREE.TorusGeometry(1.38, 0.035, 6, 24));
+        const ring2Mat = this.trackDisposable(new THREE.MeshStandardMaterial({
+          color: 0x38bdf8,
+          emissive: 0x0284c7,
+          emissiveIntensity: 2.2,
+        }));
+        const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
+        ring2.rotation.z = Math.PI / 4;
+        addHullOutline(ring2, 1.15);
+        shieldGroup.add(ring2);
+        shieldGroup.userData.ring2 = ring2;
+
+        // 4. 6 Orbiting Miniature Cartoon Shield Runes
+        const runeGeo = this.trackDisposable(new THREE.OctahedronGeometry(0.14, 0));
+        const runeMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+          color: 0xfacc15,
+          emissive: 0xf59e0b,
+          emissiveIntensity: 2.0,
+        }));
+        const runes = [];
+        for (let i = 0; i < 6; i++) {
+          const rune = new THREE.Mesh(runeGeo, runeMat);
+          const baseAngle = (i / 6) * Math.PI * 2;
+          rune.position.set(Math.cos(baseAngle) * 1.42, Math.sin(baseAngle * 2) * 0.25, Math.sin(baseAngle) * 1.42);
+          addHullOutline(rune, 1.12);
+          shieldGroup.add(rune);
+          runes.push({ mesh: rune, baseAngle });
+        }
+        shieldGroup.userData.runes = runes;
+
+        // 5. Ground Aegis Seal Ring on Cobblestones
+        const sealGeo = this.trackDisposable(new THREE.RingGeometry(1.05, 1.28, 24));
+        const sealMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+          color: 0x38bdf8,
+          emissive: 0x06b6d4,
+          emissiveIntensity: 1.8,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.75,
+        }));
+        const groundSeal = new THREE.Mesh(sealGeo, sealMat);
+        groundSeal.position.set(0, -1.32, 0);
+        groundSeal.rotation.x = -Math.PI / 2;
+        shieldGroup.add(groundSeal);
+        shieldGroup.userData.groundSeal = groundSeal;
+
+        // Activation Sweep Ring
+        const sweepGeo = this.trackDisposable(new THREE.TorusGeometry(1.30, 0.045, 6, 24));
+        const sweepMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+          color: 0xfacc15,
+          emissive: 0xfff,
+          emissiveIntensity: 3.5,
+          transparent: true,
+          opacity: 0,
+        }));
+        const sweepRing = new THREE.Mesh(sweepGeo, sweepMat);
+        sweepRing.rotation.x = Math.PI / 2;
+        sweepRing.position.set(0, -1.32, 0);
+        shieldGroup.add(sweepRing);
+        shieldGroup.userData.sweepRing = sweepRing;
 
         this.shieldMesh = shieldGroup;
         this.root.add(shieldGroup);
-        this.disposables.push(geo, mat, innerGeo, innerMat);
       }
       this.shieldMesh.visible = true;
+      this.triggerShieldActivateEffect();
     } else if (this.shieldMesh) {
       this.shieldMesh.visible = false;
     }
+  }
+
+  triggerShieldActivateEffect() {
+    this.shieldActivateTime = 0;
+    if (this.shieldMesh) {
+      this.shieldMesh.scale.set(0.15, 0.15, 0.15);
+      if (this.shieldMesh.userData.sweepRing) {
+        this.shieldMesh.userData.sweepRing.material.opacity = 0.9;
+        this.shieldMesh.userData.sweepRing.position.y = -1.32;
+      }
+    }
+  }
+
+  triggerShieldBreakEffect() {
+    if (this.breakEffectGroup) {
+      this.root.remove(this.breakEffectGroup);
+      this.breakEffectGroup = null;
+    }
+
+    const breakGroup = new THREE.Group();
+    breakGroup.position.set(0, 1.38, 0);
+
+    const shardGeo = this.trackDisposable(new THREE.OctahedronGeometry(0.13, 0));
+    const shardMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      emissive: 0x06b6d4,
+      emissiveIntensity: 2.5,
+      transparent: true,
+      opacity: 0.95,
+    }));
+
+    const shards = [];
+    for (let i = 0; i < 10; i++) {
+      const mesh = new THREE.Mesh(shardGeo, shardMat);
+      addHullOutline(mesh, 1.15);
+      breakGroup.add(mesh);
+
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI;
+      const speed = 2.8 + Math.random() * 3.2;
+      shards.push({
+        mesh,
+        vx: Math.cos(theta) * Math.cos(phi) * speed,
+        vy: Math.sin(phi) * speed + 2.2,
+        vz: Math.sin(theta) * Math.cos(phi) * speed,
+        rx: (Math.random() - 0.5) * 12,
+        ry: (Math.random() - 0.5) * 12,
+      });
+    }
+
+    breakGroup.userData = { shards, elapsedMs: 0, durationMs: 480 };
+    this.breakEffectGroup = breakGroup;
+    this.root.add(breakGroup);
+  }
+
+  triggerHeartHealEffect() {
+    if (this.healEffectGroup) {
+      this.root.remove(this.healEffectGroup);
+      this.healEffectGroup = null;
+    }
+
+    const healGroup = new THREE.Group();
+    healGroup.position.set(0, 0, 0);
+
+    // 2 Rising Emerald & Crimson Aura Rings
+    const auraGeo = this.trackDisposable(new THREE.TorusGeometry(0.85, 0.035, 6, 24));
+    const emRingMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: 0x10b981,
+      emissive: 0x059669,
+      emissiveIntensity: 2.8,
+      transparent: true,
+      opacity: 0.85,
+    }));
+    const crRingMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      emissive: 0xdc2626,
+      emissiveIntensity: 2.8,
+      transparent: true,
+      opacity: 0.85,
+    }));
+
+    const ringEmerald = new THREE.Mesh(auraGeo, emRingMat);
+    ringEmerald.rotation.x = Math.PI / 2;
+    ringEmerald.position.y = 0.1;
+    addHullOutline(ringEmerald, 1.12);
+    healGroup.add(ringEmerald);
+
+    const ringCrimson = new THREE.Mesh(auraGeo, crRingMat);
+    ringCrimson.rotation.x = Math.PI / 2;
+    ringCrimson.position.y = 0.35;
+    addHullOutline(ringCrimson, 1.12);
+    healGroup.add(ringCrimson);
+
+    // 6 Floating 3D Cartoon Mini-Hearts / Vitality Crosses
+    const crossGeo = this.trackDisposable(new THREE.BoxGeometry(0.18, 0.06, 0.06));
+    const crossGeoV = this.trackDisposable(new THREE.BoxGeometry(0.06, 0.18, 0.06));
+    const crossMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: 0x10b981,
+      emissive: 0x34d399,
+      emissiveIntensity: 2.5,
+      transparent: true,
+      opacity: 0.95,
+    }));
+    const heartMiniMat = this.trackDisposable(new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      emissive: 0xf87171,
+      emissiveIntensity: 2.5,
+      transparent: true,
+      opacity: 0.95,
+    }));
+
+    const floaters = [];
+    for (let i = 0; i < 6; i++) {
+      const floater = new THREE.Group();
+      if (i % 2 === 0) {
+        // Vitality Cross
+        const h = new THREE.Mesh(crossGeo, crossMat);
+        const v = new THREE.Mesh(crossGeoV, crossMat);
+        addBoxOutline(h);
+        floater.add(h);
+        floater.add(v);
+      } else {
+        // Mini Octa-Heart
+        const oct = new THREE.Mesh(this.trackDisposable(new THREE.OctahedronGeometry(0.11, 0)), heartMiniMat);
+        addHullOutline(oct, 1.15);
+        floater.add(oct);
+      }
+      healGroup.add(floater);
+      floaters.push({
+        group: floater,
+        baseAngle: (i / 6) * Math.PI * 2,
+        heightOffset: i * 0.12,
+      });
+    }
+
+    healGroup.userData = {
+      ringEmerald,
+      ringCrimson,
+      floaters,
+      elapsedMs: 0,
+      durationMs: 750,
+    };
+
+    this.healEffectGroup = healGroup;
+    this.root.add(healGroup);
   }
 
   setVictory(active) {
@@ -784,11 +1010,129 @@ export class PlayerCharacter {
       }
     }
 
+    // 1. Full-Body Shield Idle & Orbit Animation
     if (this.shieldMesh && this.shieldMesh.visible) {
-      this.shieldMesh.rotation.y += dt * 2.2;
-      this.shieldMesh.rotation.x += dt * 1.4;
-      const pulse = 1.0 + Math.sin((this.runTime || 0) * 4.5) * 0.04;
-      this.shieldMesh.scale.set(pulse, pulse, pulse);
+      this.shieldTime = (this.shieldTime || 0) + dt;
+      const t = this.shieldTime;
+
+      // Inner dome subtle breathe pulse
+      if (this.shieldMesh.userData.innerDome) {
+        const breathe = 1.0 + Math.sin(t * 3.5) * 0.025;
+        this.shieldMesh.userData.innerDome.scale.set(1.12 * breathe, 1.52 * breathe, 1.12 * breathe);
+      }
+
+      // Counter-rotating rings
+      if (this.shieldMesh.userData.ring1) {
+        this.shieldMesh.userData.ring1.rotation.y += dt * 2.5;
+        this.shieldMesh.userData.ring1.rotation.x += dt * 0.8;
+      }
+      if (this.shieldMesh.userData.ring2) {
+        this.shieldMesh.userData.ring2.rotation.y -= dt * 2.2;
+        this.shieldMesh.userData.ring2.rotation.z += dt * 0.9;
+      }
+
+      // Orbiting 6 shield runes
+      if (this.shieldMesh.userData.runes) {
+        this.shieldMesh.userData.runes.forEach(({ mesh, baseAngle }) => {
+          const ang = baseAngle + t * 2.0;
+          mesh.position.set(Math.cos(ang) * 1.42, Math.sin(ang * 2) * 0.22, Math.sin(ang) * 1.42);
+          mesh.rotation.y += dt * 3.5;
+          mesh.rotation.x += dt * 2.0;
+        });
+      }
+
+      // Ground seal ring spin & pulse
+      if (this.shieldMesh.userData.groundSeal) {
+        this.shieldMesh.userData.groundSeal.rotation.z += dt * 1.6;
+        const sealPulse = 1.0 + Math.sin(t * 4.0) * 0.06;
+        this.shieldMesh.userData.groundSeal.scale.set(sealPulse, sealPulse, 1);
+      }
+
+      // Shield pop-in activation elastic animation
+      if (this.shieldActivateTime < 320) {
+        this.shieldActivateTime += deltaMs;
+        const p = Math.min(1, this.shieldActivateTime / 320);
+        const elastic = p === 1 ? 1 : 1 - Math.pow(2, -10 * p) * Math.cos((p * 10 - 0.75) * ((2 * Math.PI) / 3));
+        const scale = 0.15 + 0.85 * elastic;
+        this.shieldMesh.scale.set(scale, scale, scale);
+
+        if (this.shieldMesh.userData.sweepRing) {
+          const sweepY = -1.32 + p * 2.92;
+          this.shieldMesh.userData.sweepRing.position.y = sweepY;
+          this.shieldMesh.userData.sweepRing.material.opacity = (1 - p) * 0.9;
+        }
+      } else {
+        this.shieldMesh.scale.set(1, 1, 1);
+        if (this.shieldMesh.userData.sweepRing) {
+          this.shieldMesh.userData.sweepRing.material.opacity = 0;
+        }
+      }
+    }
+
+    // 2. Shield Shatter Shards Break Animation (480ms)
+    if (this.breakEffectGroup) {
+      const data = this.breakEffectGroup.userData;
+      data.elapsedMs += deltaMs;
+      const progress = Math.min(1, data.elapsedMs / data.durationMs);
+
+      data.shards.forEach((s) => {
+        s.mesh.position.x += s.vx * dt;
+        s.mesh.position.y += s.vy * dt;
+        s.mesh.position.z += s.vz * dt;
+        s.vy -= 14.0 * dt; // gravity
+        s.mesh.rotation.x += s.rx * dt;
+        s.mesh.rotation.y += s.ry * dt;
+        if (s.mesh.material) {
+          s.mesh.material.opacity = Math.max(0, 1 - progress);
+        }
+      });
+
+      if (data.elapsedMs >= data.durationMs) {
+        this.root.remove(this.breakEffectGroup);
+        this.breakEffectGroup = null;
+      }
+    }
+
+    // 3. Soul Heart Rising Aura & Spiral Floaters Heal Animation (750ms)
+    if (this.healEffectGroup) {
+      const data = this.healEffectGroup.userData;
+      data.elapsedMs += deltaMs;
+      const progress = Math.min(1, data.elapsedMs / data.durationMs);
+      const easeOut = 1 - Math.pow(1 - progress, 2);
+
+      // Rings sweep upward
+      if (data.ringEmerald) {
+        data.ringEmerald.position.y = 0.1 + easeOut * 2.7;
+        const ringScale = 1.0 + easeOut * 0.45;
+        data.ringEmerald.scale.set(ringScale, ringScale, 1);
+        data.ringEmerald.material.opacity = Math.max(0, (1 - progress) * 0.9);
+      }
+      if (data.ringCrimson) {
+        data.ringCrimson.position.y = 0.35 + easeOut * 2.6;
+        const ringScale = 1.0 + easeOut * 0.38;
+        data.ringCrimson.scale.set(ringScale, ringScale, 1);
+        data.ringCrimson.material.opacity = Math.max(0, (1 - progress) * 0.9);
+      }
+
+      // Mini-hearts / crosses spiral upward
+      data.floaters.forEach(({ group, baseAngle, heightOffset }) => {
+        const spiralAngle = baseAngle + progress * 4.5;
+        const radius = 0.65 + progress * 0.45;
+        group.position.set(
+          Math.cos(spiralAngle) * radius,
+          0.1 + heightOffset + progress * 2.6,
+          Math.sin(spiralAngle) * radius
+        );
+        group.rotation.y += dt * 5.0;
+        group.rotation.x += dt * 3.5;
+        const s = Math.sin(progress * Math.PI) * 1.25;
+        group.scale.set(s, s, s);
+      });
+
+      if (data.elapsedMs >= data.durationMs) {
+        this.root.remove(this.healEffectGroup);
+        this.healEffectGroup = null;
+      }
     }
   }
 

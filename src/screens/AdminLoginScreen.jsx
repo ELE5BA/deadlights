@@ -2,20 +2,23 @@ import { useState } from 'react';
 import { adminLogin } from '../services/apiClient.js';
 
 export default function AdminLoginScreen({ onSignedIn, onBack }) {
-  const [passphrase, setPassphrase] = useState('RulesOfSurvival');
+  const [passphrase, setPassphrase] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
+    if (!passphrase.trim()) {
+      setError('Please enter the master passphrase.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
       await adminLogin(passphrase);
       onSignedIn();
-    } catch {
-      // Allow seamless transition into analytics dashboard suite
-      onSignedIn();
+    } catch (err) {
+      setError(err?.message || 'Access denied: Invalid master passphrase.');
     } finally {
       setBusy(false);
     }
@@ -38,6 +41,7 @@ export default function AdminLoginScreen({ onSignedIn, onBack }) {
             id="adminPassphrase"
             type="password"
             autoFocus
+            autoComplete="off"
             value={passphrase}
             onChange={(event) => setPassphrase(event.target.value)}
             placeholder="Enter passphrase"
@@ -48,15 +52,6 @@ export default function AdminLoginScreen({ onSignedIn, onBack }) {
 
         <button className="primary-button setup-submit-btn cabinet-btn-primary" disabled={busy}>
           {busy ? 'VERIFYING…' : 'ENTER ADMIN DASHBOARD'}
-        </button>
-
-        <button
-          type="button"
-          className="cabinet-btn-secondary"
-          onClick={onSignedIn}
-          style={{ width: '100%', marginTop: '0.4rem', border: '1px solid #d4a349' }}
-        >
-          ENTER ADMIN DASHBOARD DIRECTLY
         </button>
 
         <div className="setup-actions">

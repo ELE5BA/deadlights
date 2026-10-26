@@ -121,7 +121,7 @@ const SAMPLE_PARTICIPANT_ROSTER = [
 ];
 
 export default function AnalyticsDashboardScreen({ onExit }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [liveData, setLiveData] = useState(null);
@@ -213,12 +213,11 @@ export default function AnalyticsDashboardScreen({ onExit }) {
     } catch {
       // ignore
     }
+    setIsAuthenticated(false);
     if (window.opener && !window.opener.closed) {
       window.close();
     } else if (onExit) {
       onExit();
-    } else {
-      setIsAuthenticated(false);
     }
   };
 

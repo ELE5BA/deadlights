@@ -20,7 +20,7 @@ export const STAGE_BRIEFINGS = {
     stage: 2,
     name: 'The Amber Hollow',
     subtitle: 'Lingering Lantern Grove',
-    speed: '18.0 m/s (+20% Velocity)',
+    speed: '17.5 m/s (Cruise Pace)',
     hazards: [
       { name: 'Swaying Specters', action: 'ANTICIPATE CURVE', type: 'CURVE HAZARD', tip: 'Curving sine-wave ghosts that drift side-to-side. Predict their arc!' },
       { name: 'Crate Blockers', action: 'DODGE', type: 'ROAD OBSTACLE', tip: 'Spawned near curve hazards to test lateral agility.' },
@@ -35,7 +35,7 @@ export const STAGE_BRIEFINGS = {
     stage: 3,
     name: 'The Crimson Mire',
     subtitle: 'Watcher in the Red Weeds',
-    speed: '21.0 m/s (Fast Tempo)',
+    speed: '19.5 m/s (Brisk Tempo)',
     hazards: [
       { name: 'Double Blockades', action: 'FIND THE 1 OPEN LANE', type: 'TWIN BARRIER', tip: 'Twin hazard crates thrown simultaneously, sealing 2 of 3 lanes!' },
       { name: 'Swaying Specters', action: 'ANTICIPATE SWAY', type: 'CURVE HAZARD', tip: 'Faster oscillation frequency.' },
@@ -50,7 +50,7 @@ export const STAGE_BRIEFINGS = {
     stage: 4,
     name: 'The Glitch Rift',
     subtitle: 'Fractured Reality Field',
-    speed: '24.5 m/s (High Speed)',
+    speed: '22.0 m/s (Accelerated)',
     hazards: [
       { name: 'Glitch Spacetime Shifts', action: 'QUICK REFLEXES', type: 'WARP HAZARD', tip: 'Hazard warning windows shrink and spawn frequency rises.' },
       { name: 'Double Blockades', action: 'RAPID LANE DIVE', type: 'TWIN BARRIER', tip: 'Aggressive twin-lane barricades.' },
@@ -65,7 +65,7 @@ export const STAGE_BRIEFINGS = {
     stage: 5,
     name: 'The Abyssal Void',
     subtitle: 'The Darkness Closes In',
-    speed: '28.5 m/s (Terminal Velocity)',
+    speed: '24.5 m/s (High Velocity)',
     hazards: [
       { name: 'Multi-Hazard Barrages', action: 'CHAIN EVASIONS', type: 'COMBO HAZARD', tip: 'Waves, specters, and double crates deployed in rapid succession.' },
       { name: 'Pennywise Stalking Close', action: 'NO ERRORS', type: 'PROXIMITY THREAT', tip: 'Pennywise hovers closer; zero leeway for sluggish reactions.' },
@@ -79,7 +79,7 @@ export const STAGE_BRIEFINGS = {
     stage: 6,
     name: 'The Grimlight Core',
     subtitle: 'Apex Jester Confrontation',
-    speed: '33.0 m/s (Apex Overdrive)',
+    speed: '27.0 m/s (Apex Gauntlet)',
     hazards: [
       { name: 'Apex Pennywise Barrage', action: 'MAXIMUM SURVIVAL', type: 'APEX GAUNTLET', tip: 'Full-track gauntlet barrage at maximum velocity.' },
       { name: 'Double Blockades', action: 'SPLIT-SECOND DODGE', type: 'TWIN BARRIER', tip: 'Rapid barrage of twin blocks.' },

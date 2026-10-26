@@ -78,7 +78,7 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onLeaderbo
                 key={s.stage}
                 className={`stage-shield-pip ${cleared ? 'shield-cleared' : 'shield-incomplete'}`}
                 style={{ '--stage-color': s.color }}
-                title={`Stage ${s.stage} (${s.name}): ${cleared ? 'Purified' : 'Unreached'}`}
+                title={`Stage ${s.stage} (${s.name}): ${cleared ? 'Purified' : 'Locked'}`}
               >
                 <div className="shield-header">
                   <span className="shield-roman">{s.roman}</span>
@@ -96,15 +96,32 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onLeaderbo
           })}
         </div>
 
+        {/* Informative Codex Restoration Note */}
+        <div
+          style={{
+            textAlign: 'center',
+            fontSize: '0.74rem',
+            color: isFlawless ? '#34d399' : '#d4a349',
+            fontWeight: 800,
+            letterSpacing: '0.05em',
+            margin: '-0.3rem 0 0.5rem 0',
+            textTransform: 'uppercase',
+          }}
+        >
+          {isFlawless
+            ? '★ ALL 6 POKÉDEX CARDS SECURED · CARNIVAL PURIFIED ★'
+            : `${stagesCleared} OF 6 CODEX CARDS PURIFIED · SURVIVE TO STAGE 6 TO FILL ALL CARDS`}
+        </div>
+
         {/* 4. CLEAN 3×2 TELEMETRY GRID */}
         <div className="results-telemetry-grid cabinet-telemetry-well">
           <div className="telemetry-tile">
             <span className="telemetry-val stat-val">{stagesCleared} / 6</span>
-            <span className="telemetry-lbl stat-label">STAGES PURIFIED</span>
+            <span className="telemetry-lbl stat-label">CARDS COMPLETED</span>
           </div>
           <div className="telemetry-tile">
             <span className="telemetry-val stat-val">+{result.fragmentsEarned ?? 0}</span>
-            <span className="telemetry-lbl stat-label">CARDS ASSEMBLED</span>
+            <span className="telemetry-lbl stat-label">FRAGMENTS GATHERED</span>
           </div>
           <div className="telemetry-tile">
             <span className="telemetry-val stat-val">{result.survivalSeconds.toFixed(1)}s</span>

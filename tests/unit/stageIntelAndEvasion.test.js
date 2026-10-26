@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { evaluatePowerupSpawnNeed } from '../../src/game/GameEngine.js';
 
 test('overhead obstacle tumbling vault arc clears overhead marquee archway with high clearance', () => {
   // Test the parabolic aerial vault arc used in PursuerEntity
@@ -49,4 +50,73 @@ test('somersault tumbling angle executes complete 360 degree front-flip over the
 test('stage intel card default auto-dismissal is strictly 4000ms', () => {
   const autoDismissMs = 4000;
   assert.equal(autoDismissMs, 4000);
+});
+
+test('at 5/5 HP with survivalProbPct = 90%, both soul_heart and aegis_shield have 0% spawn rate', () => {
+  const result = evaluatePowerupSpawnNeed(
+    {
+      health: 5,
+      maxHealth: 5,
+      survivalProbPct: 90,
+      recentDamageMs: 99999,
+      shieldRemainingMs: 0,
+    },
+    () => 0.01
+  );
+  assert.equal(result, null);
+});
+
+test('when shieldRemainingMs > 0, aegis_shield never spawns', () => {
+  const result = evaluatePowerupSpawnNeed(
+    {
+      health: 2,
+      maxHealth: 5,
+      shieldRemainingMs: 5000,
+      isHeartOnTrack: true,
+      survivalProbPct: 30,
+    },
+    () => 0.01
+  );
+  assert.notEqual(result, 'aegis_shield');
+  assert.equal(result, null);
+});
+
+test('when health < maxHealth (e.g. 2/5 HP), soul_heart and aegis_shield spawn according to their need-based thresholds', () => {
+  // Critical health (2/5 HP): heartProb = 0.42, shieldProb = 0.34
+  // 1. Soul heart spawns when roll < 0.42
+  const heartSpawn = evaluatePowerupSpawnNeed(
+    {
+      health: 2,
+      maxHealth: 5,
+      isHeartOnTrack: false,
+    },
+    () => 0.40
+  );
+  assert.equal(heartSpawn, 'soul_heart');
+
+  // 2. When heart cannot spawn (e.g. on track), aegis_shield spawns when roll < 0.34
+  const shieldSpawn = evaluatePowerupSpawnNeed(
+    {
+      health: 2,
+      maxHealth: 5,
+      isHeartOnTrack: true,
+      isShieldOnTrack: false,
+      shieldRemainingMs: 0,
+    },
+    () => 0.30
+  );
+  assert.equal(shieldSpawn, 'aegis_shield');
+
+  // 3. Shield does NOT spawn if roll >= 0.34
+  const noShield = evaluatePowerupSpawnNeed(
+    {
+      health: 2,
+      maxHealth: 5,
+      isHeartOnTrack: true,
+      isShieldOnTrack: false,
+      shieldRemainingMs: 0,
+    },
+    () => 0.35
+  );
+  assert.equal(noShield, null);
 });

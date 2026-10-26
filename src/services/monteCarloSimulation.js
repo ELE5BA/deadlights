@@ -60,7 +60,7 @@ export function runMonteCarloSimulation({
 
       // Card fragment collection check (5 cards required per stage)
       let stageCardsGot = 0;
-      const cardSchedule = [8, 20, 32, 44, 54];
+      const cardSchedule = GAME_CONFIG.cardSpawnSchedule || [8, 18, 28, 38, 48];
       let cardFailed = false;
 
       for (let c = 0; c < cardSchedule.length; c++) {
@@ -172,7 +172,6 @@ export function runMonteCarloSimulation({
 
       survivalSeconds += stageDuration;
       stageClearCounts[currentStageIndex]++;
-      health = Math.min(5, health + 1); // Checkpoint vitality recovery (+1 Heart on stage clear)
       currentStageIndex++;
     }
 

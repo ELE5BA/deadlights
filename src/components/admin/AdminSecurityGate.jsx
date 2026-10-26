@@ -3,21 +3,24 @@ import { adminLogin } from '../../services/apiClient.js';
 import { playButtonClickSfx } from '../../game/soundEffects.js';
 
 export default function AdminSecurityGate({ onAuthenticated, onLaunchGame }) {
-  const [passphrase, setPassphrase] = useState('RulesOfSurvival');
+  const [passphrase, setPassphrase] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (!passphrase.trim()) {
+      setError('Please enter the master operator passphrase.');
+      return;
+    }
     playButtonClickSfx();
     setBusy(true);
     setError('');
     try {
       await adminLogin(passphrase);
       onAuthenticated();
-    } catch {
-      // Allow graceful seamless unlock for arcade testing
-      onAuthenticated();
+    } catch (err) {
+      setError(err?.message || 'Access denied: Invalid master passphrase.');
     } finally {
       setBusy(false);
     }
@@ -49,6 +52,7 @@ export default function AdminSecurityGate({ onAuthenticated, onLaunchGame }) {
               onChange={(e) => setPassphrase(e.target.value)}
               placeholder="Enter operator passphrase"
               autoFocus
+              autoComplete="off"
               className="admin-gate-input"
             />
           </div>
@@ -61,15 +65,6 @@ export default function AdminSecurityGate({ onAuthenticated, onLaunchGame }) {
             disabled={busy}
           >
             {busy ? 'AUTHENTICATING…' : 'ENTER ADMIN CONSOLE'}
-          </button>
-
-          <button
-            type="button"
-            className="admin-btn-accent"
-            onClick={handleSubmit}
-            style={{ marginTop: '0.5rem' }}
-          >
-            QUICK UNLOCK (BOOTH PREVIEW)
           </button>
         </form>
 

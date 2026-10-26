@@ -110,11 +110,11 @@ function StagePokemonMiniSprite({ stageNumber }) {
  * Custom Bespoke Cartoon-Outlined Poké-Heart SVG
  * Shaped like a heart-styled Pokéball with comic ink outlines, pulsing at 1 HP.
  */
-function PokeHeartSvg({ active, isCritical }) {
+function PokeHeartSvg({ active, isCritical, isRestored }) {
   if (!active) {
     return (
       <svg
-        className="poke-heart poke-heart--depleted"
+        className={`poke-heart poke-heart--depleted ${isRestored ? 'poke-heart--restored' : ''}`}
         viewBox="0 0 28 28"
         width="28"
         height="28"
@@ -135,7 +135,7 @@ function PokeHeartSvg({ active, isCritical }) {
 
   return (
     <svg
-      className={`poke-heart poke-heart--active ${isCritical ? 'poke-heart--pulse' : ''}`}
+      className={`poke-heart poke-heart--active ${isCritical ? 'poke-heart--pulse' : ''} ${isRestored ? 'poke-heart--restored' : ''}`}
       viewBox="0 0 28 28"
       width="28"
       height="28"
@@ -170,6 +170,47 @@ function PokeHeartSvg({ active, isCritical }) {
 }
 
 /**
+ * Custom Bespoke Cartoon Aegis Crest Shield Icon
+ * Gold & cyan heraldic shield with #120b1d comic ink outline and radiant core.
+ */
+function CartoonAegisShieldIcon() {
+  return (
+    <svg className="aegis-crest-svg" viewBox="0 0 28 28" width="18" height="18" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="aegisGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="55%" stopColor="#06b6d4" />
+          <stop offset="100%" stopColor="#facc15" />
+        </linearGradient>
+      </defs>
+      {/* Outer gold-trimmed shield body with comic ink border */}
+      <path
+        d="M14 2.5 L24 6 V13 C24 19.5 19.5 24.5 14 26 C8.5 24.5 4 19.5 4 13 V6 Z"
+        fill="url(#aegisGrad)"
+        stroke="#120b1d"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      {/* Inner cyan-gold energy crest */}
+      <path
+        d="M14 5 L21.5 8 V12.5 C21.5 17.5 18 21.8 14 23.2 C10 21.8 6.5 17.5 6.5 12.5 V8 Z"
+        stroke="#facc15"
+        strokeWidth="1.2"
+        fill="none"
+      />
+      {/* Central arcane lightning cross & jewel */}
+      <path
+        d="M14 7 V18.5 M9.5 12 H18.5"
+        stroke="#ffffff"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="14" cy="12" r="2.2" fill="#facc15" stroke="#120b1d" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+/**
  * Custom Bespoke Faceted SVG Rift Shard
  */
 function FacetedRiftShardSvg() {
@@ -189,62 +230,150 @@ function FacetedRiftShardSvg() {
 }
 
 export const PENNYWISE_LINES = [
+  // Classic Carnival Chills
   'WE ALL FLOAT DOWN HERE... EVEN YOUR POKÉMON!',
   "GOTTA CATCH 'EM ALL? I'LL CATCH YOU FIRST!",
   'TAKE A POKÉ-BALLOON, RUNNER... IT FLOATS!',
   "YOUR GRIMDEX CAN'T SAVE YOU FROM THE GRIMLIGHT!",
   "HEE-HEE! MISS ONE CARD AND YOU'RE MINE!",
+
+  // 4th Wall: Keyboard & Controls
+  "SMASHING YOUR ARROW KEYS WON'T SAVE YOU FROM THE VOID, PLAYER!",
+  "MASHING THE SPACEBAR WON'T MAKE YOU FLY OVER THE DEADLIGHTS!",
+  "SWEATY PALMS ON THE KEYBOARD? I CAN HEAR YOUR MECHANICAL SWITCHES CLICKING!",
+  "IS YOUR 'A' AND 'D' KEY WEARING OUT YET, RUNNER? HE-HE-HE!",
+  "BLAMING INPUT LAG FOR THAT HIT?! THAT WAS 100% PURE HUMAN SKILL ISSUE!",
+  "DID YOUR FINGER SLIP OFF THE KEYBOARD? HOW DELICIOUSLY CLUMSY!",
+  "MASHING SPACEBAR HARDER WON'T SHRINK YOUR HITBOX, RUNNER!",
+
+  // 4th Wall: Screen, Monitor & Hardware
+  "I'M NOT JUST A 3D MESH IN YOUR BROWSER... I'M RIGHT BEHIND YOUR MONITOR!",
+  "ARE YOU PLAYING ON 60 HERTZ? YOUR EYE REFRESH RATE CAN'T TRACK MY JUMPSCARES!",
+  "FULLSCREEN MODE WON'T KEEP MY CLAWS FROM REACHING THROUGH THE GLASS!",
+  "DON'T TOUCH THAT ESCAPE KEY, RUNNER! PAUSING ONLY PROLONGS THE NIGHTMARE!",
+  "THINK PRESSING F5 WILL ERASE ME? I CACHED MYSELF IN YOUR LOCAL STORAGE!",
+  "DID YOUR GPU FRAME RATE STUTTER? OR WAS THAT JUST YOUR HEART STOPPING?!",
+  "CLOSE THIS TAB IF YOU DARE... WE FLOAT IN EVERY BROWSER THREAD!",
+  "TURN UP YOUR HEADPHONES, RUNNER... I WANT YOU TO HEAR ME BREATHING!",
+  "WIPING SMUDGES OFF YOUR MONITOR WON'T MAKE THE OBSTACLES DISAPPEAR!",
+  "DID YOU REALLY THINK PLAYING ON CHROME WOULD PROTECT YOUR RAM FROM ME?!",
+
+  // 4th Wall: Player Psychology & Habits
+  "YOU LEANED FORWARD IN YOUR CHAIR! I SAW THAT GAMER POSTURE SHIFT!",
+  "DID YOU BLINK, PLAYER?! IN MY CARNIVAL, A SINGLE EYE BLINK MEANS JUMPSCARE!",
+  "TRYING TO MEMORIZE MY SPAWN PATTERNS? I'M PSEUDO-RANDOM, DARLING!",
+  "TAKING SIPS OF WATER BETWEEN STAGES? HYDRATION WON'T QUENCH THE DEADLIGHTS!",
+  "RAGE-QUITTING WON'T DELETE YOUR AUTOPSY TELEMETRY FROM THE DATABASE!",
+  "CHECKING YOUR MINIMAP? THERE IS NO MINIMAP IN DERRY'S SEWERS!",
+  "ANOTHER RUN, ANOTHER LOSS! HOW MANY SHARDS ARE YOU GOING TO DONATE TO ME?!",
+  "YOUR HEART RATE IS SPIKING! I CAN TASTE THE CORTISOL THROUGH THE WEBCAM!",
+  "HOPE NOBODY IS WATCHING YOU PLAY THIS... YOU'D EMBARRASS YOURSELF!",
+  "SQUINTING AT THE RUNWAY WON'T MAKE YOUR HUMAN REFLEXES ANY FASTER!",
+
+  // 4th Wall: Three.js & Game Engine Mechanics
+  "YOU'RE CONTROLLING A PIKACHU IN A RAINCOAT WITH ARROW KEYS... DO YOU FEEL SAFE?!",
+  "THINK THAT AEGIS SHIELD WILL SAVE YOUR PIXELS? WATCH ME CRUNCH THE HITBOX!",
+  "DID PROFESSOR OAK WARN YOU NOT TO RUN INTO TALL DEADLIGHTS?!",
+  "YOU COLLECTED 4 OUT OF 5 CARDS... IT WOULD BE A SHAME IF A CRATE HIT YOU NOW!",
+  "POKÉ-BALLOONS DON'T OBEY NEWTONIAN PHYSICS IN THREE.JS, SILLY RUNNER!",
+  "MY HITBOX DOESN'T CARE ABOUT YOUR VOXEL CHARM! CRUNCH, CRUNCH, CRUNCH!",
+  "WHO IS YOUR LEAD DEVELOPER, RUNNER? DID THEY CODE YOU AN ESCAPE HATCH?!",
+  "RUNNING AT 60 FRAMES PER SECOND... AND YOU CAN'T DODGE A SINGLE SHADOW WAVE?!",
+  "YOU CAN'T INSPECT-ELEMENT YOUR WAY OUT OF THIS VOID TRIAL, LITTLE RUNNER!",
 ];
 
 const PENNYWISE_DEMISE_LINES = [
   "WHAT?! ALL SIX POKÉDEX CARDS?! MY BALLOONS ARE POPPING!",
-  "NOOO! THE GRIMDEX SEAL IS SHATTERING MY GRIMLIGHT!",
+  "DID YOU ACTUALLY BEAT MY HITBOXES?! WHO GAVE YOU THOSE PRO-GAMER REFLEXES?!",
+  "NOOO! THE GRIMDEX SEAL IS CORRUPTING MY THREE.JS SHADERS!",
+  "IMPOSSIBLE! YOU DIDN'T EVEN RAGE-QUIT ONCE?! MY GLITCHES ARE CONSUMING ME!",
   "THE ABYSS IS PULLING ME UNDER... I'M FADING INTO DARKNESSSS!",
 ];
 
 /**
- * Deterministic real-time villain taunt analyzer based on live telemetry
+ * Deterministic real-time villain taunt analyzer based on live telemetry & 4th-wall roasts
  */
 export function getDiagnosticTaunt(telemetry, fallbackIndex = 0) {
-  if (!telemetry) return PENNYWISE_LINES[fallbackIndex % PENNYWISE_LINES.length];
+  const fallback = PENNYWISE_LINES[fallbackIndex % PENNYWISE_LINES.length];
+  if (!telemetry) return fallback;
+
+  // 50% of the time, favor a pure 4th-wall Pennywise taunt for maximum personality variety!
+  if (fallbackIndex % 2 === 1) {
+    return fallback;
+  }
+
   const [leftPct = 33, centerPct = 34, rightPct = 33] = telemetry.laneOccupancyPct || [];
   const { blocker_crate, shadow_wave, swaying_specter, double_blockade } = telemetry.attackStats || {};
   const meanMs = telemetry.meanReactionMs;
   const eff = telemetry.dodgeEfficiencyPct;
   const surv = telemetry.survivalProbPct;
 
+  const candidateRoasts = [];
+
   if (leftPct > 50) {
-    return `CAMPING IN THE LEFT LANE? ${leftPct}% OCCUPANCY WON'T SAVE YOU FROM MY GRIMLIGHT!`;
+    candidateRoasts.push(
+      `CAMPING IN THE LEFT LANE? ${leftPct}% OCCUPANCY WON'T SAVE YOU FROM MY GRIMLIGHT!`,
+      `DID YOUR 'D' KEY BREAK OFF YOUR KEYBOARD? ${leftPct}% LEFT-LANE BIAS!`,
+    );
   }
   if (rightPct > 50) {
-    return `HUGGING THE RIGHT WALL? ${rightPct}% BIAS MAKES YOU EASY PREY FOR MY THROWS!`;
+    candidateRoasts.push(
+      `HUGGING THE RIGHT WALL? ${rightPct}% BIAS MAKES YOU EASY PREY FOR MY THROWS!`,
+      `GLUED TO THE RIGHT WALL? ARE YOU AFRAID OF THE CENTER OF YOUR SCREEN?!`,
+    );
   }
   if (shadow_wave && shadow_wave.hits > 0 && shadow_wave.dodgePct < 65) {
-    return `CAN'T JUMP MY LOW SKIMMERS? ${100 - shadow_wave.dodgePct}% HIT RATE ON YOUR FEET!`;
+    candidateRoasts.push(
+      `CAN'T JUMP MY LOW SKIMMERS? ${100 - shadow_wave.dodgePct}% HIT RATE ON YOUR FEET!`,
+      `DID YOU FORGET THE SPACEBAR EXISTS, PLAYER?! TIMING IS EVERYTHING!`,
+    );
   }
   if (swaying_specter && swaying_specter.hits > 0 && swaying_specter.dodgePct < 65) {
-    return `MY CURVEBALL PITCHES CRUSH YOU! ${100 - swaying_specter.dodgePct}% BREACH RATE ON SINE ARCS!`;
+    candidateRoasts.push(
+      `MY CURVEBALL PITCHES CRUSH YOU! ${100 - swaying_specter.dodgePct}% BREACH RATE ON SINE ARCS!`,
+      `CAN'T PREDICT A SIMPLE SINE WAVE IN THREE.JS? YOUR MATH TEACHER IS CRYING!`,
+    );
   }
   if (double_blockade && double_blockade.hits > 0) {
-    return `TWIN BARRAGES TRAP YOU IN THE FUNNEL! ZERO ROOM TO BREATHE!`;
+    candidateRoasts.push(
+      `TWIN BARRAGES TRAP YOU IN THE FUNNEL! ZERO ROOM TO BREATHE!`,
+      `PANIC-SWAPPING LANES WON'T SAVE YOU FROM A DOUBLE BLOCKADE!`,
+    );
   }
   if (typeof meanMs === 'number' && meanMs > 265) {
-    return `${meanMs}MS REFLEXES?! YOUR SLUGGISH REACTION FEEDS THE CARNIVAL!`;
+    candidateRoasts.push(
+      `${meanMs}MS REFLEXES?! YOUR SLUGGISH REACTION FEEDS THE CARNIVAL!`,
+      `${meanMs}MS LATENCY?! IS THAT YOUR BRAIN OR ARE YOU PLAYING ON 300 PING?!`,
+    );
   }
   if (typeof surv === 'number' && surv < 35) {
-    return `ONLY ${surv}% SURVIVAL ODDS! THE GRIMLIGHT ALREADY TASTES YOUR FEAR!`;
+    candidateRoasts.push(
+      `ONLY ${surv}% SURVIVAL ODDS! THE GRIMLIGHT ALREADY TASTES YOUR FEAR!`,
+      `ONLY ${surv}% ODDS! I HOPE YOU DIDN'T STREAM THIS RUN TO ANY WITNESSES!`,
+    );
   }
   if (typeof eff === 'number' && eff < 70) {
-    return `ONLY ${eff}% EVASION EFFICIENCY! YOUR GRIMDEX IS FALLING APART!`;
+    candidateRoasts.push(
+      `ONLY ${eff}% EVASION EFFICIENCY! YOUR GRIMDEX IS FALLING APART!`,
+      `ONLY ${eff}% EVASION! BLAMING YOUR WIRELESS KEYBOARD WON'T SAVE YOU!`,
+    );
   }
-  return PENNYWISE_LINES[fallbackIndex % PENNYWISE_LINES.length];
+
+  if (candidateRoasts.length > 0) {
+    return candidateRoasts[fallbackIndex % candidateRoasts.length];
+  }
+
+  return fallback;
 }
 
 function formatDialogue(text) {
   const keywords = [
     'FLOAT', 'POKÉMON', 'CATCH', 'POKÉ-BALLOON', 'POKÉDEX', 'GRIMDEX', 'GRIMLIGHT', 'DEADLIGHTS', 'MINE!',
     'CARDS?!', 'BALLOONS', 'POPPING!', 'HEXEDEX', 'SEAL', 'SHATTERING', 'ABYSS', 'DARKNESSSS!',
-    'CAMPING', 'OCCUPANCY', 'SKIMMERS', 'CURVEBALL', 'BARRAGES', 'REFLEXES', 'EFFICIENCY', 'SLUGGISH'
+    'CAMPING', 'OCCUPANCY', 'SKIMMERS', 'CURVEBALL', 'BARRAGES', 'REFLEXES', 'EFFICIENCY', 'SLUGGISH',
+    'KEYBOARD', 'SPACEBAR', 'BROWSER', 'MONITOR', 'REFRESH', 'PAUSING', 'LAG', 'PIXELS', 'HITBOX',
+    'HITBOXES', 'STORAGE', 'FRAME', 'FRAMES', 'SCREEN', 'HERTZ', 'POSTURE', 'PHYSICS', 'JUMPSCARE',
+    'JUMPSCARES', 'DATABASE', 'STREAM', 'ELEMENT', 'SHADERS', 'GLITCHES', 'WEBCAM', 'HEADPHONES'
   ];
   const parts = text.split(/(\b[A-ZÉ\-'!?]+\b)/g);
   return parts.map((part, idx) => {
@@ -304,6 +433,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   const [dialoguePhase, setDialoguePhase] = useState('visible');
   const [flyingCardAnim, setFlyingCardAnim] = useState(null);
   const [recentDockSlot, setRecentDockSlot] = useState(null);
+  const [powerupToast, setPowerupToast] = useState(null);
+  const [restoredHeartIndex, setRestoredHeartIndex] = useState(null);
   const [savedRunResult, setSavedRunResult] = useState(null);
   const savingPromiseRef = useRef(null);
 
@@ -365,7 +496,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       const silenceMs = 2600 + Math.floor(Math.random() * 800);
       timer = window.setTimeout(() => {
         setDialogueIndex((prev) => {
-          const pool = [0, 1, 2, 3, 4].filter((i) => i !== prev);
+          const pool = Array.from({ length: PENNYWISE_LINES.length }, (_, i) => i).filter((i) => i !== prev);
           return pool[Math.floor(Math.random() * pool.length)];
         });
         setDialoguePhase('visible');
@@ -438,6 +569,26 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       }
       if (next.jumpscareActive) {
         setJumpscareActive(true);
+      }
+      if (next.shieldBroken) {
+        setPowerupToast({
+          id: Date.now(),
+          text: 'AEGIS BARRIER SHATTERED · HIT ABSORBED!',
+          type: 'shield',
+        });
+        setTimeout(() => setPowerupToast(null), 1800);
+      }
+      if (next.heartGot) {
+        const restoredIdx = Math.max(0, (next.health ?? current.health) - 1);
+        setRestoredHeartIndex(restoredIdx);
+        setTimeout(() => setRestoredHeartIndex(null), 1200);
+
+        setPowerupToast({
+          id: Date.now(),
+          text: '+1 SOUL VITALITY RESTORED!',
+          type: 'heart',
+        });
+        setTimeout(() => setPowerupToast(null), 1800);
       }
       return { ...current, ...next };
     });
@@ -720,13 +871,24 @@ export default function GameScreen({ player, onFinished, runnerId }) {
             <div ref={stageProgressRef} className="hud-progress-fill" />
           </div>
 
-          {/* Active Shield Timer Badge (Visible when Aegis Forcefield is active) */}
+          {/* Active Shield Armor Bar (Visible when Aegis Barrier is active) */}
           {engineState.shieldRemainingMs > 0 && (
-            <div className="hud-shield-timer-badge" role="status" aria-label="Aegis Forcefield Active">
-              <span className="shield-badge-icon">🛡️</span>
-              <span className="shield-badge-text">
-                SHIELD: {(engineState.shieldRemainingMs / 1000).toFixed(1)}s
-              </span>
+            <div className="hud-shield-armor-bar" role="status" aria-label="Aegis Barrier Active">
+              <div className="shield-armor-header">
+                <div className="shield-armor-title">
+                  <CartoonAegisShieldIcon />
+                  <span className="shield-armor-label">AEGIS BARRIER</span>
+                </div>
+                <span className="shield-armor-timer-tabular">
+                  {(engineState.shieldRemainingMs / 1000).toFixed(1)}s
+                </span>
+              </div>
+              <div className="shield-armor-track">
+                <div
+                  className="shield-armor-fill"
+                  style={{ width: `${Math.min(100, Math.max(0, (engineState.shieldRemainingMs / 10000) * 100))}%` }}
+                />
+              </div>
             </div>
           )}
 
@@ -738,6 +900,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                   key={i}
                   active={i < currentHp}
                   isCritical={isHeartCritical && i === 0}
+                  isRestored={restoredHeartIndex === i}
                 />
               ))}
             </div>
@@ -878,6 +1041,29 @@ export default function GameScreen({ player, onFinished, runnerId }) {
             +1 {flyingCardAnim.cardName.toUpperCase()} FRAGMENT [{flyingCardAnim.slot}/5]
           </div>
         </>
+      )}
+
+      {/* Power-up Comic Callout Toast (Shield Broken / Heart Restored) */}
+      {powerupToast && !hasActiveModalOrCutscene && (
+        <div
+          className={`hud-powerup-callout-toast toast--${powerupToast.type}`}
+          role="status"
+          key={powerupToast.id}
+        >
+          {powerupToast.type === 'shield' ? (
+            <CartoonAegisShieldIcon />
+          ) : (
+            <svg viewBox="0 0 28 28" width="18" height="18" fill="none" aria-hidden="true">
+              <path
+                d="M14 24 C14 24 3 17 3 9 C3 5 6 2 10 2 C12 2 13.5 3 14 4.5 C14.5 3 16 2 18 2 C22 2 25 5 25 9 C25 17 14 24 14 24 Z"
+                fill="#10b981"
+                stroke="#120b1d"
+                strokeWidth="2.5"
+              />
+            </svg>
+          )}
+          <span>{powerupToast.text}</span>
+        </div>
       )}
 
       {/* 5. STAGE-SPECIFIC POKÉMON BOTTOM 5-CARD DOCK */}
@@ -1238,25 +1424,64 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         <div className="countdown-overlay">
           <div className="countdown-number">{countdown > 0 ? countdown : 'SURVIVE!'}</div>
 
-          {/* Pre-Stage Intel Briefing: Clear expectations for current stage */}
+          {/* Pre-Stage Intel Briefing: Clear expectations for current stage (Picture 3 Cabinet Theme) */}
           <div className="countdown-stage-intel-card" role="status" aria-label="Pre-Stage Intel Briefing">
             <div className="countdown-intel-header">
-              <span className="countdown-stage-tag">STAGE {engineState.stageNumber} OF 6</span>
-              <strong className="countdown-stage-name">{engineState.stageName.toUpperCase()}</strong>
-              <span className="countdown-speed-tag">{STAGE_BRIEFINGS[engineState.stageNumber]?.speed || '15 m/s'}</span>
+              <div className="countdown-intel-title-group">
+                <span className="countdown-stage-tag">STAGE {engineState.stageNumber}/6</span>
+                <strong className="countdown-stage-name">{engineState.stageName}</strong>
+              </div>
+              <span className="countdown-speed-tag">
+                {STAGE_BRIEFINGS[engineState.stageNumber]?.speed || '15.0 m/s'}
+              </span>
             </div>
 
-            <div className="countdown-hazards-row">
-              <span className="countdown-hazards-label">EXPECT HAZARDS:</span>
-              {(STAGE_BRIEFINGS[engineState.stageNumber]?.hazards || []).map((h, i) => (
-                <span key={i} className="countdown-hazard-pill">
-                  <strong>{h.name}</strong> <em>({h.action})</em>
+            {/* Sleek Gradient Accent Track */}
+            <div className="countdown-intel-divider" />
+
+            {/* Sunken Hazard Countermeasures Grid */}
+            <div className="countdown-hazards-well">
+              <div className="countdown-hazards-well-title">
+                TACTICAL HAZARD COUNTERMEASURES
+              </div>
+              <div className="countdown-hazards-grid">
+                {(STAGE_BRIEFINGS[engineState.stageNumber]?.hazards || []).map((h, i) => {
+                  const isJump = h.action.toUpperCase().includes('JUMP');
+                  const isDodge = h.action.toUpperCase().includes('DODGE') || h.action.toUpperCase().includes('LANE') || h.action.toUpperCase().includes('OPEN');
+                  const isChain = h.action.toUpperCase().includes('CHAIN') || h.action.toUpperCase().includes('SURVIVAL');
+                  const badgeClass = isJump ? 'action-badge--jump' : isChain ? 'action-badge--chain' : 'action-badge--dodge';
+
+                  return (
+                    <div key={i} className="countdown-hazard-card">
+                      <div className="countdown-hazard-top">
+                        <span className="countdown-hazard-title">{h.name}</span>
+                        <span className={`countdown-action-badge ${badgeClass}`}>
+                          {h.action}
+                        </span>
+                      </div>
+                      {h.tip && <div className="countdown-hazard-tip">{h.tip}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sunken Mission Directive & Pro-Tip Well */}
+            <div className="countdown-directive-well">
+              <div className="countdown-directive-row">
+                <span className="countdown-directive-badge">DIRECTIVE</span>
+                <span className="countdown-directive-text">
+                  {STAGE_BRIEFINGS[engineState.stageNumber]?.objective || 'Collect all 5 fragments to purify the stage.'}
                 </span>
-              ))}
-            </div>
-
-            <div className="countdown-directive-text">
-              <strong>DIRECTIVE:</strong> {STAGE_BRIEFINGS[engineState.stageNumber]?.objective || 'Collect all 5 fragments'}
+              </div>
+              {STAGE_BRIEFINGS[engineState.stageNumber]?.proTip && (
+                <div className="countdown-protip-row">
+                  <span className="countdown-protip-icon">💡</span>
+                  <span className="countdown-protip-text">
+                    <strong>PRO-TIP:</strong> {STAGE_BRIEFINGS[engineState.stageNumber].proTip}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1272,19 +1497,6 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               </div>
             </div>
 
-            {/* Stage Hazard Expectations in Pause Menu */}
-            <div style={{ margin: '8px 0', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'left' }}>
-              <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '0.08em', display: 'block', marginBottom: '4px' }}>
-                STAGE {engineState.stageNumber} HAZARDS & ACTIONS:
-              </span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {(STAGE_BRIEFINGS[engineState.stageNumber]?.hazards || []).map((h, i) => (
-                  <span key={i} style={{ fontSize: '0.74rem', background: 'rgba(239, 68, 68, 0.15)', color: '#f8fafc', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                    <strong>{h.name}</strong>: <span style={{ color: '#ef4444', fontWeight: 700 }}>{h.action}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
 
             {/* Live Run Status Telemetry Box */}
             <div className="pause-telemetry-grid cabinet-telemetry-well">
