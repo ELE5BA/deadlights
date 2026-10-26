@@ -278,7 +278,7 @@ export class GameEngine {
     this.recentDamageMs = 99999;
 
     // 100% Functioning Deterministic Telemetry Engine
-    this.laneTimeMs = [0, 1, 0];
+    this.laneTimeMs = [0, 0, 0];
     this.activeThreats = [];
     this.evasionLatencies = [];
     this.attackStats = {
@@ -358,12 +358,16 @@ export class GameEngine {
   }
 
   getTelemetryState() {
-    const totalLaneMs = Math.max(1, (this.laneTimeMs?.[0] || 0) + (this.laneTimeMs?.[1] || 0) + (this.laneTimeMs?.[2] || 0));
-    const laneOccupancyPct = (this.laneTimeMs || [0, 1, 0]).map((t) => Math.round((t / totalLaneMs) * 100));
-
-    const sumPct = laneOccupancyPct[0] + laneOccupancyPct[1] + laneOccupancyPct[2];
-    if (sumPct !== 100) {
-      laneOccupancyPct[1] += 100 - sumPct;
+    const totalLaneMs = (this.laneTimeMs?.[0] || 0) + (this.laneTimeMs?.[1] || 0) + (this.laneTimeMs?.[2] || 0);
+    let laneOccupancyPct;
+    if (totalLaneMs > 0) {
+      laneOccupancyPct = (this.laneTimeMs || [0, 0, 0]).map((t) => Math.round((t / totalLaneMs) * 100));
+      const sumPct = laneOccupancyPct[0] + laneOccupancyPct[1] + laneOccupancyPct[2];
+      if (sumPct !== 100) {
+        laneOccupancyPct[1] += 100 - sumPct;
+      }
+    } else {
+      laneOccupancyPct = [0, 100, 0];
     }
 
     const currentSpeed = Math.max(1, this.currentSpeed || 11.0);
@@ -546,7 +550,7 @@ export class GameEngine {
       distanceM: 0,
       cameraTiltZ: 0,
       upcomingCardLane: null,
-      laneTimeMs: [0, 1, 0],
+      laneTimeMs: [0, 0, 0],
       activeThreats: [],
       evasionLatencies: [],
       attackStats: {
@@ -1499,6 +1503,9 @@ export class GameEngine {
     if (!this.paused) {
       this.elapsedMs += deltaMs;
       this.stageElapsedMs += deltaMs;
+      if (this.laneTimeMs && this.laneTimeMs[this.laneIndex] !== undefined) {
+        this.laneTimeMs[this.laneIndex] += deltaMs;
+      }
 
       const currentStage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
       const stageProgress = this.stageElapsedMs / 1000;
