@@ -230,7 +230,7 @@ export default function AnalyticsDashboardScreen({ onExit }) {
 
   const isSim = activeMode === 'simulation';
   const liveRunsCount = liveData?.metrics?.completedRuns ?? 0;
-  const isBayesian = !isSim && liveRunsCount < 10;
+  const isBayesian = !isSim && liveRunsCount < 5;
 
   // Canonical Hazard Baselines
   const PRIOR_OBSTACLES = useMemo(() => [
@@ -250,15 +250,15 @@ export default function AnalyticsDashboardScreen({ onExit }) {
     const baseShards = 3850;
 
     const avgScore = liveData?.metrics?.averageScore && liveData.metrics.averageScore > 0
-      ? (n < 10 ? Math.round((liveData.metrics.averageScore * n + baseAvgScore * (10 - n)) / 10) : liveData.metrics.averageScore)
+      ? (n < 5 ? Math.round((liveData.metrics.averageScore * n + baseAvgScore * (5 - n)) / 5) : liveData.metrics.averageScore)
       : baseAvgScore;
 
     const medScore = liveData?.metrics?.medianScore && liveData.metrics.medianScore > 0
-      ? (n < 10 ? Math.round((liveData.metrics.medianScore * n + baseMedScore * (10 - n)) / 10) : liveData.metrics.medianScore)
+      ? (n < 5 ? Math.round((liveData.metrics.medianScore * n + baseMedScore * (5 - n)) / 5) : liveData.metrics.medianScore)
       : baseMedScore;
 
     const avgSurv = liveData?.metrics?.averageSurvival && liveData.metrics.averageSurvival > 0
-      ? Number((n < 10 ? ((liveData.metrics.averageSurvival * n + baseSurv * (10 - n)) / 10) : liveData.metrics.averageSurvival).toFixed(1))
+      ? Number((n < 5 ? ((liveData.metrics.averageSurvival * n + baseSurv * (5 - n)) / 5) : liveData.metrics.averageSurvival).toFixed(1))
       : baseSurv;
 
     const totalShards = liveData?.metrics?.totalShardsEarned && liveData.metrics.totalShardsEarned > 0
@@ -298,7 +298,7 @@ export default function AnalyticsDashboardScreen({ onExit }) {
 
   const stage6ClearRate = useMemo(() => {
     if (isSim) return simData.metrics.stage6ClearRate;
-    if (liveRunsCount >= 10) {
+    if (liveRunsCount >= 5) {
       const stage6Runs = (liveData?.series?.endReasons || []).find((r) => r.reason === 'all_stages_cleared')?.count || 0;
       return Number(((stage6Runs / liveRunsCount) * 100).toFixed(1));
     }
@@ -359,7 +359,7 @@ export default function AnalyticsDashboardScreen({ onExit }) {
   // Termination Split
   const terminationSplit = useMemo(() => {
     if (isSim) return simData.endReasons;
-    if (liveRunsCount >= 10 && liveData?.series?.endReasons?.length) {
+    if (liveRunsCount >= 5 && liveData?.series?.endReasons?.length) {
       const total = liveRunsCount;
       return liveData.series.endReasons.map((r) => ({
         reason: r.reason,
