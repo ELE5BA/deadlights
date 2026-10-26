@@ -168,8 +168,8 @@ export default function App() {
       {screen === 'setup' && (
         <PlayerSetupScreen
           onCancel={() => setScreen('attract')}
-          onCreate={async (nickname) => {
-            const created = await createPlayer(nickname);
+          onCreate={async (playerData) => {
+            const created = await createPlayer(playerData);
             setActivePlayer(created);
             setScreen('code');
           }}
@@ -189,16 +189,7 @@ export default function App() {
           result={result}
           onPlayAgain={() => setScreen('game')}
           onTitle={() => setScreen('attract')}
-          onCollection={() => setScreen('collection')}
           onLeaderboard={() => setScreen('leaderboard')}
-        />
-      )}
-
-      {screen === 'collection' && (
-        <CollectionScreen
-          player={player}
-          onBack={() => setScreen('attract')}
-          onPlayerUpdate={setActivePlayer}
         />
       )}
 
@@ -325,16 +316,6 @@ export default function App() {
                     className="text-button"
                     onClick={() => {
                       playButtonClickSfx();
-                      setScreen('collection');
-                    }}
-                  >
-                    POKÉDEX BINDER ({player.wallet?.shardsBalance ?? 0} SHARDS)
-                  </button>
-                  <span className="home-link-divider">·</span>
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      playButtonClickSfx();
                       localStorage.removeItem('deadlights.activePlayer');
                       setPlayer(null);
                     }}
@@ -352,11 +333,6 @@ export default function App() {
                 <DashboardIcon /> ADMIN CONSOLE
               </button>
             </nav>
-
-            {/* Live Attract Stage Pill */}
-            <div className="attract-stage-pill" aria-live="polite">
-              <span className="attract-dot" /> ATTRACT PREVIEW · STAGE {attractStage.stage}: {attractStage.name.toUpperCase()}
-            </div>
           </section>
 
           {/* Cross-Window Admin Launch Toast */}

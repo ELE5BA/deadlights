@@ -1083,3 +1083,106 @@ export function stopWindAudio() {
   }
 }
 
+/**
+ * Play cyan-gold Aegis Shield pickup harmonic chord
+ */
+export function playShieldPickupSfx() {
+  if (muted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(440, now);
+    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(554.37, now);
+    osc2.frequency.exponentialRampToValueAtTime(1108.73, now + 0.35);
+
+    gainNode.gain.setValueAtTime(0.24, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.46);
+    osc2.stop(now + 0.46);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Play crystalline shield break shatter burst
+ */
+export function playShieldBreakSfx() {
+  if (muted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const buffer = createNoiseBuffer(ctx, 0.28);
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1400, now);
+    filter.frequency.exponentialRampToValueAtTime(320, now + 0.28);
+
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0.35, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+    noise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    noise.start(now);
+    noise.stop(now + 0.29);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Play Soul Heart pickup warm restorative chime (major arpeggio)
+ */
+export function playHeartPickupSfx() {
+  if (muted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, idx) => {
+      const startTime = now + idx * 0.06;
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gainNode.gain.setValueAtTime(0.22, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.28);
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.29);
+    });
+  } catch {
+    // ignore
+  }
+}
+
+

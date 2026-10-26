@@ -646,6 +646,45 @@ export class PlayerCharacter {
     this.torsoGroup.add(this.rightLegPivot);
   }
 
+  setShieldActive(active) {
+    this.isShieldActive = Boolean(active);
+    if (this.isShieldActive) {
+      if (!this.shieldMesh) {
+        const shieldGroup = new THREE.Group();
+        const geo = new THREE.IcosahedronGeometry(1.28, 1);
+        const mat = new THREE.MeshBasicMaterial({
+          color: 0x38bdf8,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.65,
+        });
+        const wireSphere = new THREE.Mesh(geo, mat);
+
+        const innerGeo = new THREE.SphereGeometry(1.15, 16, 16);
+        const innerMat = new THREE.MeshStandardMaterial({
+          color: 0x0284c7,
+          emissive: 0x38bdf8,
+          emissiveIntensity: 0.5,
+          transparent: true,
+          opacity: 0.22,
+          roughness: 0.2,
+        });
+        const innerSphere = new THREE.Mesh(innerGeo, innerMat);
+
+        shieldGroup.add(wireSphere);
+        shieldGroup.add(innerSphere);
+        shieldGroup.position.set(0, 1.05, 0);
+
+        this.shieldMesh = shieldGroup;
+        this.root.add(shieldGroup);
+        this.disposables.push(geo, mat, innerGeo, innerMat);
+      }
+      this.shieldMesh.visible = true;
+    } else if (this.shieldMesh) {
+      this.shieldMesh.visible = false;
+    }
+  }
+
   setVictory(active) {
     this.isVictory = Boolean(active);
     this.victoryTime = 0;
@@ -743,6 +782,13 @@ export class PlayerCharacter {
       if (this.torsoGroup) {
         this.torsoGroup.rotation.x = -0.25 + tuckAngle * 0.2;
       }
+    }
+
+    if (this.shieldMesh && this.shieldMesh.visible) {
+      this.shieldMesh.rotation.y += dt * 2.2;
+      this.shieldMesh.rotation.x += dt * 1.4;
+      const pulse = 1.0 + Math.sin((this.runTime || 0) * 4.5) * 0.04;
+      this.shieldMesh.scale.set(pulse, pulse, pulse);
     }
   }
 

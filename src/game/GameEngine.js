@@ -10,6 +10,8 @@ import {
   createRiftShard,
   createAmberOrb,
   createCardFragment,
+  createShieldPowerup,
+  createHeartPowerup,
 } from './entities/SpawnVisuals.js';
 import { GAME_CONFIG, GAME_STAGES } from '../../shared/gameConfig.js';
 import { ENTITY_KEYS, EVENT_TYPES } from '../../shared/eventNames.js';
@@ -24,6 +26,9 @@ import {
   playStageClearSfx,
   playJumpscareSfx,
   playVictoryCelebrationSfx,
+  playShieldPickupSfx,
+  playShieldBreakSfx,
+  playHeartPickupSfx,
   startBackgroundMusic,
   stopBackgroundMusic,
   updateWindAudio,
@@ -228,6 +233,13 @@ export class GameEngine {
       swaying_specter: { spawns: 0, hits: 0, dodges: 0 },
       double_blockade: { spawns: 0, hits: 0, dodges: 0 },
     };
+    this.powerupStats = {
+      shieldsCollected: 0,
+      shieldsBroken: 0,
+      heartsCollected: 0,
+      heartHpRestored: 0,
+      heartBonusScore: 0,
+    };
     this.fatalProjectile = null;
 
     this.frame = this.frame.bind(this);
@@ -360,6 +372,13 @@ export class GameEngine {
       totalSpawns,
       totalHits,
       fatalProjectile: this.fatalProjectile || null,
+      powerupStats: {
+        shieldsCollected: this.powerupStats?.shieldsCollected || 0,
+        shieldsBroken: this.powerupStats?.shieldsBroken || 0,
+        heartsCollected: this.powerupStats?.heartsCollected || 0,
+        heartHpRestored: this.powerupStats?.heartHpRestored || 0,
+        heartBonusScore: this.powerupStats?.heartBonusScore || 0,
+      },
     };
   }
 
@@ -375,7 +394,7 @@ export class GameEngine {
       milestonesReached: this.milestones ? this.milestones.size : 0,
       stagesCleared: this.stagesCleared || 0,
       fragmentsCollected: this.fragmentsCollected || 0,
-    });
+    }) + (this.bonusScore || 0);
 
     this.onStateChange?.({
       health: this.health,
@@ -396,6 +415,10 @@ export class GameEngine {
       lane: this.laneIndex,
       jumping: this.jumpElapsedMs > 0,
       paused: this.paused,
+      shieldRemainingMs: this.shieldRemainingMs || 0,
+      devGodMode: Boolean(this.devGodMode),
+      devAutoPilot: Boolean(this.devAutoPilot),
+      devTimeScale: this.devTimeScale || 1.0,
       telemetry: this.getTelemetryState(),
       ...extra,
     });
@@ -429,6 +452,7 @@ export class GameEngine {
     this.isVictorySequenceActive = false;
     this.isLossSequenceActive = false;
     this.playerEntity?.setVictory(false);
+    this.playerEntity?.setShieldActive(false);
     if (this.playerEntity?.root) {
       this.playerEntity.root.rotation.set(0, 0, 0);
     }
@@ -455,6 +479,11 @@ export class GameEngine {
       health: GAME_CONFIG.startingHealth,
       normalShards: 0,
       rarePickups: 0,
+      shieldRemainingMs: 0,
+      bonusScore: 0,
+      devGodMode: this.devGodMode || false,
+      devAutoPilot: this.devAutoPilot || false,
+      devTimeScale: this.devTimeScale || 1.0,
       milestones: new Set(),
       events: [],
       distanceM: 0,
@@ -468,6 +497,13 @@ export class GameEngine {
         shadow_wave: { spawns: 0, hits: 0, dodges: 0 },
         swaying_specter: { spawns: 0, hits: 0, dodges: 0 },
         double_blockade: { spawns: 0, hits: 0, dodges: 0 },
+      },
+      powerupStats: {
+        shieldsCollected: 0,
+        shieldsBroken: 0,
+        heartsCollected: 0,
+        heartHpRestored: 0,
+        heartBonusScore: 0,
       },
       fatalProjectile: null,
     });
@@ -639,6 +675,9 @@ export class GameEngine {
     const allowedHazards = stage.hazardTypes || ['blocker_crate', 'shadow_wave'];
     const spawnZ = -GAME_CONFIG.spawnDistance;
 
+    const speed = (stage.speed && stage.speed.base) || 15;
+    const throwDurationMs = Math.min(250, Math.max(130, Math.round((7.5 / speed) * 1000)));
+
     const isPredictiveCardWindow = this.upcomingCardLane !== null;
 
     const hazardChance = stage.hazardChance ?? 0.65;
@@ -712,7 +751,7 @@ export class GameEngine {
             consumed: false,
             isThrownProjectile: true,
             throwElapsedMs: 0,
-            throwDurationMs: 280,
+            throwDurationMs,
             startX: handPos.x,
             startY: handPos.y,
             startZ: handPos.z,
@@ -757,7 +796,7 @@ export class GameEngine {
           consumed: false,
           isThrownProjectile: true,
           throwElapsedMs: 0,
-          throwDurationMs: 280,
+          throwDurationMs,
           startX: handPos.x,
           startY: handPos.y,
           startZ: handPos.z,
@@ -797,7 +836,7 @@ export class GameEngine {
         consumed: false,
         isThrownProjectile: true,
         throwElapsedMs: 0,
-        throwDurationMs: 280,
+        throwDurationMs,
         startX: handPos.x,
         startY: handPos.y,
         startZ: handPos.z,
@@ -840,7 +879,7 @@ export class GameEngine {
               consumed: false,
               isThrownProjectile: true,
               throwElapsedMs: 0,
-              throwDurationMs: 280,
+              throwDurationMs,
               startX: comboHandPos.x,
               startY: comboHandPos.y,
               startZ: comboHandPos.z,
@@ -853,8 +892,7 @@ export class GameEngine {
         }
       }
     } else {
-      // Shards / Amber Orbs
-      // Check for any existing object within Math.abs(obj.mesh.position.z - spawnZ) < 4.5
+      // Pickups: Aegis Shield (14%), Soul Heart (12% hurt / 5% full), Amber Orb, or Rift Shard
       const occupiedAtZ = new Set(
         this.objects
           .filter((obj) => !obj.consumed && Math.abs(obj.mesh.position.z - spawnZ) < 4.5)
@@ -866,15 +904,61 @@ export class GameEngine {
 
       const availableShardLanes = [0, 1, 2].filter((l) => !occupiedAtZ.has(l));
       if (availableShardLanes.length === 0) {
-        // Skip spawning shard if all 3 lanes are occupied at that exact Z
+        // Skip spawning pickup if all 3 lanes are occupied at that exact Z
         return;
       }
 
       const lane = availableShardLanes[Math.floor(Math.random() * availableShardLanes.length)];
-      const isRare = Math.random() < 0.28;
+      const maxHp = GAME_CONFIG.maxHealth || 5;
+      const isDamaged = this.health < maxHp;
+      const isCritical = this.health <= 2;
+      const hasActiveShield = (this.shieldRemainingMs || 0) > 0;
 
-      const mesh = isRare ? createAmberOrb() : createRiftShard();
-      const entityKey = isRare ? ENTITY_KEYS.AMBER_ORB : ENTITY_KEYS.RIFT_SHARD;
+      // Prevent redundant powerup spam: don't spawn duplicate heart/shield if one is already on track
+      const isShieldOnTrack = this.objects.some((obj) => obj.isShield && !obj.consumed);
+      const isHeartOnTrack = this.objects.some((obj) => obj.isHeart && !obj.consumed);
+
+      let isShield = false;
+      let isHeart = false;
+      let isRare = false;
+      let mesh;
+      let entityKey;
+
+      // 1. Soul Heart: ONLY spawns when user actually needs health (health < maxHp).
+      // Never spawns when user is at full 5/5 HP.
+      let shouldSpawnHeart = false;
+      if (isDamaged && !isHeartOnTrack) {
+        const heartChance = isCritical ? 0.35 : 0.18;
+        shouldSpawnHeart = Math.random() < heartChance;
+      }
+
+      // 2. Aegis Shield: ONLY spawns when needed by the user:
+      // - No active shield aura & none already approaching on track
+      // - User is damaged (< maxHp) or in dangerous stages (Stage 2+)
+      let shouldSpawnShield = false;
+      if (!shouldSpawnHeart && !hasActiveShield && !isShieldOnTrack) {
+        if (isCritical) {
+          shouldSpawnShield = Math.random() < 0.28;
+        } else if (isDamaged) {
+          shouldSpawnShield = Math.random() < 0.18;
+        } else if (this.currentStageIndex >= 1) {
+          shouldSpawnShield = Math.random() < 0.10;
+        }
+      }
+
+      if (shouldSpawnHeart) {
+        isHeart = true;
+        mesh = createHeartPowerup();
+        entityKey = 'soul_heart';
+      } else if (shouldSpawnShield) {
+        isShield = true;
+        mesh = createShieldPowerup();
+        entityKey = 'aegis_shield';
+      } else {
+        isRare = Math.random() < 0.28;
+        mesh = isRare ? createAmberOrb() : createRiftShard();
+        entityKey = isRare ? ENTITY_KEYS.AMBER_ORB : ENTITY_KEYS.RIFT_SHARD;
+      }
 
       mesh.position.set(GAME_CONFIG.laneCenters[lane], 1.05, spawnZ);
       this.world.scene.add(mesh);
@@ -886,6 +970,8 @@ export class GameEngine {
         isWave: false,
         isSway: false,
         isRare,
+        isShield,
+        isHeart,
         isFragment: false,
         isCard: false,
         entityKey,
@@ -925,6 +1011,7 @@ export class GameEngine {
 
     // 2. Update track objects
     for (const object of this.objects) {
+      const prevZ = object.mesh.position.z;
       object.mesh.position.z += speed * dt;
 
       // Ballistic Lob Trajectory for Thrown Projectiles
@@ -985,6 +1072,9 @@ export class GameEngine {
         if (object.mesh.userData.outerRing) {
           object.mesh.userData.outerRing.rotation.z -= deltaMs * 0.009;
         }
+        if (object.mesh.userData.innerRing) {
+          object.mesh.userData.innerRing.rotation.x += deltaMs * 0.007;
+        }
         if (object.mesh.userData.sparkles) {
           object.mesh.userData.sparkles.forEach((sp) => {
             sp.offset += deltaMs * 0.005;
@@ -993,25 +1083,50 @@ export class GameEngine {
         }
       }
 
-      const close = object.mesh.position.z > -1.15 && object.mesh.position.z < 1.15;
-      if (!object.consumed && close && object.lane === this.laneIndex) {
-        if (object.isHazard && this.invulnerableMs <= 0 && (!object.isWave || this.jumpElapsedMs === 0)) {
+      // Swept Z-Interval Collision Detection (Anti-Tunneling)
+      const hitZ = prevZ <= 0.95 && object.mesh.position.z >= -0.95;
+      // Combined Physical X-Hitbox & Lane Check
+      const hitX = Math.abs(object.mesh.position.x - this.currentX) < 1.05 ||
+        (object.lane === this.laneIndex && Math.abs(this.currentX - GAME_CONFIG.laneCenters[this.laneIndex]) < 0.75);
+
+      if (!object.consumed && hitZ && hitX) {
+        const playerY = this.playerEntity?.root?.position?.y || 0;
+        const clearedWave = object.isWave && playerY >= 0.42;
+
+        if (object.isHazard && !clearedWave && this.invulnerableMs <= 0) {
           object.consumed = true;
           this.disposeWarningRing(object);
-          if (this.attackStats && this.attackStats[object.entityKey]) {
-            this.attackStats[object.entityKey].hits += 1;
-          }
-          this.health -= 1;
-          if (this.health <= 0) {
-            this.fatalProjectile = object.entityKey;
-          }
-          this.invulnerableMs = 1400;
-          playCollisionHitSfx();
-          this.emit(EVENT_TYPES.COLLISION, object.entityKey, 0, object.lane);
-          this.updateHudImmediate({ hit: true });
-          if (this.health <= 0) {
-            this.triggerLossSequence('hit_points_zero');
-            return;
+
+          if (this.devGodMode) {
+            this.invulnerableMs = 450;
+            this.updateHudImmediate({ hit: false });
+          } else if (this.shieldRemainingMs > 0) {
+            // Shield absorbs impact: 0 Hearts lost
+            if (!this.powerupStats) {
+              this.powerupStats = { shieldsCollected: 0, shieldsBroken: 0, heartsCollected: 0, heartHpRestored: 0, heartBonusScore: 0 };
+            }
+            this.powerupStats.shieldsBroken = (this.powerupStats.shieldsBroken || 0) + 1;
+            this.shieldRemainingMs = 0;
+            this.playerEntity?.setShieldActive?.(false);
+            playShieldBreakSfx();
+            this.invulnerableMs = 750;
+            this.updateHudImmediate({ shieldBroken: true });
+          } else {
+            if (this.attackStats && this.attackStats[object.entityKey]) {
+              this.attackStats[object.entityKey].hits += 1;
+            }
+            this.health -= 1;
+            if (this.health <= 0) {
+              this.fatalProjectile = object.entityKey;
+            }
+            this.invulnerableMs = 950;
+            playCollisionHitSfx();
+            this.emit(EVENT_TYPES.COLLISION, object.entityKey, 0, object.lane);
+            this.updateHudImmediate({ hit: true });
+            if (this.health <= 0) {
+              this.triggerLossSequence('hit_points_zero');
+              return;
+            }
           }
         }
 
@@ -1039,6 +1154,30 @@ export class GameEngine {
               cardPickup,
               stageCardsCollected: this.stageCardsCollected,
             });
+          } else if (object.isShield) {
+            if (!this.powerupStats) {
+              this.powerupStats = { shieldsCollected: 0, shieldsBroken: 0, heartsCollected: 0, heartHpRestored: 0, heartBonusScore: 0 };
+            }
+            this.powerupStats.shieldsCollected = (this.powerupStats.shieldsCollected || 0) + 1;
+            this.shieldRemainingMs = 10000;
+            playShieldPickupSfx();
+            this.playerEntity?.setShieldActive?.(true);
+            this.updateHudImmediate({ shieldGot: true });
+          } else if (object.isHeart) {
+            if (!this.powerupStats) {
+              this.powerupStats = { shieldsCollected: 0, shieldsBroken: 0, heartsCollected: 0, heartHpRestored: 0, heartBonusScore: 0 };
+            }
+            this.powerupStats.heartsCollected = (this.powerupStats.heartsCollected || 0) + 1;
+            const maxHp = GAME_CONFIG.maxHealth || 5;
+            if (this.health < maxHp) {
+              this.health = Math.min(maxHp, this.health + 1);
+              this.powerupStats.heartHpRestored = (this.powerupStats.heartHpRestored || 0) + 1;
+            } else {
+              this.bonusScore = (this.bonusScore || 0) + 150;
+              this.powerupStats.heartBonusScore = (this.powerupStats.heartBonusScore || 0) + 150;
+            }
+            playHeartPickupSfx();
+            this.updateHudImmediate({ heartGot: true });
           } else if (object.isRare) {
             this.rarePickups += 1;
             playRareOrbSfx();
@@ -1057,8 +1196,10 @@ export class GameEngine {
       if ((object.isFragment || object.isCard) && !object.consumed && object.mesh.position.z > 2.0) {
         object.consumed = true;
         this.emit(EVENT_TYPES.CARD_MISSED, ENTITY_KEYS.CARD_FRAGMENT, 0, object.lane);
-        this.triggerLossSequence('card_missed');
-        return;
+        if (!this.devGodMode) {
+          this.triggerLossSequence('card_missed');
+          return;
+        }
       }
     }
 
@@ -1104,12 +1245,6 @@ export class GameEngine {
       for (const obj of this.objects) {
         this.disposeWarningRing(obj);
       }
-    }
-
-    // Progressive checkpoint recovery: Restore +1 Heart on stage clear (capped at maxHealth)
-    const maxHp = GAME_CONFIG.maxHealth || 5;
-    if (this.health < maxHp) {
-      this.health = Math.min(maxHp, this.health + 1);
     }
 
     if (this.currentStageIndex < GAME_STAGES.length - 1) {
@@ -1178,7 +1313,9 @@ export class GameEngine {
 
   frame() {
     if (!this.running) return;
-    const deltaMs = Math.min(this.clock.getDelta() * 1000, 50);
+    const rawDelta = this.clock.getDelta() * 1000;
+    const scale = this.devTimeScale || 1.0;
+    const deltaMs = Math.min(rawDelta * scale, 50 * scale);
     const dt = deltaMs / 1000;
 
     // Grand Victory Sequence (5.2s 4-phase defeat cutscene & celebration)
@@ -1294,6 +1431,15 @@ export class GameEngine {
       this.invulnerableMs -= deltaMs;
       if (this.cardSpawnSafeGuardMs > 0) {
         this.cardSpawnSafeGuardMs -= deltaMs;
+      }
+      if (this.shieldRemainingMs > 0) {
+        this.shieldRemainingMs = Math.max(0, this.shieldRemainingMs - deltaMs);
+        if (this.shieldRemainingMs === 0) {
+          this.playerEntity?.setShieldActive?.(false);
+        }
+      }
+      if (this.devAutoPilot && !this.isLossSequenceActive && !this.isVictorySequenceActive) {
+        this.updateDevAutoPilot(deltaMs);
       }
 
       // 1. True Optic Flow: Infinite scrolling trackside chunks (140-unit loop)
@@ -1464,8 +1610,10 @@ export class GameEngine {
       if (this.stageElapsedMs >= stageDuration * 1000) {
         if (this.stageCardsCollected < (GAME_CONFIG.cardsRequiredPerStage || 5)) {
           this.emit(EVENT_TYPES.CARD_MISSED, ENTITY_KEYS.CARD_FRAGMENT, 0, this.laneIndex);
-          this.triggerLossSequence('card_missed');
-          return;
+          if (!this.devGodMode) {
+            this.triggerLossSequence('card_missed');
+            return;
+          }
         }
         this.advanceStage();
         this.world.renderer.render(this.world.scene, this.world.camera);
@@ -1558,6 +1706,175 @@ export class GameEngine {
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+  }
+
+  // ==========================================
+  // SECRET DEV TOOLS & ADMIN CONSOLE METHODS
+  // ==========================================
+
+  setDevGodMode(enabled) {
+    this.devGodMode = Boolean(enabled);
+    this.updateHudImmediate();
+  }
+
+  setDevAutoPilot(enabled) {
+    this.devAutoPilot = Boolean(enabled);
+    this.updateHudImmediate();
+  }
+
+  setDevTimeScale(scale) {
+    this.devTimeScale = Math.max(0.1, Math.min(5.0, Number(scale) || 1.0));
+    this.updateHudImmediate();
+  }
+
+  devWarpToStage(stageNum) {
+    const stageIdx = Math.max(0, Math.min(GAME_STAGES.length - 1, (stageNum || 1) - 1));
+    this.currentStageIndex = stageIdx;
+    this.stageElapsedMs = 0;
+    this.stageCardsCollected = 0;
+    this.scheduledCardIndex = 0;
+    this.upcomingCardLane = null;
+
+    // Clear objects on track
+    if (this.objects) {
+      for (const obj of this.objects) {
+        this.disposeWarningRing(obj);
+        if (obj?.mesh) this.world.scene.remove(obj.mesh);
+      }
+      this.objects = [];
+    }
+
+    this.world.applyAtmosphere(null, stageIdx + 1);
+    startBackgroundMusic(stageIdx + 1);
+    this.updateHudImmediate({ stageIndex: stageIdx });
+  }
+
+  devGrantCardFragment() {
+    this.stageCardsCollected = (this.stageCardsCollected ?? 0) + 1;
+    this.fragmentsCollected = (this.fragmentsCollected ?? 0) + 1;
+    const isFullCard = this.stageCardsCollected >= (GAME_CONFIG.cardsRequiredPerStage || 5);
+    playCardFragmentSfx(isFullCard);
+    this.emit(EVENT_TYPES.FRAGMENT_PICKUP, ENTITY_KEYS.CARD_FRAGMENT, 1, this.laneIndex);
+    const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.currentStageIndex);
+    this.updateHudImmediate({
+      fragmentGot: true,
+      cardPickup,
+      stageCardsCollected: this.stageCardsCollected,
+    });
+  }
+
+  devCompleteCurrentStage() {
+    this.stageCardsCollected = GAME_CONFIG.cardsRequiredPerStage || 5;
+    this.advanceStage();
+  }
+
+  devToggleShield() {
+    if (this.shieldRemainingMs > 0) {
+      this.shieldRemainingMs = 0;
+      this.playerEntity?.setShieldActive?.(false);
+    } else {
+      this.shieldRemainingMs = 15000;
+      if (!this.powerupStats) {
+        this.powerupStats = { shieldsCollected: 0, shieldsBroken: 0, heartsCollected: 0, heartHpRestored: 0, heartBonusScore: 0 };
+      }
+      this.powerupStats.shieldsCollected = (this.powerupStats.shieldsCollected || 0) + 1;
+      playShieldPickupSfx();
+      this.playerEntity?.setShieldActive?.(true);
+    }
+    this.updateHudImmediate();
+  }
+
+  devFullHeal() {
+    this.health = GAME_CONFIG.maxHealth || 5;
+    if (!this.powerupStats) {
+      this.powerupStats = { shieldsCollected: 0, shieldsBroken: 0, heartsCollected: 0, heartHpRestored: 0, heartBonusScore: 0 };
+    }
+    this.powerupStats.heartsCollected = (this.powerupStats.heartsCollected || 0) + 1;
+    this.powerupStats.heartHpRestored = (this.powerupStats.heartHpRestored || 0) + 1;
+    playHeartPickupSfx();
+    this.updateHudImmediate();
+  }
+
+  devAddShards(amount = 50) {
+    this.normalShards = (this.normalShards || 0) + amount;
+    playShardPickupSfx();
+    this.updateHudImmediate();
+  }
+
+  devTriggerVictory() {
+    this.triggerVictorySequence();
+  }
+
+  devTriggerJumpscareLoss() {
+    this.triggerLossSequence('hit_points_zero');
+  }
+
+  updateDevAutoPilot(deltaMs) {
+    this.devAutoPilotCooldownMs = (this.devAutoPilotCooldownMs || 0) - deltaMs;
+    if (this.devAutoPilotCooldownMs > 0) return;
+
+    // 1. Check for immediate jumpable low skimmers in current lane
+    const imminentJumpHazard = this.objects.find(
+      (obj) => obj.isHazard && obj.isWave && !obj.consumed &&
+        obj.mesh.position.z >= -7.0 && obj.mesh.position.z <= 0.5 &&
+        (obj.lane === this.laneIndex || Math.abs(obj.mesh.position.x - this.currentX) < 1.0)
+    );
+    if (imminentJumpHazard && this.jumpElapsedMs === 0) {
+      this.jump();
+      this.devAutoPilotCooldownMs = 180;
+      return;
+    }
+
+    // 2. Check for imminent non-jumpable hazards in current lane
+    const imminentHazard = this.objects.find(
+      (obj) => obj.isHazard && !obj.consumed &&
+        (!obj.isWave || this.jumpElapsedMs > 0) &&
+        obj.mesh.position.z >= -10.0 && obj.mesh.position.z <= 1.0 &&
+        (obj.lane === this.laneIndex || Math.abs(obj.mesh.position.x - this.currentX) < 1.1)
+    );
+
+    if (imminentHazard) {
+      // Calculate threat scores for each lane
+      const laneThreatScores = [0, 0, 0];
+      for (const obj of this.objects) {
+        if (obj.isHazard && !obj.consumed && obj.mesh.position.z >= -12.0 && obj.mesh.position.z <= 2.0) {
+          const zWeight = 15.0 - Math.abs(obj.mesh.position.z);
+          laneThreatScores[obj.lane] = (laneThreatScores[obj.lane] || 0) + zWeight;
+        }
+      }
+
+      let safestLane = this.laneIndex;
+      let minThreat = laneThreatScores[this.laneIndex];
+      [0, 1, 2].forEach((l) => {
+        if (laneThreatScores[l] < minThreat) {
+          minThreat = laneThreatScores[l];
+          safestLane = l;
+        }
+      });
+
+      if (safestLane !== this.laneIndex) {
+        this.moveLane(safestLane > this.laneIndex ? 1 : -1);
+        this.devAutoPilotCooldownMs = 120;
+        return;
+      }
+    }
+
+    // 3. Otherwise seek upcoming card fragment or power-up
+    const desirableTarget = this.objects.find(
+      (obj) => !obj.consumed && (obj.isCard || obj.isFragment || obj.isShield || obj.isHeart) &&
+        obj.mesh.position.z >= -22.0 && obj.mesh.position.z < -0.5
+    );
+
+    if (desirableTarget && desirableTarget.lane !== this.laneIndex) {
+      const isTargetLaneBlocked = this.objects.some(
+        (obj) => obj.isHazard && !obj.consumed && obj.lane === desirableTarget.lane &&
+          obj.mesh.position.z >= -7.0 && obj.mesh.position.z <= 1.5
+      );
+      if (!isTargetLaneBlocked) {
+        this.moveLane(desirableTarget.lane > this.laneIndex ? 1 : -1);
+        this.devAutoPilotCooldownMs = 150;
+      }
+    }
   }
 
   dispose() {

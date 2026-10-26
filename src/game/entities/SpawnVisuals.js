@@ -117,7 +117,7 @@ export const SHARED_ASSETS = {
     gatePole: tagShared(new THREE.BoxGeometry(0.16, 1.85, 0.36)),
     gateBulb: tagShared(new THREE.SphereGeometry(0.14, 6, 6)),
 
-    // Pickups
+    // Pickups & Power-ups
     crystalMain: tagShared(new THREE.OctahedronGeometry(0.38, 0)),
     crystalSub: tagShared(new THREE.OctahedronGeometry(0.22, 0)),
     shardHalo: tagShared(new THREE.TorusGeometry(0.52, 0.04, 6, 16)),
@@ -129,6 +129,12 @@ export const SHARED_ASSETS = {
     cardBorderLR: tagShared(new THREE.BoxGeometry(0.08, 0.95, 0.10)),
     cardEmblem: tagShared(new THREE.CylinderGeometry(0.18, 0.18, 0.12, 8)),
     cardSparkle: tagShared(new THREE.BoxGeometry(0.08, 0.08, 0.08)),
+    shieldOcta: tagShared(new THREE.OctahedronGeometry(0.38, 0)),
+    shieldRingInner: tagShared(new THREE.TorusGeometry(0.54, 0.045, 6, 16)),
+    shieldRingOuter: tagShared(new THREE.TorusGeometry(0.70, 0.04, 6, 16)),
+    heartSphere: tagShared(new THREE.SphereGeometry(0.24, 8, 8)),
+    heartCone: tagShared(new THREE.ConeGeometry(0.35, 0.54, 8)),
+    heartSparkle: tagShared(new THREE.OctahedronGeometry(0.09, 0)),
   },
 
   materials: {
@@ -200,7 +206,7 @@ export const SHARED_ASSETS = {
     gateWarningLight: tagShared(new THREE.MeshStandardMaterial({ color: '#E94462', emissive: '#E94462', emissiveIntensity: 2.4 })),
     gateStripeWhite: tagShared(new THREE.MeshStandardMaterial({ color: '#f8fafc', flatShading: true })),
 
-    // Pickups
+    // Pickups & Power-ups
     crystal: tagShared(new THREE.MeshStandardMaterial({ color: '#43D9F2', emissive: '#43D9F2', emissiveIntensity: 1.8, roughness: 0.15, metalness: 0.2, flatShading: true })),
     shardHalo: tagShared(new THREE.MeshStandardMaterial({ color: '#38bdf8', emissive: '#38bdf8', emissiveIntensity: 2.2 })),
     star: tagShared(new THREE.MeshStandardMaterial({ color: '#FFD000', emissive: '#FFD000', emissiveIntensity: 2.2, roughness: 0.1, flatShading: true })),
@@ -209,6 +215,12 @@ export const SHARED_ASSETS = {
     goldBorder: tagShared(new THREE.MeshStandardMaterial({ color: '#FFD000', emissive: '#FFD000', emissiveIntensity: 2.0 })),
     cardEmblem: tagShared(new THREE.MeshStandardMaterial({ color: '#43D9F2', emissive: '#43D9F2', emissiveIntensity: 2.5, flatShading: true })),
     cardSparkle: tagShared(new THREE.MeshStandardMaterial({ color: '#f8fafc', emissive: '#ffffff', emissiveIntensity: 3.0 })),
+    shieldCoreMat: tagShared(new THREE.MeshStandardMaterial({ color: '#38bdf8', emissive: '#0284c7', emissiveIntensity: 2.2, roughness: 0.15, metalness: 0.2, flatShading: true })),
+    shieldRingInnerMat: tagShared(new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#eab308', emissiveIntensity: 2.0 })),
+    shieldRingOuterMat: tagShared(new THREE.MeshStandardMaterial({ color: '#38bdf8', emissive: '#0ea5e9', emissiveIntensity: 2.0 })),
+    heartVesselMat: tagShared(new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#dc2626', emissiveIntensity: 2.2, roughness: 0.2, flatShading: true })),
+    heartGoldTrim: tagShared(new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#ca8a04', emissiveIntensity: 1.8 })),
+    heartEmeraldSparkle: tagShared(new THREE.MeshStandardMaterial({ color: '#10b981', emissive: '#059669', emissiveIntensity: 2.5 })),
   },
 };
 
@@ -866,3 +878,82 @@ export function createCardFragment() {
 
   return group;
 }
+
+/**
+ * 8. Aegis Shield Power-Up (aegis_shield)
+ * Floating cyan-and-gold hexagonal forcefield core with dual counter-rotating torus rings.
+ */
+export function createShieldPowerup() {
+  const group = new THREE.Group();
+  const { geometries: G, materials: M } = SHARED_ASSETS;
+
+  const core = new THREE.Mesh(G.shieldOcta, M.shieldCoreMat);
+  addHullOutline(core, 1.12);
+  group.add(core);
+
+  const innerRing = new THREE.Mesh(G.shieldRingInner, M.shieldRingInnerMat);
+  innerRing.rotation.x = Math.PI / 3;
+  group.add(innerRing);
+
+  const outerRing = new THREE.Mesh(G.shieldRingOuter, M.shieldRingOuterMat);
+  outerRing.rotation.x = -Math.PI / 4;
+  outerRing.rotation.y = Math.PI / 6;
+  group.add(outerRing);
+
+  group.userData.innerRing = innerRing;
+  group.userData.outerRing = outerRing;
+
+  return group;
+}
+
+/**
+ * 9. Soul Heart Power-Up (soul_heart)
+ * Floating crimson-and-gold 3D heart vessel with orbiting emerald/gold heal sparkles.
+ */
+export function createHeartPowerup() {
+  const group = new THREE.Group();
+  const { geometries: G, materials: M } = SHARED_ASSETS;
+
+  const heartContainer = new THREE.Group();
+
+  // Left Lobe
+  const leftLobe = new THREE.Mesh(G.heartSphere, M.heartVesselMat);
+  leftLobe.position.set(-0.16, 0.16, 0);
+  addHullOutline(leftLobe, 1.1);
+  heartContainer.add(leftLobe);
+
+  // Right Lobe
+  const rightLobe = new THREE.Mesh(G.heartSphere, M.heartVesselMat);
+  rightLobe.position.set(0.16, 0.16, 0);
+  addHullOutline(rightLobe, 1.1);
+  heartContainer.add(rightLobe);
+
+  // Bottom Inverted Cone
+  const cone = new THREE.Mesh(G.heartCone, M.heartVesselMat);
+  cone.position.set(0, -0.10, 0);
+  cone.rotation.z = Math.PI;
+  addHullOutline(cone, 1.1);
+  heartContainer.add(cone);
+
+  // Gold Trim Ring
+  const trimRing = new THREE.Mesh(G.shieldRingInner, M.heartGoldTrim);
+  trimRing.scale.set(0.65, 0.65, 0.65);
+  trimRing.rotation.x = Math.PI / 2;
+  trimRing.position.y = 0.02;
+  heartContainer.add(trimRing);
+
+  group.add(heartContainer);
+
+  const sparkles = [];
+  for (let s = 0; s < 4; s++) {
+    const sp = new THREE.Mesh(G.heartSparkle, s % 2 === 0 ? M.heartEmeraldSparkle : M.heartGoldTrim);
+    addHullOutline(sp, 1.1);
+    group.add(sp);
+    sparkles.push({ mesh: sp, offset: (s / 4) * Math.PI * 2 });
+  }
+  group.userData.sparkles = sparkles;
+  group.userData.heartContainer = heartContainer;
+
+  return group;
+}
+

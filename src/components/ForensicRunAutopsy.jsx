@@ -36,6 +36,22 @@ function CrossedBladesIcon() {
   );
 }
 
+function ShieldIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
 /**
  * 4-Tier Forensic Run Autopsy Component
  * Obsidian & Antique Gold Cabinet Style with balanced 2x2 responsive grid
@@ -47,6 +63,13 @@ export default function ForensicRunAutopsy({ telemetry, currentStage = 1, curren
     dodgeEfficiencyPct: typeof telemetry?.dodgeEfficiencyPct === 'number' ? telemetry.dodgeEfficiencyPct : 78,
     survivalProbPct: typeof telemetry?.survivalProbPct === 'number' ? telemetry.survivalProbPct : 62,
     fatalProjectile: telemetry?.fatalProjectile || null,
+    powerupStats: {
+      shieldsCollected: telemetry?.powerupStats?.shieldsCollected || 0,
+      shieldsBroken: telemetry?.powerupStats?.shieldsBroken || 0,
+      heartsCollected: telemetry?.powerupStats?.heartsCollected || 0,
+      heartHpRestored: telemetry?.powerupStats?.heartHpRestored || 0,
+      heartBonusScore: telemetry?.powerupStats?.heartBonusScore || 0,
+    },
     attackStats: {
       blocker_crate: {
         label: 'Heavy Lob',
@@ -194,6 +217,35 @@ export default function ForensicRunAutopsy({ telemetry, currentStage = 1, curren
               <span className={`chip-value ${data.survivalProbPct >= 65 ? 'highlight-green' : data.survivalProbPct >= 35 ? 'highlight-amber' : 'highlight-red'}`}>
                 {data.survivalProbPct}%
               </span>
+            </div>
+          </div>
+
+          {/* Survival Relics Telemetry Subpanel */}
+          <div
+            className="telemetry-relics-subpanel"
+            style={{
+              marginTop: '8px',
+              padding: '6px 10px',
+              background: 'rgba(9, 6, 16, 0.65)',
+              border: '1px solid rgba(212, 163, 73, 0.25)',
+              borderRadius: '6px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: '0.68rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <ShieldIcon />
+              <span style={{ color: '#94a3b8', fontSize: '0.65rem' }}>AEGIS SHIELD:</span>
+              <strong style={{ color: '#38bdf8' }}>{data.powerupStats.shieldsCollected}</strong>
+              <span style={{ color: '#64748b', fontSize: '0.62rem' }}>({data.powerupStats.shieldsBroken} absorbed)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <HeartIcon />
+              <span style={{ color: '#94a3b8', fontSize: '0.65rem' }}>SOUL HEART:</span>
+              <strong style={{ color: '#f43f5e' }}>{data.powerupStats.heartsCollected}</strong>
+              <span style={{ color: '#64748b', fontSize: '0.62rem' }}>(+{data.powerupStats.heartHpRestored} HP)</span>
             </div>
           </div>
         </div>

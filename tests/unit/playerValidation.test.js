@@ -14,7 +14,8 @@ test('nickname validation rejects private or malformed identity input', () => {
 
 test('fullName and section formatting handles academic roster input [Last Name, First Name] and [#Section]', () => {
   assert.equal(formatFullName('  Dela Cruz, Juan  '), 'Dela Cruz, Juan');
-  assert.equal(formatSectionTag('Diamond'), '#Diamond');
-  assert.equal(formatSectionTag('#Section-1'), '#Section-1');
-  assert.equal(formatSectionTag('  CS-101  '), '#CS-101');
+  assert.equal(formatSectionTag('4isb'), '4ISB');
+  assert.equal(formatSectionTag('#4ISB'), '4ISB');
+  assert.equal(formatSectionTag('  3isa  '), '3ISA');
+  assert.equal(formatSectionTag('##Section-1'), 'SECTION-1');
 });

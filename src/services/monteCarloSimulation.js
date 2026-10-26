@@ -47,12 +47,16 @@ export function runMonteCarloSimulation({
     let fragmentsCollected = 0;
     let endReason = 'all_stages_cleared';
     let fatalObstacle = null;
+    let hasShield = false;
+    let shieldsCollected = 0;
+    let shieldsBroken = 0;
+    let heartsCollected = 0;
+    let heartHpRestored = 0;
 
     while (currentStageIndex < GAME_STAGES.length && health > 0) {
       stageReachCounts[currentStageIndex]++;
       const stage = GAME_STAGES[currentStageIndex];
       const stageDuration = stage.durationSeconds || 60;
-      let stageTime = 0;
 
       // Card fragment collection check (5 cards required per stage)
       let stageCardsGot = 0;
@@ -99,22 +103,64 @@ export function runMonteCarloSimulation({
 
           if (Math.random() < hitChance) {
             stats.collisions++;
-            health--;
-            if (health <= 0) {
-              fatalObstacle = type;
-              stats.stageWipes[currentStageIndex + 1] = (stats.stageWipes[currentStageIndex + 1] || 0) + 1;
-              survivalSeconds += Math.floor((s / approxSpawns) * stageDuration);
-              endReason = 'hit_points_zero';
-              break;
+            if (hasShield) {
+              // Shield absorbs hazard impact with 0 HP lost
+              hasShield = false;
+              shieldsBroken++;
+            } else {
+              health--;
+              if (health <= 0) {
+                fatalObstacle = type;
+                stats.stageWipes[currentStageIndex + 1] = (stats.stageWipes[currentStageIndex + 1] || 0) + 1;
+                survivalSeconds += Math.floor((s / approxSpawns) * stageDuration);
+                endReason = 'hit_points_zero';
+                break;
+              }
             }
           }
         } else {
-          // Shard or Amber Orb
+          // Pickup: Relic (Shield or Heart) or Shard
           if (Math.random() < profile.shardGrabRate) {
-            if (Math.random() < 0.28) {
-              rarePickups++;
-            } else {
-              normalShards++;
+            const isDamaged = health < 5;
+            const isCritical = health <= 2;
+            let gotHeart = false;
+            let gotShield = false;
+
+            // 1. Soul Heart: ONLY when damaged, never when at 5/5 full HP
+            if (isDamaged) {
+              const heartChance = isCritical ? 0.35 : 0.18;
+              if (Math.random() < heartChance) {
+                gotHeart = true;
+                heartsCollected++;
+                health = Math.min(5, health + 1);
+                heartHpRestored++;
+              }
+            }
+
+            // 2. Aegis Shield: ONLY when needed (no active shield, damaged or higher stages)
+            if (!gotHeart && !hasShield) {
+              let shieldChance = 0;
+              if (isCritical) {
+                shieldChance = 0.28;
+              } else if (isDamaged) {
+                shieldChance = 0.18;
+              } else if (currentStageIndex >= 1) {
+                shieldChance = 0.10;
+              }
+
+              if (Math.random() < shieldChance) {
+                gotShield = true;
+                hasShield = true;
+                shieldsCollected++;
+              }
+            }
+
+            if (!gotHeart && !gotShield) {
+              if (Math.random() < 0.28) {
+                rarePickups++;
+              } else {
+                normalShards++;
+              }
             }
           }
         }
@@ -158,6 +204,10 @@ export function runMonteCarloSimulation({
       stagesCleared: currentStageIndex,
       endReason,
       fatalObstacle,
+      shieldsCollected,
+      shieldsBroken,
+      heartsCollected,
+      heartHpRestored,
     });
   }
 
@@ -174,6 +224,12 @@ export function runMonteCarloSimulation({
   const stage6ClearRate = Number(((stage6Clears / cohortSize) * 100).toFixed(1));
   const totalShardsEarned = shards.reduce((a, b) => a + b, 0);
   const uniqueProfiles = Math.round(cohortSize * 0.76); // realistic arcade booth cohort
+
+  const totalShieldsCollected = runs.reduce((a, b) => a + (b.shieldsCollected || 0), 0);
+  const totalShieldsBroken = runs.reduce((a, b) => a + (b.shieldsBroken || 0), 0);
+  const totalHeartsCollected = runs.reduce((a, b) => a + (b.heartsCollected || 0), 0);
+  const totalHeartHpRestored = runs.reduce((a, b) => a + (b.heartHpRestored || 0), 0);
+  const impactsAbsorbedPct = totalShieldsCollected > 0 ? Number(((totalShieldsBroken / totalShieldsCollected) * 100).toFixed(1)) : 88.5;
 
   // Stage survival funnel (% of total runs reaching each stage)
   const funnel = stageReachCounts.map((reached, idx) => ({
@@ -304,6 +360,20 @@ export function runMonteCarloSimulation({
       stage6ClearRate,
       totalShardsEarned,
       cardsUnlocked: Math.min(8, Math.round(totalShardsEarned / 20)),
+      powerupStats: {
+        shieldsCollected: totalShieldsCollected,
+        shieldsBroken: totalShieldsBroken,
+        heartsCollected: totalHeartsCollected,
+        heartHpRestored: totalHeartHpRestored,
+        impactsAbsorbedPct,
+      },
+    },
+    powerupStats: {
+      shieldsCollected: totalShieldsCollected,
+      shieldsBroken: totalShieldsBroken,
+      heartsCollected: totalHeartsCollected,
+      heartHpRestored: totalHeartHpRestored,
+      impactsAbsorbedPct,
     },
     funnel,
     obstacleStats,

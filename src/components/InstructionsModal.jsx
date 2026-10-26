@@ -99,14 +99,14 @@ export default function InstructionsModal({
   initialStage = 1,
   isStageTransition = false,
 }) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState(initialTab === 'cards' ? 'howtoplay' : initialTab);
   const [selectedStage, setSelectedStage] = useState(initialStage);
   const [dontShowAgain, setDontShowAgain] = useState(
     () => localStorage.getItem('deadlights.skipInstructions') === 'true'
   );
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    setActiveTab(initialTab === 'cards' ? 'howtoplay' : initialTab);
     setSelectedStage(initialStage);
   }, [initialTab, initialStage]);
 
@@ -153,7 +153,7 @@ export default function InstructionsModal({
         position: 'fixed',
         inset: 0,
         zIndex: 999999,
-        background: 'rgba(5, 4, 10, 0.88)',
+        background: 'rgba(5, 4, 10, 0.90)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         display: 'flex',
@@ -171,34 +171,34 @@ export default function InstructionsModal({
       <div
         className="cabinet-card instructions-modal-dialog"
         style={{
-          maxWidth: '960px',
+          maxWidth: '940px',
           width: '94%',
           maxHeight: '88vh',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
           zIndex: 1000000,
-          background: 'rgba(13, 10, 24, 0.97)',
+          background: '#140f22',
           border: '2px solid #d4a349',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.9), 0 0 36px rgba(212, 163, 73, 0.25)',
-          borderRadius: '18px',
-          padding: '28px 34px 24px 34px',
+          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.95), 0 0 36px rgba(212, 163, 73, 0.28)',
+          borderRadius: '16px',
+          padding: '26px 30px 22px 30px',
           boxSizing: 'border-box',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="cabinet-modal-header" style={{ position: 'relative', marginBottom: '20px', paddingLeft: '40px', paddingRight: '40px' }}>
+        <div className="cabinet-modal-header" style={{ position: 'relative', marginBottom: '18px', paddingLeft: '24px', paddingRight: '24px' }}>
           <span className="cabinet-modal-sub" style={{ color: '#d4a349', letterSpacing: '0.14em', fontWeight: 800, fontSize: '0.82rem', marginBottom: '4px' }}>
             {isStageTransition ? 'CARNIVAL GAUNTLET SURVIVAL MANUAL · STAGE TRANSITION' : 'CARNIVAL GAUNTLET SURVIVAL MANUAL'}
           </span>
-          <h2 className="cabinet-modal-title" style={{ fontSize: '1.9rem', letterSpacing: '0.04em', lineHeight: 1.15, margin: '0 0 6px 0' }}>
+          <h2 className="cabinet-modal-title" style={{ fontSize: '1.85rem', letterSpacing: '0.04em', lineHeight: 1.15, margin: '0 0 6px 0' }}>
             {isStageTransition ? `STAGE ${selectedStage} INTEL BRIEFING` : 'OPERATIONAL BRIEFING & STAGE INTEL'}
           </h2>
           <p className="cabinet-modal-sub" style={{ color: '#cbd5e1', fontSize: '0.84rem', letterSpacing: '0.06em', margin: 0 }}>
             {isStageTransition
               ? `REVIEW WHAT TO EXPECT IN STAGE ${selectedStage} · PRESS ENTER TO COMMENCE`
-              : 'MASTER EVASIVE CONTROLS · KNOW WHAT HAZARDS TO EXPECT IN ALL 6 STAGES'}
+              : 'MASTER EVASIVE CONTROLS · HARVEST POWER-UPS · ZERO MISSES ALLOWED'}
           </p>
 
           {onClose && (
@@ -208,7 +208,7 @@ export default function InstructionsModal({
               style={{
                 position: 'absolute',
                 top: '-4px',
-                right: '-10px',
+                right: '-4px',
                 background: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid rgba(255, 255, 255, 0.18)',
                 color: '#fff',
@@ -229,15 +229,15 @@ export default function InstructionsModal({
           )}
         </div>
 
-        {/* Tab Switcher */}
+        {/* 2-Tab Switcher: Controls & Power-Ups / Stage Intel (Stages 1-6) */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '12px',
-            marginBottom: '20px',
-            paddingBottom: '16px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+            marginBottom: '18px',
+            paddingBottom: '14px',
+            borderBottom: '1px solid rgba(212, 163, 73, 0.25)',
           }}
         >
           <button
@@ -248,18 +248,23 @@ export default function InstructionsModal({
               setActiveTab('howtoplay');
             }}
             style={{
-              padding: '11px 14px',
+              padding: '11px 16px',
               borderRadius: '8px',
-              fontSize: '0.86rem',
-              fontWeight: 700,
+              fontSize: '0.88rem',
+              fontWeight: 800,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               whiteSpace: 'nowrap',
+              background: activeTab === 'howtoplay' ? 'rgba(212, 163, 73, 0.25)' : '#090610',
+              border: activeTab === 'howtoplay' ? '2px solid #d4a349' : '1px solid rgba(255, 255, 255, 0.1)',
+              color: activeTab === 'howtoplay' ? '#facc15' : '#94a3b8',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
             }}
           >
-            CONTROLS & OBJECTIVES
+            CONTROLS & POWER-UPS
           </button>
           <button
             type="button"
@@ -269,138 +274,162 @@ export default function InstructionsModal({
               setActiveTab('stages');
             }}
             style={{
-              padding: '11px 14px',
+              padding: '11px 16px',
               borderRadius: '8px',
-              fontSize: '0.86rem',
-              fontWeight: 700,
+              fontSize: '0.88rem',
+              fontWeight: 800,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               whiteSpace: 'nowrap',
+              background: activeTab === 'stages' ? 'rgba(212, 163, 73, 0.25)' : '#090610',
+              border: activeTab === 'stages' ? '2px solid #d4a349' : '1px solid rgba(255, 255, 255, 0.1)',
+              color: activeTab === 'stages' ? '#facc15' : '#94a3b8',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
             }}
           >
-            WHAT TO EXPECT IN EACH STAGE (1–6)
-          </button>
-          <button
-            type="button"
-            className={`tab-nav-btn ${activeTab === 'cards' ? 'is-active-tab' : ''}`}
-            onClick={() => {
-              playButtonClickSfx();
-              setActiveTab('cards');
-            }}
-            style={{
-              padding: '11px 14px',
-              borderRadius: '8px',
-              fontSize: '0.86rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            GRIMDEX CARDS & SCORING
+            STAGE INTEL (STAGES 1–6)
           </button>
         </div>
 
         {/* Scrollable Content Body */}
         <div style={{ overflowY: 'auto', padding: '4px 6px 16px 2px', flex: 1 }}>
-          {/* TAB 1: HOW TO PLAY & CONTROLS */}
+          {/* TAB 1: CONTROLS & POWER-UPS */}
           {activeTab === 'howtoplay' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* 3 Core Controls Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
                 {/* Control 1: Lane Shift */}
-                <div style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(56, 189, 248, 0.35)', borderRadius: '12px', padding: '18px 18px 20px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ background: '#090610', border: '1px solid rgba(56, 189, 248, 0.35)', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '5px' }}>
                       <span className="keycap">A</span>
                       <span className="keycap">D</span>
                     </div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 4px' }}>or</span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 3px' }}>or</span>
                     <div style={{ display: 'flex', gap: '5px' }}>
                       <span className="keycap">←</span>
                       <span className="keycap">→</span>
                     </div>
                   </div>
-                  <strong style={{ display: 'block', color: '#38bdf8', fontSize: '0.98rem', letterSpacing: '0.03em', margin: 0 }}>
+                  <strong style={{ display: 'block', color: '#38bdf8', fontSize: '0.94rem', letterSpacing: '0.03em', margin: 0 }}>
                     SHIFT TRACK LANES
                   </strong>
-                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#cbd5e1', lineHeight: '1.55' }}>
-                    Quickly glide between Left, Center, and Right lanes to dodge crates, projectiles, and incoming traps.
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                    Glide between Left, Center, and Right lanes to dodge crates, projectiles, and incoming traps.
                   </p>
                 </div>
 
                 {/* Control 2: Jump */}
-                <div style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(245, 158, 11, 0.35)', borderRadius: '12px', padding: '18px 18px 20px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ background: '#090610', border: '1px solid rgba(245, 158, 11, 0.35)', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span className="keycap" style={{ minWidth: '68px', textAlign: 'center' }}>SPACE</span>
-                    <span style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 4px' }}>or</span>
+                    <span className="keycap" style={{ minWidth: '64px', textAlign: 'center' }}>SPACE</span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 3px' }}>or</span>
                     <div style={{ display: 'flex', gap: '5px' }}>
                       <span className="keycap">W</span>
                       <span className="keycap">↑</span>
                     </div>
                   </div>
-                  <strong style={{ display: 'block', color: '#fbbf24', fontSize: '0.98rem', letterSpacing: '0.03em', margin: 0 }}>
+                  <strong style={{ display: 'block', color: '#fbbf24', fontSize: '0.94rem', letterSpacing: '0.03em', margin: 0 }}>
                     HIGH LEAP OVER HAZARDS
                   </strong>
-                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#cbd5e1', lineHeight: '1.55' }}>
-                    Vault over low-skimmer <strong>Shadow Waves</strong> and ground debris. Essential for surviving red wave walls.
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                    Vault over low-skimmer <strong>Shadow Waves</strong> and ground debris. Clear Y ≥ 0.42 height.
                   </p>
                 </div>
 
-                {/* Control 3: Pause & Mute */}
-                <div style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(148, 163, 184, 0.35)', borderRadius: '12px', padding: '18px 18px 20px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* Control 3: Pause */}
+                <div style={{ background: '#090610', border: '1px solid rgba(148, 163, 184, 0.35)', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span className="keycap">ESC</span>
-                    <span style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 4px' }}>or</span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 3px' }}>or</span>
                     <span className="keycap">P</span>
                   </div>
-                  <strong style={{ display: 'block', color: '#e2e8f0', fontSize: '0.98rem', letterSpacing: '0.03em', margin: 0 }}>
+                  <strong style={{ display: 'block', color: '#e2e8f0', fontSize: '0.94rem', letterSpacing: '0.03em', margin: 0 }}>
                     TACTICAL PAUSE
                   </strong>
-                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#cbd5e1', lineHeight: '1.55' }}>
-                    Pause gameplay at any moment to catch your breath or review stage objectives.
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                    Pause gameplay at any moment to catch your breath or review stage hazard directives.
                   </p>
+                </div>
+              </div>
+
+              {/* NEW DEDICATED IN-GAME POWER-UPS SECTION */}
+              <div style={{ background: '#090610', border: '1.5px solid #d4a349', borderRadius: '12px', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ background: 'rgba(212, 163, 73, 0.2)', color: '#d4a349', border: '1px solid #d4a349', padding: '3px 8px', borderRadius: '4px', fontSize: '0.74rem', fontWeight: 900, letterSpacing: '0.08em' }}>
+                      SURVIVAL RELICS
+                    </span>
+                    <strong style={{ color: '#facc15', fontSize: '1.05rem', letterSpacing: '0.04em' }}>
+                      IN-GAME SURVIVAL POWER-UPS
+                    </strong>
+                  </div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.78rem' }}>SPAWN DYNAMICALLY WHEN IN DANGER</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
+                  {/* Power-up 1: Aegis Shield */}
+                  <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.35)', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1.25rem' }}>🛡️</span>
+                      <strong style={{ color: '#38bdf8', fontSize: '0.96rem' }}>AEGIS FORCEFIELD SHIELD</strong>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', lineHeight: '1.5' }}>
+                      Floating cyan-and-gold octahedron with dual counter-rotating rings. Appears when vulnerable or under heavy attack to grant <strong>10.0 seconds</strong> of forcefield aura. Completely absorbs any hazard impact (<strong>0 Hearts lost!</strong>), shatters, and provides <strong>750ms</strong> of invulnerability.
+                    </p>
+                  </div>
+
+                  {/* Power-up 2: Soul Heart */}
+                  <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1.25rem' }}>❤️</span>
+                      <strong style={{ color: '#ef4444', fontSize: '0.96rem' }}>SOUL HEART VESSEL</strong>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', lineHeight: '1.5' }}>
+                      Floating crimson-and-gold 3D heart with orbiting emerald heal sparkles. Materializes exclusively when you have taken damage to immediately restore <strong>+1 Poké-Heart</strong> (up to 5 max).
+                    </p>
+                  </div>
                 </div>
               </div>
 
               {/* Vitality & Pennywise threat */}
-              <div style={{ background: 'linear-gradient(135deg, rgba(185, 28, 28, 0.16) 0%, rgba(15, 23, 42, 0.75) 100%)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '12px', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ background: 'rgba(239, 68, 68, 0.22)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.45)', padding: '3px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.06em' }}>
-                    VITALITY
+              <div style={{ background: '#090610', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '10px', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ background: 'rgba(239, 68, 68, 0.22)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.45)', padding: '2px 7px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.06em' }}>
+                    VITALITY RULES
                   </span>
-                  <strong style={{ color: '#ef4444', fontSize: '1.05rem', letterSpacing: '0.04em' }}>
+                  <strong style={{ color: '#ef4444', fontSize: '0.98rem', letterSpacing: '0.03em' }}>
                     THE PURSUER (PENNYWISE) & HEART LOSS
                   </strong>
                 </div>
-                <p style={{ margin: 0, fontSize: '0.88rem', color: '#f1f5f9', lineHeight: '1.6' }}>
-                  You start with <strong>5 Poké-Hearts</strong>. Colliding with any hazard strips 1 Heart. As your health declines, Pennywise flies dangerously close and attacks with higher frequency. Clearing a stage restores <strong>+1 Heart</strong>. At 0 HP, Pennywise claims your soul with a jumpscare!
+                <p style={{ margin: 0, fontSize: '0.84rem', color: '#f1f5f9', lineHeight: '1.55' }}>
+                  You start with <strong>5 Poké-Hearts</strong>. Colliding with any hazard strips 1 Heart (unless shielded). Hearts do <strong>not</strong> automatically restore between stages—collecting <strong>Soul Hearts</strong> and <strong>Aegis Shields</strong> is mandatory for survival! At 0 HP, Pennywise claims your soul with a jumpscare.
                 </p>
               </div>
 
               {/* Zero Miss Enforcement */}
-              <div style={{ background: 'rgba(212, 163, 73, 0.1)', border: '1px solid rgba(212, 163, 73, 0.32)', borderRadius: '12px', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <strong style={{ color: '#f59e0b', fontSize: '0.98rem', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
-                  <span style={{ background: 'rgba(245, 158, 11, 0.22)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.45)', padding: '3px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.06em' }}>
+              <div style={{ background: '#090610', border: '1px solid rgba(212, 163, 73, 0.32)', borderRadius: '10px', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <strong style={{ color: '#f59e0b', fontSize: '0.96rem', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+                  <span style={{ background: 'rgba(245, 158, 11, 0.22)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.45)', padding: '2px 7px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.06em' }}>
                     CRITICAL
                   </span>
                   MANDATORY DIRECTIVE: NEVER MISS A CARD FRAGMENT!
                 </strong>
-                <p style={{ margin: 0, fontSize: '0.87rem', color: '#e2e8f0', lineHeight: '1.55' }}>
+                <p style={{ margin: 0, fontSize: '0.84rem', color: '#e2e8f0', lineHeight: '1.5' }}>
                   Each stage spawns exactly <strong>5 Golden Card Fragments</strong>. You <em>must</em> steer into every fragment’s lane to capture it. Letting a card fragment slip past you immediately ends the run!
                 </p>
               </div>
             </div>
           )}
 
-          {/* TAB 2: WHAT TO EXPECT IN EACH STAGE */}
+          {/* TAB 2: STAGE INTEL (STAGES 1-6) */}
           {activeTab === 'stages' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Stage selector buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
                 {[1, 2, 3, 4, 5, 6].map((stg) => {
                   const b = STAGE_BRIEFINGS[stg];
                   const isCur = selectedStage === stg;
@@ -413,9 +442,9 @@ export default function InstructionsModal({
                         setSelectedStage(stg);
                       }}
                       style={{
-                        padding: '12px 6px',
-                        borderRadius: '10px',
-                        background: isCur ? 'rgba(212, 163, 73, 0.25)' : 'rgba(15, 23, 42, 0.6)',
+                        padding: '10px 4px',
+                        borderRadius: '8px',
+                        background: isCur ? 'rgba(212, 163, 73, 0.25)' : '#090610',
                         border: isCur ? `2px solid ${b.accentColor}` : '1px solid rgba(255, 255, 255, 0.1)',
                         color: isCur ? '#fff' : '#94a3b8',
                         cursor: 'pointer',
@@ -423,14 +452,14 @@ export default function InstructionsModal({
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '4px',
+                        gap: '3px',
                         transition: 'all 0.18s ease',
                       }}
                     >
-                      <span style={{ fontSize: '0.74rem', fontWeight: 800, color: b.accentColor, letterSpacing: '0.04em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: b.accentColor, letterSpacing: '0.04em' }}>
                         STAGE {stg}
                       </span>
-                      <strong style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>
+                      <strong style={{ fontSize: '0.76rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '110px' }}>
                         {b.name.split(' ')[1] || b.name}
                       </strong>
                     </button>
@@ -438,170 +467,91 @@ export default function InstructionsModal({
                 })}
               </div>
 
-              {/* Stage Detail Card */}
+              {/* Stage Detail Card in Obsidian/Gold */}
               <div
                 style={{
-                  background: 'rgba(15, 23, 42, 0.8)',
+                  background: '#090610',
                   border: `1.5px solid ${stage.accentColor}`,
-                  borderRadius: '14px',
-                  padding: '24px 26px',
-                  boxShadow: `0 0 24px ${stage.accentColor}22`,
+                  borderRadius: '12px',
+                  padding: '20px 22px',
+                  boxShadow: `0 0 20px ${stage.accentColor}22`,
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '18px',
+                  gap: '14px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '12px' }}>
                   <div>
-                    <span style={{ fontSize: '0.76rem', fontWeight: 800, color: stage.accentColor, letterSpacing: '0.12em' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 800, color: stage.accentColor, letterSpacing: '0.12em' }}>
                       STAGE {stage.stage} OF 6 · WHAT TO EXPECT
                     </span>
-                    <h3 style={{ margin: '6px 0 2px 0', fontSize: '1.4rem', color: '#f8fafc', letterSpacing: '0.03em' }}>
+                    <h3 style={{ margin: '4px 0 2px 0', fontSize: '1.35rem', color: '#f8fafc', letterSpacing: '0.03em' }}>
                       {stage.name.toUpperCase()}
                     </h3>
-                    <span style={{ fontSize: '0.84rem', color: '#94a3b8' }}>{stage.subtitle}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{stage.subtitle}</span>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>TEMPO & SPEED</span>
-                    <strong style={{ fontSize: '0.98rem', color: stage.accentColor }}>{stage.speed}</strong>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block', fontWeight: 700 }}>VELOCITY</span>
+                    <strong style={{ color: stage.accentColor, fontSize: '0.96rem' }}>{stage.speed}</strong>
                   </div>
                 </div>
 
-                {/* Hazards List */}
+                {/* Hazards in this stage */}
                 <div>
-                  <h4 style={{ margin: '0 0 12px 0', fontSize: '0.88rem', color: '#cbd5e1', letterSpacing: '0.08em' }}>
-                    ACTIVE HAZARD THREATS IN THIS STAGE:
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#f59e0b', letterSpacing: '0.08em', display: 'block', marginBottom: '8px' }}>
+                    HAZARDS DEPLOYED IN THIS STAGE:
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {stage.hazards.map((h, i) => (
                       <div
                         key={i}
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '14px',
-                          background: 'rgba(255, 255, 255, 0.04)',
-                          padding: '12px 18px',
-                          borderRadius: '10px',
+                          background: 'rgba(255, 255, 255, 0.03)',
                           border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '8px',
+                          padding: '10px 14px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px',
                         }}
                       >
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <strong style={{ color: '#f8fafc', fontSize: '0.88rem' }}>{h.name}</strong>
+                            <span style={{ fontSize: '0.66rem', color: '#94a3b8', background: 'rgba(255, 255, 255, 0.08)', padding: '1px 5px', borderRadius: '3px' }}>{h.type}</span>
+                          </div>
+                          <p style={{ margin: '3px 0 0 0', fontSize: '0.8rem', color: '#cbd5e1' }}>{h.tip}</p>
+                        </div>
                         <span
                           style={{
-                            fontSize: '0.68rem',
+                            color: '#ef4444',
                             fontWeight: 900,
-                            letterSpacing: '0.08em',
-                            padding: '3px 7px',
+                            fontSize: '0.72rem',
+                            letterSpacing: '0.06em',
+                            background: 'rgba(239, 68, 68, 0.16)',
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            padding: '4px 10px',
                             borderRadius: '4px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.16)',
-                            color: '#cbd5e1',
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {h.type}
+                          {h.action}
                         </span>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <strong style={{ color: '#fff', fontSize: '0.92rem' }}>{h.name}</strong>
-                            <span
-                              style={{
-                                fontSize: '0.7rem',
-                                fontWeight: 800,
-                                padding: '2px 8px',
-                                borderRadius: '4px',
-                                background: 'rgba(239, 68, 68, 0.2)',
-                                color: '#ef4444',
-                                border: '1px solid rgba(239, 68, 68, 0.4)',
-                              }}
-                            >
-                              ACTION: {h.action}
-                            </span>
-                          </div>
-                          <span style={{ fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.45' }}>{h.tip}</span>
-                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Directive & Pro Tip */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-                  <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '14px 18px', borderRadius: '10px' }}>
-                    <span style={{ fontSize: '0.74rem', color: '#38bdf8', fontWeight: 800, display: 'block', marginBottom: '4px' }}>STAGE GOAL</span>
-                    <strong style={{ fontSize: '0.88rem', color: '#fff', lineHeight: '1.45' }}>{stage.objective}</strong>
+                {/* Directive & Pro-tip */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '10px', fontSize: '0.82rem' }}>
+                  <div style={{ color: '#e2e8f0' }}>
+                    <strong style={{ color: '#fbbf24' }}>DIRECTIVE: </strong>
+                    <span>{stage.objective}</span>
                   </div>
-                  <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', padding: '14px 18px', borderRadius: '10px' }}>
-                    <span style={{ fontSize: '0.74rem', color: '#fbbf24', fontWeight: 800, display: 'block', marginBottom: '4px' }}>SURVIVAL PRO-TIP</span>
-                    <strong style={{ fontSize: '0.88rem', color: '#fff', lineHeight: '1.45' }}>{stage.proTip}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: CARDS & SCORING */}
-          {activeTab === 'cards' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '14px', padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <h4 style={{ margin: '0 0 8px 0', color: '#d4a349', fontSize: '1.05rem', letterSpacing: '0.04em' }}>
-                    THE 6 CODEX POKÉMON SEALS
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '0.87rem', color: '#cbd5e1', lineHeight: '1.5' }}>
-                    Each of the 6 stages is anchored to an elemental Pokémon card. Collecting all 5 fragments in a stage completes that card into your Grimdex Binder:
-                  </p>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', padding: '12px 14px', borderRadius: '8px' }}>
-                    <strong style={{ color: '#10b981', fontSize: '0.85rem' }}>STAGE 1: BULBA-MOSS</strong>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>Grass / Poison · 120 HP</span>
-                  </div>
-                  <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid #f59e0b', padding: '12px 14px', borderRadius: '8px' }}>
-                    <strong style={{ color: '#f59e0b', fontSize: '0.85rem' }}>STAGE 2: PIKA-LANTERN</strong>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>Electric / Light · 130 HP</span>
-                  </div>
-                  <div style={{ background: 'rgba(56, 189, 248, 0.15)', border: '1px solid #38bdf8', padding: '12px 14px', borderRadius: '8px' }}>
-                    <strong style={{ color: '#38bdf8', fontSize: '0.85rem' }}>STAGE 3: ZAP-VENOMOTH</strong>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>Lightning / Bug · 140 HP</span>
-                  </div>
-                  <div style={{ background: 'rgba(192, 132, 252, 0.15)', border: '1px solid #c084fc', padding: '12px 14px', borderRadius: '8px' }}>
-                    <strong style={{ color: '#c084fc', fontSize: '0.85rem' }}>STAGE 4: GENGAR-WISP</strong>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>Ghost / Psychic · 150 HP</span>
-                  </div>
-                  <div style={{ background: 'rgba(148, 163, 184, 0.15)', border: '1px solid #94a3b8', padding: '12px 14px', borderRadius: '8px' }}>
-                    <strong style={{ color: '#94a3b8', fontSize: '0.85rem' }}>STAGE 5: CORVI-GEAR</strong>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>Steel / Flying · 160 HP</span>
-                  </div>
-                  <div style={{ background: 'rgba(6, 182, 212, 0.15)', border: '1px solid #06b6d4', padding: '12px 14px', borderRadius: '8px' }}>
-                    <strong style={{ color: '#06b6d4', fontSize: '0.85rem' }}>STAGE 6: GYARADOS-FIN</strong>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>Apex Water / Dark · 170 HP</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Scoring breakdown */}
-              <div style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '14px', padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <h4 style={{ margin: 0, color: '#fbbf24', fontSize: '1.02rem', letterSpacing: '0.04em' }}>
-                  SCORING & SHARD REWARDS
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-                  <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '14px 16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>SURVIVAL TIME</span>
-                    <strong style={{ display: 'block', color: '#fff', fontSize: '1.08rem' }}>+10 PTS / SEC</strong>
-                  </div>
-                  <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '14px 16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>NORMAL SHARD</span>
-                    <strong style={{ display: 'block', color: '#38bdf8', fontSize: '1.08rem' }}>+25 PTS</strong>
-                  </div>
-                  <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '14px 16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>RARE ORB</span>
-                    <strong style={{ display: 'block', color: '#f59e0b', fontSize: '1.08rem' }}>+60 PTS (+3)</strong>
-                  </div>
-                  <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '14px 16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>STAGE CLEAR</span>
-                    <strong style={{ display: 'block', color: '#10b981', fontSize: '1.08rem' }}>+300 PTS (+15)</strong>
+                  <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.78rem' }}>
+                    <strong>Pro-Tip: </strong>{stage.proTip}
                   </div>
                 </div>
               </div>
@@ -612,23 +562,23 @@ export default function InstructionsModal({
         {/* Footer actions */}
         <div
           style={{
-            padding: '20px 0 0 0',
-            marginTop: '12px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+            padding: '16px 0 0 0',
+            marginTop: '8px',
+            borderTop: '1px solid rgba(212, 163, 73, 0.25)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: '16px',
+            gap: '14px',
           }}
         >
           {!isStageTransition ? (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.86rem', color: '#94a3b8' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.84rem', color: '#94a3b8' }}>
               <input
                 type="checkbox"
                 checked={dontShowAgain}
                 onChange={(e) => handleToggleDontShow(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: '#d4a349', cursor: 'pointer' }}
+                style={{ width: '16px', height: '16px', accentColor: '#d4a349', cursor: 'pointer' }}
               />
               <span>Skip this briefing automatically on next runs</span>
             </label>
@@ -644,7 +594,7 @@ export default function InstructionsModal({
                 type="button"
                 className="text-button cabinet-btn-secondary"
                 onClick={onClose}
-                style={{ padding: '12px 24px', fontSize: '0.9rem', borderRadius: '8px' }}
+                style={{ padding: '10px 20px', fontSize: '0.88rem', borderRadius: '8px' }}
               >
                 CLOSE
               </button>
@@ -653,7 +603,7 @@ export default function InstructionsModal({
               type="button"
               className="primary-button cabinet-btn-primary"
               onClick={handleStart}
-              style={{ padding: '12px 30px', fontSize: '0.98rem', fontWeight: 800, borderRadius: '8px' }}
+              style={{ padding: '11px 26px', fontSize: '0.94rem', fontWeight: 800, borderRadius: '8px' }}
               autoFocus
             >
               {startButtonText}

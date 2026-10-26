@@ -1,32 +1,22 @@
 import { useState } from 'react';
 
 export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [section, setSection] = useState('');
-  const [nickname, setNickname] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [recoveryCode, setRecoveryCode] = useState('');
   const [returning, setReturning] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  function handleSectionChange(e) {
-    let val = e.target.value;
-    setSection(val);
-  }
-
-  function handleSectionBlur() {
-    if (section.trim() && !section.trim().startsWith('#')) {
-      setSection(`#${section.trim()}`);
-    }
-  }
 
   async function submit(event) {
     event.preventDefault();
     setError('');
 
     if (returning) {
-      if (!nickname.trim() && !fullName.trim()) {
-        setError('Please enter your registered Name or Call-sign.');
+      if (!identifier.trim()) {
+        setError('Please enter your Call-Sign, Full Name, or First and Last Name.');
         return;
       }
       if (!recoveryCode.trim()) {
@@ -35,7 +25,7 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
       }
       setSaving(true);
       try {
-        await onContinue(nickname.trim() || fullName.trim(), recoveryCode.trim());
+        await onContinue(identifier.trim(), recoveryCode.trim());
       } catch (requestError) {
         setError(requestError.message);
       } finally {
@@ -45,26 +35,29 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
     }
 
     // Creating new player
-    if (!fullName.trim()) {
-      setError('Please enter your Name in [Last Name, First Name] format.');
+    if (!firstName.trim()) {
+      setError('Please enter your First Name.');
+      return;
+    }
+
+    if (!lastName.trim()) {
+      setError('Please enter your Last Name.');
       return;
     }
 
     if (!section.trim()) {
-      setError('Please enter your Section [#Section].');
+      setError('Please enter your Section (e.g. 4ISB, 3ISA, 4ISA).');
       return;
     }
 
-    const formattedSection = section.trim().startsWith('#')
-      ? section.trim()
-      : `#${section.trim()}`;
+    const cleanSection = section.trim().replace(/^#+/, '').toUpperCase();
 
     setSaving(true);
     try {
       await onCreate({
-        fullName: fullName.trim(),
-        section: formattedSection,
-        nickname: nickname.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        section: cleanSection,
       });
     } catch (requestError) {
       setError(requestError.message);
@@ -75,125 +68,194 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
 
   return (
     <main className="overlay-screen">
-      <form className="setup-card cabinet-card" onSubmit={submit} style={{ maxWidth: '480px' }}>
-        <div className="cabinet-modal-header">
-          <span className="cabinet-modal-sub" style={{ letterSpacing: '0.14em', color: '#38bdf8', fontWeight: 700 }}>
-            GRIMDEX · PARTICIPANT ROSTER
+      <form
+        className="setup-card cabinet-card setup-card--neat"
+        onSubmit={submit}
+        style={{
+          maxWidth: '480px',
+          width: '100%',
+          padding: '1.4rem 1.6rem',
+          margin: 'auto',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div className="cabinet-modal-header" style={{ width: '100%', marginBottom: '0.35rem' }}>
+          <span className="cabinet-modal-sub" style={{ letterSpacing: '0.14em', color: '#d4a349', fontWeight: 800, fontSize: '0.72rem' }}>
+            PARTICIPANT ROSTER
           </span>
-          <h2 className="cabinet-modal-title">
+          <h2 className="cabinet-modal-title" style={{ fontSize: '1.5rem', margin: '3px 0 4px 0' }}>
             {returning ? 'RESTORE ARCHIVE' : 'PARTICIPANT REGISTRATION'}
           </h2>
-          <p className="cabinet-modal-sub">
+          <p className="cabinet-modal-sub" style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
             {returning
-              ? 'RECOVERY CREDENTIALS · RETRIEVE BINDER'
-              : 'ROSTER REGISTRATION · RECORDED IN DASHBOARD'}
+              ? 'ENTER CALL-SIGN OR FULL NAME & RECOVERY CODE'
+              : 'ENTER NAME & SECTION · SPECIALIZED CALL-SIGN AUTO-GENERATED'}
           </p>
         </div>
 
-        <p className="setup-sub">
-          {returning
-            ? 'Input your registered Name / Call-sign and secret recovery code to retrieve your collection.'
-            : 'Your Name and Section will be recorded in the Admin Dashboard participant registry and arcade leaderboard.'}
-        </p>
-
         {!returning ? (
-          <>
-            {/* Field 1: Name [Last Name, First Name] */}
-            <div className="input-group">
-              <label htmlFor="fullName" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>PLAYER NAME [Last Name, First Name]</span>
-                <span style={{ color: '#ef4444', fontSize: '0.78rem' }}>*REQUIRED</span>
-              </label>
-              <input
-                id="fullName"
-                value={fullName}
-                maxLength="48"
-                autoFocus
-                required
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Dela Cruz, Juan or Smith, John"
-                autoComplete="name"
-              />
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>
-                Format: <strong>[Last Name, First Name]</strong> for official records
-              </span>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            {/* Field 1 & 2: First Name and Last Name side-by-side in 2-column grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', width: '100%' }}>
+              <div className="setup-field-group">
+                <label
+                  htmlFor="firstName"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    color: '#d4a349',
+                    letterSpacing: '0.08em',
+                    marginBottom: '0.25rem',
+                  }}
+                >
+                  <span>FIRST NAME</span>
+                  <span style={{ color: '#ef4444', fontSize: '0.65rem', fontWeight: 900 }}>*REQ</span>
+                </label>
+                <input
+                  id="firstName"
+                  value={firstName}
+                  maxLength="32"
+                  autoFocus
+                  required
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Juan"
+                  autoComplete="given-name"
+                  className="setup-neat-input"
+                />
+              </div>
+
+              <div className="setup-field-group">
+                <label
+                  htmlFor="lastName"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    color: '#d4a349',
+                    letterSpacing: '0.08em',
+                    marginBottom: '0.25rem',
+                  }}
+                >
+                  <span>LAST NAME</span>
+                  <span style={{ color: '#ef4444', fontSize: '0.65rem', fontWeight: 900 }}>*REQ</span>
+                </label>
+                <input
+                  id="lastName"
+                  value={lastName}
+                  maxLength="32"
+                  required
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Dela Cruz"
+                  autoComplete="family-name"
+                  className="setup-neat-input"
+                />
+              </div>
             </div>
 
-            {/* Field 2: Section [#Section] */}
-            <div className="input-group">
-              <label htmlFor="section" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>CLASS / GROUP SECTION [#Section]</span>
-                <span style={{ color: '#ef4444', fontSize: '0.78rem' }}>*REQUIRED</span>
+            {/* Field 3: Section */}
+            <div className="setup-field-group" style={{ width: '100%' }}>
+              <label
+                htmlFor="section"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  color: '#d4a349',
+                  letterSpacing: '0.08em',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                <span>SECTION</span>
+                <span style={{ color: '#ef4444', fontSize: '0.65rem', fontWeight: 900 }}>*REQ</span>
               </label>
               <input
                 id="section"
                 value={section}
-                maxLength="32"
+                maxLength="16"
                 required
-                onChange={handleSectionChange}
-                onBlur={handleSectionBlur}
-                placeholder="e.g. #Diamond or #Section-1"
+                onChange={(e) => setSection(e.target.value)}
+                placeholder="4ISB"
                 autoComplete="off"
+                className="setup-neat-input"
               />
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>
-                Format: <strong>[#Section]</strong> (e.g. #Section 1, #CS-101, #Diamond)
-              </span>
             </div>
-
-            {/* Optional Field 3: Arcade Call-Sign */}
-            <div className="input-group">
-              <label htmlFor="nickname" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>ARCADE CALL-SIGN</span>
-                <span style={{ color: '#94a3b8', fontSize: '0.78rem' }}>OPTIONAL</span>
+          </div>
+        ) : (
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            <div className="setup-field-group" style={{ width: '100%' }}>
+              <label
+                htmlFor="identifier"
+                style={{
+                  display: 'block',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  color: '#d4a349',
+                  letterSpacing: '0.08em',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                CALL-SIGN OR FULL NAME
               </label>
               <input
-                id="nickname"
-                value={nickname}
-                maxLength="16"
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="Leave blank to auto-generate from your name"
-                autoComplete="off"
-              />
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>
-                Short arcade HUD handle (2–16 alphanumeric characters)
-              </span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="input-group">
-              <label htmlFor="nickname">CALL-SIGN OR FULL NAME</label>
-              <input
-                id="nickname"
-                value={nickname}
-                maxLength="32"
+                id="identifier"
+                value={identifier}
+                maxLength="48"
                 autoFocus
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="e.g. ROOKIE or Dela Cruz, Juan"
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="e.g. JUAN_DEL4ISB or Dela Cruz, Juan"
                 autoComplete="off"
+                className="setup-neat-input"
               />
             </div>
 
-            <div className="input-group">
-              <label htmlFor="recoveryCode">SECRET RECOVERY CODE</label>
+            <div className="setup-field-group" style={{ width: '100%' }}>
+              <label
+                htmlFor="recoveryCode"
+                style={{
+                  display: 'block',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  color: '#d4a349',
+                  letterSpacing: '0.08em',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                SECRET RECOVERY CODE
+              </label>
               <input
                 id="recoveryCode"
                 value={recoveryCode}
                 onChange={(e) => setRecoveryCode(e.target.value)}
                 placeholder="e.g. DL-XXXX-XXXX"
                 autoComplete="off"
+                className="setup-neat-input"
               />
             </div>
-          </>
+          </div>
         )}
 
-        {error && <p className="form-error" role="alert">{error}</p>}
+        {error && (
+          <p className="form-error" role="alert" style={{ width: '100%', margin: '0.4rem 0 0', boxSizing: 'border-box' }}>
+            {error}
+          </p>
+        )}
 
-        <button className="primary-button setup-submit-btn cabinet-btn-primary" disabled={saving}>
-          {saving ? 'AUTHENTICATING…' : returning ? 'RESTORE ARCHIVE' : 'REGISTER & COMMENCE [SPACE]'}
+        <button
+          className="primary-button setup-submit-btn cabinet-btn-primary"
+          disabled={saving}
+          style={{ width: '100%', marginTop: '0.85rem', padding: '0.85rem', fontSize: '0.92rem' }}
+        >
+          {saving ? 'AUTHENTICATING…' : returning ? 'RESTORE ARCHIVE' : 'REGISTER & COMMENCE [ENTER]'}
         </button>
 
-        <div className="setup-actions">
+        <div className="setup-actions" style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.65rem', justifyContent: 'center' }}>
           <button
             className="text-button cabinet-btn-secondary"
             type="button"
@@ -201,10 +263,16 @@ export default function PlayerSetupScreen({ onCreate, onContinue, onCancel }) {
               setReturning(!returning);
               setError('');
             }}
+            style={{ fontSize: '0.76rem', padding: '0.45rem 0.85rem' }}
           >
-            {returning ? 'REGISTER NEW PARTICIPANT' : 'RESTORE WITH RECOVERY CODE'}
+            {returning ? 'NEW REGISTRATION' : 'RETURNING PLAYER?'}
           </button>
-          <button className="text-button cabinet-btn-secondary" type="button" onClick={onCancel}>
+          <button
+            className="text-button cabinet-btn-secondary"
+            type="button"
+            onClick={onCancel}
+            style={{ fontSize: '0.76rem', padding: '0.45rem 0.85rem' }}
+          >
             RETURN TO TITLE
           </button>
         </div>

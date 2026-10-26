@@ -10,7 +10,7 @@ const STAGE_SEALS = [
   { stage: 6, roman: 'VI', name: 'Gyarados-Fin', color: '#06b6d4' },
 ];
 
-export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollection, onLeaderboard }) {
+export default function ResultsScreen({ result, onPlayAgain, onTitle, onLeaderboard }) {
   const stagesCleared = result.stagesCleared ?? 0;
   const isFlawless = stagesCleared === 6;
   const isCardMissed = result.endReason === 'card_missed';
@@ -124,18 +124,59 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
           </div>
         </div>
 
+        {/* Survival Relics Performance Ribbon */}
+        <div
+          className="results-relics-strip cabinet-telemetry-well"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            padding: '10px 16px',
+            margin: '0.6rem 0',
+            background: 'rgba(10, 7, 18, 0.85)',
+            border: '1px solid rgba(212, 163, 73, 0.3)',
+            borderRadius: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.1rem' }}>🛡️</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span className="stat-label" style={{ fontSize: '0.65rem', color: '#94a3b8', letterSpacing: '0.05em' }}>
+                AEGIS FORCEFIELD
+              </span>
+              <span className="stat-val" style={{ fontSize: '0.95rem', color: '#38bdf8', fontWeight: 800 }}>
+                {(result.telemetry?.powerupStats?.shieldsCollected ?? result.summary?.telemetry?.powerupStats?.shieldsCollected ?? 0)} Deployed{' '}
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                  ({(result.telemetry?.powerupStats?.shieldsBroken ?? result.summary?.telemetry?.powerupStats?.shieldsBroken ?? 0)} Absorbed)
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <div style={{ width: '1px', height: '24px', background: 'rgba(212, 163, 73, 0.2)' }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.1rem' }}>❤️</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span className="stat-label" style={{ fontSize: '0.65rem', color: '#94a3b8', letterSpacing: '0.05em' }}>
+                SOUL HEARTS
+              </span>
+              <span className="stat-val" style={{ fontSize: '0.95rem', color: '#f43f5e', fontWeight: 800 }}>
+                {(result.telemetry?.powerupStats?.heartsCollected ?? result.summary?.telemetry?.powerupStats?.heartsCollected ?? 0)} Recovered{' '}
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                  (+{(result.telemetry?.powerupStats?.heartHpRestored ?? result.summary?.telemetry?.powerupStats?.heartHpRestored ?? 0)} HP)
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* 4-Tier Forensic Run Autopsy */}
         <ForensicRunAutopsy
           telemetry={result.telemetry || result.summary?.telemetry}
           currentStage={stagesCleared + 1}
           currentScore={result.score}
         />
-
-        {result.unlockedCards?.length > 0 && (
-          <div className="new-card-alert">
-            ★ NEW POKÉDEX ENTRY ASSEMBLED · READY TO INSPECT IN CARD BINDER
-          </div>
-        )}
 
         <div className="save-status">
           <span className="status-dot" /> RECORD PERSISTED TO LOCAL ARCHIVE
@@ -146,10 +187,6 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onCollecti
         </button>
 
         <nav className="results-nav-row">
-          <button className="text-button cabinet-btn-secondary" onClick={onCollection}>
-            CARD BINDER
-          </button>
-          <span className="nav-divider">·</span>
           <button className="text-button cabinet-btn-secondary" onClick={onLeaderboard}>
             LEADERBOARD
           </button>

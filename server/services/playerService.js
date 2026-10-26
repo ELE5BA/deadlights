@@ -35,9 +35,7 @@ function publicPlayerSummary(db, player) {
 
 export function formatSectionTag(val) {
   if (!val || typeof val !== 'string') return '';
-  const clean = val.trim();
-  if (!clean) return '';
-  return clean.startsWith('#') ? clean : `#${clean}`;
+  return val.trim().replace(/^#+/, '').toUpperCase();
 }
 
 export function formatFullName(val) {
@@ -47,33 +45,58 @@ export function formatFullName(val) {
 
 export function createPlayer(input, extra = {}) {
   const isObject = typeof input === 'object' && input !== null;
-  const rawFullName = formatFullName(isObject ? input.fullName : extra.fullName);
+  const firstName = (isObject ? (input.firstName || '') : (extra.firstName || '')).trim();
+  const lastName = (isObject ? (input.lastName || '') : (extra.lastName || '')).trim();
+  const rawFullName = formatFullName(
+    firstName && lastName
+      ? `${lastName}, ${firstName}`
+      : (isObject ? input.fullName : extra.fullName)
+  );
   const rawSection = formatSectionTag(isObject ? input.section : extra.section);
   let nicknameCandidate = (isObject ? input.nickname : input) || '';
 
-  // If nickname was not explicitly specified, derive a valid call-sign from fullName [Last Name, First Name]
-  if (!nicknameCandidate && rawFullName) {
-    const parts = rawFullName.split(',').map((p) => p.trim());
-    const lastName = (parts[0] || '').replace(/[^A-Za-z0-9]/g, '');
-    const firstPart = (parts[1] || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 3);
-    const combined = firstPart ? `${lastName}_${firstPart}` : lastName;
-    nicknameCandidate = combined.slice(0, 14) || `P1_${Math.floor(100 + Math.random() * 899)}`;
+  // Auto-generate specialized arcade call-sign if not explicitly specified
+  if (!nicknameCandidate || typeof nicknameCandidate !== 'string' || !nicknameCandidate.trim()) {
+    let firstClean = firstName.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    let lastClean = lastName.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    let secClean = rawSection.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+
+    if ((!firstClean || !lastClean) && rawFullName) {
+      if (rawFullName.includes(',')) {
+        const parts = rawFullName.split(',').map((p) => p.trim());
+        lastClean = (parts[0] || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        firstClean = (parts[1] || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      } else {
+        const parts = rawFullName.split(/\s+/);
+        firstClean = (parts[0] || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        lastClean = (parts[parts.length - 1] || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      }
+    }
+
+    if (firstClean && lastClean) {
+      // E.g. JUAN_DEL4ISB
+      nicknameCandidate = `${firstClean.slice(0, 6)}_${lastClean.slice(0, 3)}${secClean.slice(0, 4)}`.slice(0, 16);
+    } else if (lastClean) {
+      nicknameCandidate = `${lastClean.slice(0, 8)}_${secClean.slice(0, 4)}`.slice(0, 16);
+    } else {
+      nicknameCandidate = `P1_${secClean.slice(0, 4) || Math.floor(100 + Math.random() * 899)}`.slice(0, 16);
+    }
   }
 
   let name = normalizeNickname(nicknameCandidate);
   if (!name) return { error: 'INVALID_NICKNAME' };
 
   const db = getDatabase();
-  // If derived name is taken, add numeric suffix if derived
+  // If call-sign is taken, append 2-digit suffix for uniqueness
   if (db.prepare('SELECT 1 FROM players WHERE nickname_normalized = ?').get(name.normalized)) {
-    if (rawFullName) {
-      for (let s = 2; s <= 99; s++) {
-        const alt = `${name.nickname.slice(0, 13)}_${s}`;
-        const altNorm = normalizeNickname(alt);
-        if (altNorm && !db.prepare('SELECT 1 FROM players WHERE nickname_normalized = ?').get(altNorm.normalized)) {
-          name = altNorm;
-          break;
-        }
+    for (let s = 2; s <= 99; s++) {
+      const suffix = `_${s}`;
+      const base = name.nickname.slice(0, 16 - suffix.length);
+      const alt = `${base}${suffix}`;
+      const altNorm = normalizeNickname(alt);
+      if (altNorm && !db.prepare('SELECT 1 FROM players WHERE nickname_normalized = ?').get(altNorm.normalized)) {
+        name = altNorm;
+        break;
       }
     }
   }
@@ -110,17 +133,36 @@ export function createPlayer(input, extra = {}) {
 
 export function continuePlayer(nicknameInput, recoveryCode) {
   const isObject = typeof nicknameInput === 'object' && nicknameInput !== null;
-  const candidateNick = isObject ? nicknameInput.nickname : nicknameInput;
-  const code = isObject ? nicknameInput.recoveryCode : recoveryCode;
+  const candidate = (isObject ? (nicknameInput.nickname || nicknameInput.fullName) : nicknameInput) || '';
+  const code = (isObject ? nicknameInput.recoveryCode : recoveryCode) || '';
 
-  const name = normalizeNickname(candidateNick);
-  if (!name || typeof code !== 'string') return { error: 'PROFILE_NOT_FOUND' };
+  if (typeof candidate !== 'string' || !candidate.trim() || typeof code !== 'string') {
+    return { error: 'PROFILE_NOT_FOUND' };
+  }
+
+  const trimmed = candidate.trim();
   const db = getDatabase();
-  const player = db.prepare('SELECT * FROM players WHERE nickname_normalized = ?').get(name.normalized);
+  const lowerCand = trimmed.toLowerCase();
+  const normalizedCandidate = trimmed.replace(/\s+/g, ' ').toLowerCase();
+
+  let player = db.prepare(
+    'SELECT * FROM players WHERE nickname_normalized = ? OR LOWER(full_name) = ? OR LOWER(nickname) = ?'
+  ).get(normalizedCandidate, lowerCand, lowerCand);
+
+  if (!player && trimmed.includes(' ') && !trimmed.includes(',')) {
+    const parts = trimmed.split(/\s+/);
+    if (parts.length >= 2) {
+      const reversedLastFirst = `${parts.slice(1).join(' ')}, ${parts[0]}`.toLowerCase();
+      player = db.prepare('SELECT * FROM players WHERE LOWER(full_name) = ?').get(reversedLastFirst);
+    }
+  }
+
   if (!player) return { error: 'PROFILE_NOT_FOUND' };
-  const candidate = Buffer.from(hashRecoveryCode(code));
-  const stored = Buffer.from(player.recovery_code_hash ?? '');
-  if (candidate.length !== stored.length || !crypto.timingSafeEqual(candidate, stored)) return { error: 'PROFILE_NOT_FOUND' };
+  const candidateHash = Buffer.from(hashRecoveryCode(code));
+  const storedHash = Buffer.from(player.recovery_code_hash ?? '');
+  if (candidateHash.length !== storedHash.length || !crypto.timingSafeEqual(candidateHash, storedHash)) {
+    return { error: 'PROFILE_NOT_FOUND' };
+  }
   db.prepare('UPDATE players SET last_seen_at = ? WHERE id = ?').run(new Date().toISOString(), player.id);
   return publicPlayerSummary(db, player);
 }

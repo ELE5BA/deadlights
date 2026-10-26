@@ -15,6 +15,7 @@ import {
 import { POKEMON_CARD_ROSTER } from '../game/GameEngine.js';
 import StageIntelBanner from '../components/StageIntelBanner.jsx';
 import InstructionsModal, { STAGE_BRIEFINGS } from '../components/InstructionsModal.jsx';
+import DevToolsOverlay from '../components/DevToolsOverlay.jsx';
 
 function AudioSpeakerIcon({ muted }) {
   if (muted) {
@@ -282,6 +283,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     stageCardsCollected: 0,
     cardsRequiredPerStage: 5,
     fragmentsCollected: 0,
+    shieldRemainingMs: 0,
+    devGodMode: false,
+    devAutoPilot: false,
+    devTimeScale: 1.0,
     victorySequenceActive: false,
   });
 
@@ -304,7 +309,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
 
   const [showStageBanner, setShowStageBanner] = useState(true);
   const [showManual, setShowManual] = useState(false);
-  const [stageTransitionModal, setStageTransitionModal] = useState(null);
+  const [showDevTools, setShowDevTools] = useState(false);
+  const devKeyBufferRef = useRef([]);
   const prevStageNumRef = useRef(1);
 
   const handleDismissStageBanner = useCallback(() => {
@@ -437,14 +443,16 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     });
   }, []);
 
-  const playerId = player?.playerId;
+  const playerId = player?.playerId || player?.id;
 
   const startNewRun = useCallback((token) => {
-    if (!playerId) return;
+    if (!playerId) {
+      setSessionState('error');
+      return;
+    }
     setSessionState('starting');
     setLossModal(null);
     setCompletedCardModal(null);
-    setStageTransitionModal(null);
     setJumpscareActive(false);
     setSavedRunResult(null);
     savingPromiseRef.current = null;
@@ -453,7 +461,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         setSession(data);
         setSessionState('countdown');
       })
-      .catch(() => setSessionState('error'));
+      .catch((err) => {
+        console.error('startSession error:', err);
+        setSessionState('error');
+      });
   }, [playerId]);
 
   useEffect(() => {
@@ -567,7 +578,6 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     playButtonClickSfx();
     setLossModal(null);
     setCompletedCardModal(null);
-    setStageTransitionModal(null);
     setJumpscareActive(false);
     const nextToken = crypto.randomUUID();
     setRunToken(nextToken);
@@ -580,20 +590,35 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     if (stageNum >= (GAME_CONFIG.stageCount || 6)) {
       engineRef.current?.triggerVictorySequence();
     } else {
-      // Transition to What to Expect modal before starting next stage!
-      setStageTransitionModal({ nextStage: stageNum + 1 });
+      engineRef.current?.resume();
     }
   }, [completedCardModal]);
-
-  const handleCommenceNextStage = useCallback(() => {
-    playButtonClickSfx();
-    setStageTransitionModal(null);
-    engineRef.current?.resume();
-  }, []);
 
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // 1. Secret Dev Console Keybinds: Ctrl+Shift+D or Alt+` (Alt+Backquote) or typing 'dev' within 1.2s
+      if (
+        (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) ||
+        (e.altKey && (e.key === '`' || e.code === 'Backquote'))
+      ) {
+        e.preventDefault();
+        setShowDevTools((prev) => !prev);
+        return;
+      }
+
+      const now = Date.now();
+      const k = e.key.toLowerCase();
+      if (['d', 'e', 'v'].includes(k)) {
+        const nextBuf = [...devKeyBufferRef.current.filter((item) => now - item.time < 1200), { key: k, time: now }];
+        devKeyBufferRef.current = nextBuf;
+        const len = nextBuf.length;
+        if (len >= 3 && nextBuf[len - 3].key === 'd' && nextBuf[len - 2].key === 'e' && nextBuf[len - 1].key === 'v') {
+          devKeyBufferRef.current = [];
+          setShowDevTools((prev) => !prev);
+        }
+      }
+
       if (lossModal && (e.key === 'r' || e.key === 'R')) {
         e.preventDefault();
         restartRun();
@@ -695,15 +720,15 @@ export default function GameScreen({ player, onFinished, runnerId }) {
             <div ref={stageProgressRef} className="hud-progress-fill" />
           </div>
 
-          {/* Active Stage Hazards Expectation Strip (Auto-dismisses with banner after 4s) */}
-          <div className={`hud-stage-hazards-chip ${!showStageBanner ? 'chip-dismissed' : ''}`} title="Hazards to expect in this stage">
-            <span className="hazards-chip-label">EXPECT:</span>
-            {(STAGE_BRIEFINGS[engineState.stageNumber]?.hazards || []).map((h, i) => (
-              <span key={i} className="hazard-chip-badge" title={`${h.name} — Action: ${h.action}`}>
-                {h.name.split(' ')[0]}
+          {/* Active Shield Timer Badge (Visible when Aegis Forcefield is active) */}
+          {engineState.shieldRemainingMs > 0 && (
+            <div className="hud-shield-timer-badge" role="status" aria-label="Aegis Forcefield Active">
+              <span className="shield-badge-icon">🛡️</span>
+              <span className="shield-badge-text">
+                SHIELD: {(engineState.shieldRemainingMs / 1000).toFixed(1)}s
               </span>
-            ))}
-          </div>
+            </div>
+          )}
 
           {/* Bottom Row: 3 Poké-Heart SVGs & Rift Shard Counter */}
           <div className="hud-vitality-row">
@@ -1148,6 +1173,50 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         </div>
       )}
 
+      {/* ── SESSION INITIALIZATION ERROR FALLBACK MODAL ── */}
+      {sessionState === 'error' && (
+        <div className="card-missed-modal-backdrop loss-modal-backdrop" role="alertdialog">
+          <div className="card-missed-modal loss-modal cabinet-card" style={{ maxWidth: '440px', textAlign: 'center' }}>
+            <div className="cabinet-modal-header">
+              <span className="cabinet-modal-sub" style={{ color: '#ef4444', fontWeight: 800 }}>COMMUNICATION ERROR</span>
+              <h2 className="loss-title cabinet-modal-title" style={{ fontSize: '1.45rem' }}>SESSION CANNOT START</h2>
+              <p className="loss-sub cabinet-modal-sub">
+                Could not establish game session with the booth server. Please verify your player credentials or retry.
+              </p>
+            </div>
+            <div className="loss-actions" style={{ marginTop: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <button
+                className="primary-button cabinet-btn-primary"
+                onClick={() => {
+                  playButtonClickSfx();
+                  startNewRun(crypto.randomUUID());
+                }}
+              >
+                RETRY SESSION [ENTER]
+              </button>
+              <button
+                className="text-button cabinet-btn-secondary"
+                onClick={() => {
+                  playButtonClickSfx();
+                  onFinished({
+                    score: 0,
+                    survivalSeconds: 0,
+                    stagesCleared: 0,
+                    shardsEarned: 0,
+                    wallet: player?.wallet || { shardsBalance: 0 },
+                    bestScore: player?.bestScore || 0,
+                    endReason: 'init_error',
+                    saved: false,
+                  });
+                }}
+              >
+                RETURN TO TITLE / ROSTER
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Auto-fading bottom footnote */}
       {!hasActiveModalOrCutscene && (
         <aside className={`game-help ${isTutorialFaded ? 'game-help--hidden' : ''}`}>
@@ -1302,15 +1371,12 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         />
       )}
 
-      {/* Stage Transition: What to Expect Modal Before Next Stage Starts */}
-      {stageTransitionModal && (
-        <InstructionsModal
-          initialTab="stages"
-          initialStage={stageTransitionModal.nextStage}
-          isStageTransition={true}
-          onStart={handleCommenceNextStage}
-          onClose={handleCommenceNextStage}
-          startButtonText={`COMMENCE STAGE ${stageTransitionModal.nextStage} [ENTER]`}
+      {/* Secret In-Game Dev Tools & Admin Command Console */}
+      {showDevTools && (
+        <DevToolsOverlay
+          engine={engineRef.current}
+          gameState={engineState}
+          onClose={() => setShowDevTools(false)}
         />
       )}
     </main>
