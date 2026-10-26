@@ -1392,8 +1392,8 @@ export class GameEngine {
         invulnerableMs: this.invulnerableMs,
       });
 
-      // Update Pursuer Villain Entity with live obstacles for dynamic dodging and spins
-      this.pursuerEntity.update(deltaMs, this.health, this.currentX, this.objects);
+      // Update Pursuer Villain Entity with live obstacles & overhead scenery arches for dynamic dodging and spins
+      this.pursuerEntity.update(deltaMs, this.health, this.currentX, this.objects, this.world.scrollingProps, speed);
 
       // Spring-Damper Camera Follow, Dutch Banking, Dynamic FOV Speed Ramp & Micro-Rumble
       const { camera } = this.world;

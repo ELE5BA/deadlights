@@ -10,6 +10,7 @@ import AdminLoginScreen from '../screens/AdminLoginScreen.jsx';
 import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen.jsx';
 import PokeBalloonEmblem from '../components/PokeBalloonEmblem.jsx';
 import HomeBackgroundCanvas from '../components/HomeBackgroundCanvas.jsx';
+import InstructionsModal from '../components/InstructionsModal.jsx';
 import { RUNNER_ROSTER } from '../game/entities/PlayerCharacter.js';
 import RunnerPortraitCanvas from '../components/RunnerPortraitCanvas.jsx';
 import {
@@ -30,11 +31,30 @@ function DashboardIcon({ className = 'home-dash-icon' }) {
   );
 }
 
+function AudioSpeakerIcon({ muted }) {
+  if (muted) {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor" fillOpacity="0.3" />
+        <line x1="23" y1="9" x2="17" y2="15" />
+        <line x1="17" y1="9" x2="23" y2="15" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor" fillOpacity="0.3" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    </svg>
+  );
+}
+
 const RUNNER_TRAITS = {
-  'pika-georgie': '⚡ SPARK DASH',
-  'mimikyu-kid': '🎭 DECOY VEIL',
-  'gengar-hood': '👻 SHADOW STEP',
-  'litwick-runner': '🔥 SOUL FLAME',
+  'pika-georgie': 'SPARK DASH',
+  'mimikyu-kid': 'DECOY VEIL',
+  'gengar-hood': 'SHADOW STEP',
+  'litwick-runner': 'SOUL FLAME',
 };
 
 export default function App() {
@@ -73,6 +93,7 @@ export default function App() {
   const [soundMuted, setSoundMuted] = useState(() => isMuted());
   const [result, setResult] = useState(null);
   const [attractStage, setAttractStage] = useState({ stage: 1, name: 'The Twilight Mist' });
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const handleOpenAdminWindow = () => {
     playButtonClickSfx();
@@ -209,7 +230,7 @@ export default function App() {
             title={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
             aria-label={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
           >
-            {soundMuted ? '🔇' : '🔊'}
+            <AudioSpeakerIcon muted={soundMuted} />
           </button>
 
           <section className="hero-panel arcade-title-panel" aria-labelledby="title">
@@ -261,14 +282,33 @@ export default function App() {
               className="primary-button hero-start-btn"
               onClick={() => {
                 playButtonClickSfx();
-                player ? setScreen('game') : setScreen('setup');
+                if (!player) {
+                  setScreen('setup');
+                  return;
+                }
+                const skip = localStorage.getItem('deadlights.skipInstructions') === 'true';
+                if (skip) {
+                  setScreen('game');
+                } else {
+                  setShowInstructions(true);
+                }
               }}
               disabled={health.state !== 'ready'}
             >
-              {player ? `COMMENCE RUN AS ${player.nickname.toUpperCase()}` : 'ENTER THE GAUNTLET'}
+              {player ? `COMMENCE RUN AS ${(player.fullName || player.nickname).toUpperCase()}` : 'ENTER THE GAUNTLET'}
             </button>
 
             <nav className="home-links">
+              <button
+                className="text-button"
+                onClick={() => {
+                  playButtonClickSfx();
+                  setShowInstructions(true);
+                }}
+              >
+                HOW TO PLAY
+              </button>
+              <span className="home-link-divider">·</span>
               <button
                 className="text-button"
                 onClick={() => {
@@ -323,7 +363,7 @@ export default function App() {
           {adminToast && (
             <div className="admin-launch-toast" role="status">
               <div className="toast-text">
-                <strong>⚡ BOOTH OPS:</strong> {adminToast.message}
+                <strong>BOOTH OPS:</strong> {adminToast.message}
               </div>
               {adminToast.url && (
                 <a
@@ -345,6 +385,21 @@ export default function App() {
             </div>
           )}
         </main>
+      )}
+
+      {showInstructions && (
+        <InstructionsModal
+          onStart={() => {
+            setShowInstructions(false);
+            if (player) {
+              setScreen('game');
+            } else {
+              setScreen('setup');
+            }
+          }}
+          onClose={() => setShowInstructions(false)}
+          startButtonText={player ? `COMMENCE RUN AS ${(player.fullName || player.nickname).toUpperCase()}` : 'ENTER THE GAUNTLET'}
+        />
       )}
     </div>
   );

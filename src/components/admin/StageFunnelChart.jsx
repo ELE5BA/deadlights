@@ -29,7 +29,7 @@ export default function StageFunnelChart({ funnelData = [], bottleneckStage = ''
         </div>
         {bottleneckStage && (
           <div className="bottleneck-pill">
-            <span className="bottleneck-icon">⚠</span>
+            <span className="bottleneck-icon">[!]</span>
             <span>BOTTLENECK: <strong>{bottleneckStage}</strong></span>
           </div>
         )}
@@ -99,8 +99,8 @@ export default function StageFunnelChart({ funnelData = [], bottleneckStage = ''
       </div>
 
       <div className="funnel-footer-insights">
-        <span className="insight-bullet">✦ Stage 1 begins with 100% entrant cohort.</span>
-        <span className="insight-bullet">✦ Steepest attrition typically occurs at Stages 3–4 during high-velocity sinusoidal and double-blockade releases.</span>
+        <span className="insight-bullet">• Stage 1 begins with 100% entrant cohort.</span>
+        <span className="insight-bullet">• Steepest attrition typically occurs at Stages 3–4 during high-velocity sinusoidal and double-blockade releases.</span>
       </div>
     </div>
   );

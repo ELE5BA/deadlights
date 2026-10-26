@@ -13,7 +13,7 @@ function median(values) { if (!values.length) return null; const sorted = [...va
 export function getAnalytics({ from, to } = {}) {
   const range = localRange(from, to); if (!range) return { error: 'INVALID_DATE_RANGE' };
   const [start, end] = range; const db = getDatabase();
-  const runs = db.prepare(`SELECT s.*, p.nickname FROM game_sessions s JOIN players p ON p.id = s.player_id WHERE s.status = 'completed' AND s.ended_at >= ? AND s.ended_at < ? ORDER BY s.ended_at`).all(start, end);
+  const runs = db.prepare(`SELECT s.*, p.nickname, COALESCE(p.full_name, p.nickname) AS fullName, COALESCE(p.section, '') AS section FROM game_sessions s JOIN players p ON p.id = s.player_id WHERE s.status = 'completed' AND s.ended_at >= ? AND s.ended_at < ? ORDER BY s.ended_at`).all(start, end);
   const scores = runs.map((run) => run.score); const survivals = runs.map((run) => run.survival_seconds); const shards = runs.map((run) => run.shards_collected + (run.rare_bonus_count * 3));
   const profileCounts = new Map(); runs.forEach((run) => profileCounts.set(run.player_id, (profileCounts.get(run.player_id) ?? 0) + 1));
   const uniqueProfiles = profileCounts.size; const repeatProfiles = [...profileCounts.values()].filter((count) => count >= 2).length;
@@ -27,7 +27,41 @@ export function getAnalytics({ from, to } = {}) {
   if (runs.length >= 10 && medianShards < 5) recommendations.push({ id: 'P-03', sample: runs.length, observed: `Median shards: ${medianShards.toFixed(1)}`, text: 'Slightly increase pickups or lower the first paid-card cost by 1–2 shards.' });
   if (runs.length >= 20 && medianSurvival >= 55 && obstacles.some((row) => row.collisionRate !== null && row.collisionRate < 10)) recommendations.push({ id: 'P-04', sample: runs.length, observed: `Median survival: ${medianSurvival.toFixed(1)} sec`, text: 'Increase only late-stage speed or tighten late-stage spacing slightly.' });
   const cardsUnlocked = db.prepare('SELECT COUNT(1) AS total FROM player_collections').get().total;
-  const metrics = { completedRuns: runs.length, uniqueProfiles, averageScore: runs.length ? Math.round(scores.reduce((sum, value) => sum + value, 0) / runs.length) : null, medianScore: median(scores), averageSurvival: runs.length ? Number((survivals.reduce((sum, value) => sum + value, 0) / runs.length).toFixed(1)) : null, medianSurvival, bestScore: best ? { score: best.score, nickname: best.nickname, endedAt: best.ended_at } : null, totalShardsEarned: shards.reduce((sum, value) => sum + value, 0), cardsUnlocked, repeatProfileRate: uniqueProfiles ? Number(((repeatProfiles / uniqueProfiles) * 100).toFixed(1)) : null };
+  const metrics = { completedRuns: runs.length, uniqueProfiles, averageScore: runs.length ? Math.round(scores.reduce((sum, value) => sum + value, 0) / runs.length) : null, medianScore: median(scores), averageSurvival: runs.length ? Number((survivals.reduce((sum, value) => sum + value, 0) / runs.length).toFixed(1)) : null, medianSurvival, bestScore: best ? { score: best.score, nickname: best.nickname, fullName: best.fullName, section: best.section, endedAt: best.ended_at } : null, totalShardsEarned: shards.reduce((sum, value) => sum + value, 0), cardsUnlocked, repeatProfileRate: uniqueProfiles ? Number(((repeatProfiles / uniqueProfiles) * 100).toFixed(1)) : null };
   const estimates = { expectedShardsPerRun: runs.length >= 10 ? medianShards : null, expectedShardsNeeded: Math.max(0, 10 - runs.length), nextDayRuns: daily.size >= 3 ? Number(([...daily.values()].slice(-3).reduce((sum, value) => sum + value, 0) / 3).toFixed(1)) : null, nextDayRunsNeeded: Math.max(0, 3 - daily.size) };
-  return { range: { from: start, to: end, timeZone: 'Asia/Manila' }, metrics, series: { daily: [...daily].map(([date, count]) => ({ date, count })), endReasons: [...reasons].map(([reason, count]) => ({ reason, count })) }, obstacleStats: obstacles, recommendations, estimates, sampleCounts: { completedRuns: runs.length, recordedDates: daily.size } };
+  
+  const playerRoster = db.prepare(`
+    SELECT 
+      p.id AS playerId,
+      p.nickname,
+      COALESCE(p.full_name, p.nickname) AS fullName,
+      COALESCE(p.section, '') AS section,
+      p.created_at AS createdAt,
+      p.last_seen_at AS lastSeenAt,
+      COUNT(s.id) AS totalRuns,
+      COALESCE(MAX(s.score), 0) AS bestScore,
+      COALESCE(MAX(s.survival_seconds), 0) AS bestSurvival,
+      COALESCE(MAX(s.stages_cleared), 0) AS maxStagesCleared,
+      COALESCE(SUM(s.shards_collected), 0) AS totalShards
+    FROM players p
+    LEFT JOIN game_sessions s ON s.player_id = p.id AND s.status = 'completed'
+    GROUP BY p.id
+    ORDER BY p.last_seen_at DESC
+  `).all();
+
+  const recentRuns = runs.slice(-50).reverse().map((r) => ({
+    id: r.id,
+    playerId: r.player_id,
+    nickname: r.nickname,
+    fullName: r.fullName,
+    section: r.section,
+    score: r.score,
+    survivalSeconds: r.survival_seconds,
+    stagesCleared: r.stages_cleared,
+    shards: r.shards_collected,
+    endedAt: r.ended_at,
+    endReason: r.end_reason,
+  }));
+
+  return { range: { from: start, to: end, timeZone: 'Asia/Manila' }, metrics, series: { daily: [...daily].map(([date, count]) => ({ date, count })), endReasons: [...reasons].map(([reason, count]) => ({ reason, count })) }, obstacleStats: obstacles, recommendations, estimates, sampleCounts: { completedRuns: runs.length, recordedDates: daily.size }, playerRoster, recentRuns };
 }

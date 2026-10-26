@@ -307,8 +307,8 @@ export default function HomeBackgroundCanvas({ runnerId = 'pika-georgie', onStag
         invulnerableMs: 0,
       });
 
-      // Animate pursuer in background with decor obstacles for dynamic dodging and spins
-      pursuer.update(deltaMs, 3, player.root.position.x, decorObjects);
+      // Animate pursuer in background with decor obstacles and scrolling arches for dynamic dodging and spins
+      pursuer.update(deltaMs, 3, player.root.position.x, decorObjects, world.scrollingProps, speed);
 
       // Low-angle cinematic camera sway
       world.camera.position.x = Math.sin(elapsed * 0.45) * 1.8;

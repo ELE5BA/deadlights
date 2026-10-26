@@ -20,10 +20,18 @@ export function getHealth() {
   return request('/api/health');
 }
 
-export function createPlayer(nickname) { return send('/api/players', { nickname }); }
+export function createPlayer(params) {
+  const body = typeof params === 'string' ? { nickname: params } : params;
+  return send('/api/players', body);
+}
 export function startSession(playerId, runToken, configVersion) { return send('/api/sessions', { playerId, runToken, configVersion }); }
 export function finishSession(sessionId, summary) { return send(`/api/sessions/${sessionId}/finish`, summary); }
-export function continuePlayer(nickname, recoveryCode) { return send('/api/players/continue', { nickname, recoveryCode }); }
+export function continuePlayer(nicknameOrParams, recoveryCode) {
+  const body = typeof nicknameOrParams === 'object' && nicknameOrParams !== null
+    ? nicknameOrParams
+    : { nickname: nicknameOrParams, recoveryCode };
+  return send('/api/players/continue', body);
+}
 export function getPlayerSummary(playerId) { return request(`/api/players/${playerId}/summary`); }
 export function getCollection(playerId) { return request(`/api/players/${playerId}/collection`); }
 export function unlockCreature(playerId, creatureId) { return send(`/api/players/${playerId}/collection/${creatureId}/unlock`, {}); }

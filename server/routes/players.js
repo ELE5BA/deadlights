@@ -5,16 +5,16 @@ export const playersRouter = Router();
 
 playersRouter.post('/', (request, response, next) => {
   try {
-    const result = createPlayer(request.body?.nickname);
-    if (result.error === 'INVALID_NICKNAME') return response.status(400).json({ ok: false, error: { code: result.error, message: 'Please enter a nickname using 2–16 letters, numbers, spaces, underscores, or hyphens.' } });
-    if (result.error === 'NICKNAME_TAKEN') return response.status(409).json({ ok: false, error: { code: result.error, message: 'That nickname is already in use. Continue with its player code or choose another name.' } });
+    const result = createPlayer(request.body);
+    if (result.error === 'INVALID_NICKNAME') return response.status(400).json({ ok: false, error: { code: result.error, message: 'Please enter a valid Name [Last Name, First Name] or Call-sign.' } });
+    if (result.error === 'NICKNAME_TAKEN') return response.status(409).json({ ok: false, error: { code: result.error, message: 'That call-sign is already in use. Continue with its recovery code or choose another name.' } });
     return response.status(201).json({ ok: true, data: result });
   } catch (error) { return next(error); }
 });
 
 playersRouter.post('/continue', (request, response, next) => {
   try {
-    const result = continuePlayer(request.body?.nickname, request.body?.recoveryCode);
+    const result = continuePlayer(request.body, request.body?.recoveryCode);
     if (result.error) return response.status(401).json({ ok: false, error: { code: 'PROFILE_NOT_FOUND', message: 'Could not restore that profile.' } });
     return response.json({ ok: true, data: result });
   } catch (error) { return next(error); }

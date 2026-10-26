@@ -13,6 +13,27 @@ import {
   playButtonClickSfx,
 } from '../game/soundEffects.js';
 import { POKEMON_CARD_ROSTER } from '../game/GameEngine.js';
+import StageIntelBanner from '../components/StageIntelBanner.jsx';
+import InstructionsModal, { STAGE_BRIEFINGS } from '../components/InstructionsModal.jsx';
+
+function AudioSpeakerIcon({ muted }) {
+  if (muted) {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor" fillOpacity="0.3" />
+        <line x1="23" y1="9" x2="17" y2="15" />
+        <line x1="17" y1="9" x2="23" y2="15" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor" fillOpacity="0.3" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    </svg>
+  );
+}
 
 /**
  * Miniature cartoon sprite for the 6 stage-specific Pokémon
@@ -281,6 +302,22 @@ export default function GameScreen({ player, onFinished, runnerId }) {
   const [savedRunResult, setSavedRunResult] = useState(null);
   const savingPromiseRef = useRef(null);
 
+  const [showStageBanner, setShowStageBanner] = useState(true);
+  const [showManual, setShowManual] = useState(false);
+  const [stageTransitionModal, setStageTransitionModal] = useState(null);
+  const prevStageNumRef = useRef(1);
+
+  const handleDismissStageBanner = useCallback(() => {
+    setShowStageBanner(false);
+  }, []);
+
+  useEffect(() => {
+    if (engineState.stageNumber !== prevStageNumRef.current) {
+      prevStageNumRef.current = engineState.stageNumber;
+      setShowStageBanner(true);
+    }
+  }, [engineState.stageNumber]);
+
   // Demise Cutscene Phase Tracking (0.0s to 5.2s)
   const [demiseCutscene, setDemiseCutscene] = useState({
     lineIndex: 0,
@@ -407,6 +444,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     setSessionState('starting');
     setLossModal(null);
     setCompletedCardModal(null);
+    setStageTransitionModal(null);
     setJumpscareActive(false);
     setSavedRunResult(null);
     savingPromiseRef.current = null;
@@ -529,6 +567,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     playButtonClickSfx();
     setLossModal(null);
     setCompletedCardModal(null);
+    setStageTransitionModal(null);
     setJumpscareActive(false);
     const nextToken = crypto.randomUUID();
     setRunToken(nextToken);
@@ -541,9 +580,16 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     if (stageNum >= (GAME_CONFIG.stageCount || 6)) {
       engineRef.current?.triggerVictorySequence();
     } else {
-      engineRef.current?.resume();
+      // Transition to What to Expect modal before starting next stage!
+      setStageTransitionModal({ nextStage: stageNum + 1 });
     }
   }, [completedCardModal]);
+
+  const handleCommenceNextStage = useCallback(() => {
+    playButtonClickSfx();
+    setStageTransitionModal(null);
+    engineRef.current?.resume();
+  }, []);
 
   // Keyboard controls
   useEffect(() => {
@@ -625,6 +671,15 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         runnerId={runnerId}
       />
 
+      {/* ── STAGE INTEL BANNER (CLEAR HAZARD EXPECTATIONS AT START & STAGE ADVANCE) ── */}
+      {showStageBanner && !hasActiveModalOrCutscene && sessionState === 'playing' && (
+        <StageIntelBanner
+          stageNumber={engineState.stageNumber}
+          autoDismissMs={4000}
+          onDismiss={handleDismissStageBanner}
+        />
+      )}
+
       {/* ── UNOBSTRUCTED PERIPHERAL HUD (PENNYWISE 100% UNBLOCKED IN TOP SKY) ── */}
 
       {/* 1. TOP-LEFT CARTOON PLATE (Hidden during victory sequence & jumpscare) */}
@@ -638,6 +693,16 @@ export default function GameScreen({ player, onFinished, runnerId }) {
           </div>
           <div className="hud-progress-track">
             <div ref={stageProgressRef} className="hud-progress-fill" />
+          </div>
+
+          {/* Active Stage Hazards Expectation Strip (Auto-dismisses with banner after 4s) */}
+          <div className={`hud-stage-hazards-chip ${!showStageBanner ? 'chip-dismissed' : ''}`} title="Hazards to expect in this stage">
+            <span className="hazards-chip-label">EXPECT:</span>
+            {(STAGE_BRIEFINGS[engineState.stageNumber]?.hazards || []).map((h, i) => (
+              <span key={i} className="hazard-chip-badge" title={`${h.name} — Action: ${h.action}`}>
+                {h.name.split(' ')[0]}
+              </span>
+            ))}
           </div>
 
           {/* Bottom Row: 3 Poké-Heart SVGs & Rift Shard Counter */}
@@ -709,7 +774,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
             title={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
             aria-label={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
           >
-            {soundMuted ? '🔇' : '🔊'}
+            <AudioSpeakerIcon muted={soundMuted} />
           </button>
 
           <button
@@ -882,8 +947,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               <span className="victory-marquee-sparkle" aria-hidden="true">★</span>
               <span className="victory-marquee-text">
                 {demiseCutscene.isGrandChampion
-                  ? '🏆 GRAND CHAMPION · THE CURSED CARNIVAL IS PURIFIED! 🏆'
-                  : '★ HEXEDEX SEAL ACTIVATED · BANISHING PENNYWISE ★'}
+                  ? 'GRAND CHAMPION · THE CURSED CARNIVAL IS PURIFIED!'
+                  : 'HEXEDEX SEAL ACTIVATED · BANISHING PENNYWISE'}
               </span>
               <span className="victory-marquee-sparkle" aria-hidden="true">★</span>
             </div>
@@ -997,8 +1062,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                 autoFocus
               >
                 {completedCardModal.stageNumber < 6
-                  ? `CONTINUE TO STAGE ${completedCardModal.stageNumber + 1} [PRESS SPACE]`
-                  : 'CONQUERED ALL 6 STAGES · VIEW ARCHIVE [PRESS SPACE]'}
+                  ? `STAGE ${completedCardModal.stageNumber + 1} INTEL & BRIEFING [ENTER]`
+                  : 'CONQUERED ALL 6 STAGES · VIEW ARCHIVE [ENTER]'}
               </button>
             </div>
           </div>
@@ -1103,12 +1168,26 @@ export default function GameScreen({ player, onFinished, runnerId }) {
       {sessionState === 'countdown' && (
         <div className="countdown-overlay">
           <div className="countdown-number">{countdown > 0 ? countdown : 'SURVIVE!'}</div>
-          <div className="oracle-forecast-pill" role="status" aria-label="Pre-Stage Oracle Telemetry Forecast">
-            <div className="oracle-pill-badge">STAGE {engineState.stageNumber} · ORACLE FORECAST</div>
-            <div className="oracle-pill-stats">
-              <span>SPEED: <strong>{(11.0 + (engineState.stageNumber - 1) * 1.5).toFixed(1)} m/s</strong></span>
-              <span>PROJECTILE VELOCITY: <strong>{(14.0 + (engineState.stageNumber - 1) * 2.1).toFixed(1)} m/s</strong></span>
-              <span>EST. SURVIVAL: <strong className="oracle-green">{Math.max(45, 96 - (engineState.stageNumber - 1) * 9)}%</strong></span>
+
+          {/* Pre-Stage Intel Briefing: Clear expectations for current stage */}
+          <div className="countdown-stage-intel-card" role="status" aria-label="Pre-Stage Intel Briefing">
+            <div className="countdown-intel-header">
+              <span className="countdown-stage-tag">STAGE {engineState.stageNumber} OF 6</span>
+              <strong className="countdown-stage-name">{engineState.stageName.toUpperCase()}</strong>
+              <span className="countdown-speed-tag">{STAGE_BRIEFINGS[engineState.stageNumber]?.speed || '15 m/s'}</span>
+            </div>
+
+            <div className="countdown-hazards-row">
+              <span className="countdown-hazards-label">EXPECT HAZARDS:</span>
+              {(STAGE_BRIEFINGS[engineState.stageNumber]?.hazards || []).map((h, i) => (
+                <span key={i} className="countdown-hazard-pill">
+                  <strong>{h.name}</strong> <em>({h.action})</em>
+                </span>
+              ))}
+            </div>
+
+            <div className="countdown-directive-text">
+              <strong>DIRECTIVE:</strong> {STAGE_BRIEFINGS[engineState.stageNumber]?.objective || 'Collect all 5 fragments'}
             </div>
           </div>
         </div>
@@ -1121,6 +1200,20 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               <h2 className="pause-cabinet-title cabinet-modal-title">GAME PAUSED</h2>
               <div className="pause-stage-badge cabinet-modal-sub">
                 STAGE {engineState.stageNumber} OF 6 · {engineState.stageName.toUpperCase()}
+              </div>
+            </div>
+
+            {/* Stage Hazard Expectations in Pause Menu */}
+            <div style={{ margin: '8px 0', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'left' }}>
+              <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '0.08em', display: 'block', marginBottom: '4px' }}>
+                STAGE {engineState.stageNumber} HAZARDS & ACTIONS:
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {(STAGE_BRIEFINGS[engineState.stageNumber]?.hazards || []).map((h, i) => (
+                  <span key={i} style={{ fontSize: '0.74rem', background: 'rgba(239, 68, 68, 0.15)', color: '#f8fafc', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                    <strong>{h.name}</strong>: <span style={{ color: '#ef4444', fontWeight: 700 }}>{h.action}</span>
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -1160,25 +1253,65 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                     toggleMute();
                   }}
                 >
-                  🔊 AUDIO: {soundMuted ? 'MUTED' : 'ON'}
+                  AUDIO: {soundMuted ? 'MUTED' : 'ON'}
                 </button>
                 <button
                   className="pause-toggle-btn"
                   onClick={toggleEffects}
                 >
-                  ✨ FX: {reducedEffects ? 'LOW' : 'HIGH'}
+                  FX: {reducedEffects ? 'LOW' : 'HIGH'}
                 </button>
               </div>
+
+              <button
+                className="pause-toggle-btn"
+                onClick={() => {
+                  playButtonClickSfx();
+                  setShowManual(true);
+                }}
+                style={{
+                  background: 'rgba(212, 163, 73, 0.16)',
+                  borderColor: '#d4a349',
+                  color: '#fef08a',
+                  width: '100%',
+                  padding: '9px 12px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                }}
+              >
+                HOW TO PLAY / SURVIVAL MANUAL
+              </button>
 
               <button
                 className="pause-btn-abandon"
                 onClick={endRun}
               >
-                ✖ ABANDON RUN & EXIT
+                ABANDON RUN & EXIT
               </button>
             </div>
           </section>
         </div>
+      )}
+
+      {/* In-Game Survival Manual Modal */}
+      {showManual && (
+        <InstructionsModal
+          onClose={() => setShowManual(false)}
+          onStart={() => setShowManual(false)}
+          startButtonText="RETURN TO RUN [ENTER]"
+        />
+      )}
+
+      {/* Stage Transition: What to Expect Modal Before Next Stage Starts */}
+      {stageTransitionModal && (
+        <InstructionsModal
+          initialTab="stages"
+          initialStage={stageTransitionModal.nextStage}
+          isStageTransition={true}
+          onStart={handleCommenceNextStage}
+          onClose={handleCommenceNextStage}
+          startButtonText={`COMMENCE STAGE ${stageTransitionModal.nextStage} [ENTER]`}
+        />
       )}
     </main>
   );

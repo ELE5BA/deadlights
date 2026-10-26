@@ -56,7 +56,7 @@ export default function AdminLoginScreen({ onSignedIn, onBack }) {
           onClick={onSignedIn}
           style={{ width: '100%', marginTop: '0.4rem', border: '1px solid #d4a349' }}
         >
-          ⚡ ENTER ADMIN DASHBOARD DIRECTLY
+          ENTER ADMIN DASHBOARD DIRECTLY
         </button>
 
         <div className="setup-actions">

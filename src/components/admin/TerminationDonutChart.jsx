@@ -18,7 +18,6 @@ export default function TerminationDonutChart({ endReasons = [], totalRuns = 0 }
       sublabel: 'Full Gauntlet Victory',
       color: '#10b981',
       glow: 'rgba(16, 185, 129, 0.4)',
-      icon: '🏆',
     },
     {
       key: 'hit_points_zero',
@@ -26,7 +25,6 @@ export default function TerminationDonutChart({ endReasons = [], totalRuns = 0 }
       sublabel: 'Collision Damage Fatalities',
       color: '#ef4444',
       glow: 'rgba(239, 68, 68, 0.4)',
-      icon: '💀',
     },
     {
       key: 'card_missed',
@@ -34,7 +32,6 @@ export default function TerminationDonutChart({ endReasons = [], totalRuns = 0 }
       sublabel: 'Zero-Miss Codex Rule',
       color: '#f59e0b',
       glow: 'rgba(245, 158, 11, 0.4)',
-      icon: '⏱️',
     },
   ];
 

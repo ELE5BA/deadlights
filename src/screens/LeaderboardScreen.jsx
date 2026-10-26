@@ -163,7 +163,8 @@ export default function LeaderboardScreen({ player, onBack, onPlay }) {
                       </div>
 
                       <div className="podium-nickname-wrap">
-                        <strong className="podium-nickname">{entry.nickname.toUpperCase()}</strong>
+                        <strong className="podium-nickname">{(entry.fullName || entry.nickname).toUpperCase()}</strong>
+                        {entry.section && <span style={{ fontSize: '0.72rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.15)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>{entry.section}</span>}
                         {isActive && <span className="podium-you-badge">YOU</span>}
                       </div>
 
@@ -205,7 +206,12 @@ export default function LeaderboardScreen({ player, onBack, onPlay }) {
                       >
                         <div className="challenger-left">
                           <span className="challenger-keycap">#{entry.rank}</span>
-                          <span className="challenger-name">{entry.nickname}</span>
+                          <span className="challenger-name">{entry.fullName || entry.nickname}</span>
+                          {entry.section && (
+                            <span style={{ fontSize: '0.7rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.15)', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
+                              {entry.section}
+                            </span>
+                          )}
                           {isActive && <span className="challenger-you-tag">YOU</span>}
                         </div>
                         <div className="challenger-right">

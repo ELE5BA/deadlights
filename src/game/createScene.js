@@ -403,28 +403,31 @@ export function createScene(canvas) {
 
     // Grand Carnival Marquee Overhead Truss Arch spanning over the road
     const grandArch = new THREE.Group();
+    grandArch.name = 'grandArch';
+    grandArch.userData = { isOverheadObstacle: true, baseHeight: 6.4 };
     [-6.8, 6.8].forEach((colX) => {
-      const tower = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6.2, 0.45), lampPostMat);
-      tower.position.set(colX, 3.1, 0);
+      const tower = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6.4, 0.45), lampPostMat);
+      tower.position.set(colX, 3.2, 0);
       addBoxOutline(tower);
       grandArch.add(tower);
     });
     const archBeam = new THREE.Mesh(new THREE.BoxGeometry(14.2, 0.6, 0.5), lampPostMat);
-    archBeam.position.set(0, 6.1, 0);
+    archBeam.position.set(0, 6.4, 0);
     addBoxOutline(archBeam);
     grandArch.add(archBeam);
 
     const signBoard = new THREE.Mesh(new THREE.BoxGeometry(7.5, 1.1, 0.18), tentMat);
-    signBoard.position.set(0, 6.1, 0.35);
+    signBoard.position.set(0, 6.4, 0.35);
     addBoxOutline(signBoard);
     grandArch.add(signBoard);
 
     for (let bx = -5.8; bx <= 5.8; bx += 1.45) {
       const bMesh = new THREE.Mesh(new THREE.SphereGeometry(0.16, 6, 6), (Math.abs(bx) % 2.9 < 1.0) ? goldBulbMat : redBulbMat);
-      bMesh.position.set(bx, 6.75, 0.4);
+      bMesh.position.set(bx, 7.05, 0.4);
       grandArch.add(bMesh);
     }
     chunk0.add(grandArch);
+    chunk0.userData = { hasOverheadObstacle: true, arch: grandArch };
 
     scene.add(chunk0);
     scrollingProps.push(chunk0);

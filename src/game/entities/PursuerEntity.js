@@ -233,6 +233,15 @@ export class PursuerEntity {
     this.currentBankZ = 0;
     this.currentPitchX = 0;
 
+    // Overhead Arch Avoidance: Acrobatic Aerial Vault & Front-Flip Somersault Above Obstacles
+    this.overheadVaultActive = false;
+    this.currentVaultFactor = 0;
+    this.vaultFlipAngle = 0;
+    this.vaultProgress = 0;
+    this.vaultLiftY = 0;
+    this.currentSomersaultAngle = 0;
+    this.somersaultTuck = 0;
+
     this.buildPennywiseRig();
   }
 
@@ -999,6 +1008,13 @@ export class PursuerEntity {
     this.jumpscareElapsed = 0;
     this.spinAnim.active = false;
     this.dodgeActive = false;
+    this.overheadVaultActive = false;
+    this.currentVaultFactor = 0;
+    this.vaultFlipAngle = 0;
+    this.vaultProgress = 0;
+    this.vaultLiftY = 0;
+    this.currentSomersaultAngle = 0;
+    this.somersaultTuck = 0;
     this.clownTargetX = 0;
     this.currentClownX = 0;
     this.clownLiftY = 0;
@@ -1459,7 +1475,7 @@ export class PursuerEntity {
     }
   }
 
-  update(deltaMs, playerHearts, targetLaneX = 0, activeObstacles = []) {
+  update(deltaMs, playerHearts, targetLaneX = 0, activeObstacles = [], scrollingProps = [], runSpeed = 20) {
     const dt = deltaMs / 1000;
     this.time += dt * 3.2;
 
@@ -1602,13 +1618,80 @@ export class PursuerEntity {
       }
     }
 
-    // Gentle, buoyant evasive lift during dodge
-    const targetLiftY = this.dodgeActive ? 0.75 : 0;
-    this.clownLiftY = THREE.MathUtils.damp(this.clownLiftY, targetLiftY, 3.2, dt);
+    // ── OVERHEAD MARQUEE ARCH AVOIDANCE: AERIAL VAULT & SOMERSAULT FLIP ──
+    // Pennywise vaults high above the arch and executes a tumbling front-flip over it
+    let targetVaultProgress = 0;
+    let isVaulting = false;
+    const clownZPos = this.root.position.z;
 
-    // Rare, deliberate theatrical pirouette (every 18 - 26 seconds, NO SPAM)
+    if (scrollingProps && scrollingProps.length > 0) {
+      for (const chunk of scrollingProps) {
+        if (!chunk.userData?.hasOverheadObstacle) continue;
+        const arch = chunk.userData.arch;
+        if (!arch) continue;
+
+        // Arch moves in +Z direction (from far background forward toward camera)
+        const archWorldZ = chunk.position.z + arch.position.z;
+        const dz = archWorldZ - clownZPos;
+
+        // Active vault & somersault window: -9.5 (launch approach) to +4.5 (landing float)
+        if (dz >= -9.5 && dz <= 4.5) {
+          isVaulting = true;
+          this.overheadVaultActive = true;
+          targetVaultProgress = (dz - (-9.5)) / (4.5 - (-9.5)); // 0 to 1
+          break;
+        }
+      }
+    }
+
+    if (!isVaulting && this.overheadVaultActive) {
+      this.overheadVaultActive = false;
+      targetVaultProgress = 0;
+    }
+
+    this.vaultProgress = targetVaultProgress;
+
+    // Fluid parabolic aerial vault arc with smooth apex rise
+    const u = Math.min(1, Math.max(0, this.vaultProgress));
+    const vaultArc = isVaulting ? Math.sin(u * Math.PI) : 0;
+    // Soar +5.4 units above normal hover (reaches Y ~ 9.75, far above the Y = 6.4 beam & 7.05 bulbs)
+    const targetLiftY = Math.pow(vaultArc, 0.75) * 5.4;
+    this.vaultLiftY = THREE.MathUtils.damp(this.vaultLiftY || 0, targetLiftY, 8.5, dt);
+
+    // Continuous, buttery-smooth 360-degree tumbling somersault flip with quintic smootherstep easing
+    let targetFlipAngle = 0;
+    let targetTuck = 0;
+    if (isVaulting && this.vaultProgress >= 0.10 && this.vaultProgress <= 0.88) {
+      const flipProg = (this.vaultProgress - 0.10) / (0.88 - 0.10);
+      // Quintic smootherstep: 6t^5 - 15t^4 + 10t^3 (0 1st & 2nd derivative at ends = zero jerk)
+      const flipEase = flipProg * flipProg * flipProg * (flipProg * (flipProg * 6 - 15) + 10);
+      targetFlipAngle = -flipEase * Math.PI * 2;
+      targetTuck = Math.sin(flipProg * Math.PI);
+    } else if (isVaulting && this.vaultProgress > 0.88) {
+      // Landing glide: hold full 360 loop without snapping back to 0 while vault settles
+      targetFlipAngle = -Math.PI * 2;
+      targetTuck = 0;
+    } else {
+      // Outside vaulting: seamlessly normalize -2*PI to 0 without reverse unwind
+      if (this.currentSomersaultAngle <= -Math.PI * 1.6) {
+        this.currentSomersaultAngle += Math.PI * 2;
+      }
+      targetFlipAngle = 0;
+      targetTuck = 0;
+    }
+
+    // High responsiveness damping for rotational angle and acrobatic limb tuck
+    this.currentSomersaultAngle = THREE.MathUtils.damp(this.currentSomersaultAngle || 0, targetFlipAngle, 14.0, dt);
+    this.somersaultTuck = THREE.MathUtils.damp(this.somersaultTuck || 0, targetTuck, 11.0, dt);
+    this.vaultFlipAngle = this.currentSomersaultAngle;
+
+    // Gentle, buoyant evasive lift during road obstacle dodge
+    const targetLiftDodge = this.dodgeActive ? 0.75 : 0;
+    this.clownLiftY = THREE.MathUtils.damp(this.clownLiftY, targetLiftDodge, 3.2, dt);
+
+    // Rare, deliberate theatrical pirouette (every 18 - 26 seconds, NO SPAM, paused during aerial vault)
     this.spinTimer += dt;
-    if (this.spinTimer >= this.nextSpinInterval && !this.dodgeActive && !this.throwAnim.active) {
+    if (this.spinTimer >= this.nextSpinInterval && !this.dodgeActive && !this.throwAnim.active && !this.overheadVaultActive) {
       this.spinTimer = 0;
       this.nextSpinInterval = 18.0 + Math.random() * 8.0;
       const dir = Math.random() > 0.5 ? 1 : -1;
@@ -1632,7 +1715,7 @@ export class PursuerEntity {
 
     // ── IN-GAME AMBIENT STALKING ANIMATION ─────────────────────────
     this.headTwitchTimer += dt;
-    if (this.headTwitchTimer > 3.2) {
+    if (this.headTwitchTimer > 3.2 && !this.overheadVaultActive) {
       this.headTwitchTimer = 0;
       this.targetHeadTilt = (Math.random() > 0.5 ? 1 : -1) * (0.18 + Math.random() * 0.16);
       this.targetHeadRotY = (Math.random() - 0.5) * 0.28;
@@ -1641,33 +1724,42 @@ export class PursuerEntity {
     this.currentHeadTilt += (this.targetHeadTilt - this.currentHeadTilt) * Math.min(1, dt * 5.0);
     this.targetHeadTilt *= Math.max(0, 1 - dt * 1.5);
 
-    // Sinusoidal hover bobbing + buoyant lift
+    // Sinusoidal hover bobbing with organic dual-frequency harmonic + vault lift
     const targetHoverY = playerHearts <= 1 ? 4.05 : 4.35;
     this.baseHoverY += (targetHoverY - this.baseHoverY) * Math.min(1, dt * 2.5);
 
-    const hoverY = this.baseHoverY + Math.sin(this.time * 0.75) * 0.22 + this.clownLiftY;
-    this.bodyGroup.position.y = hoverY;
+    const organicHover = Math.sin(this.time * 0.75) * 0.20 + Math.sin(this.time * 1.5 + 1.2) * 0.06;
+    const hoverY = this.baseHoverY + organicHover + this.clownLiftY + this.vaultLiftY;
 
-    // Fluid lateral traversal with smooth spring damping
+    // Center-of-mass rotation offset during tumbling somersault:
+    // Ensures rotation pivots cleanly around clown's midriff/chest (y = 1.15) rather than swinging from pelvis
+    const somersaultAngle = this.currentSomersaultAngle;
+    const cmY = 1.15;
+    const cmOffsetY = cmY * (1 - Math.cos(somersaultAngle));
+    const cmOffsetZ = -cmY * Math.sin(somersaultAngle);
+
+    this.bodyGroup.position.y = hoverY + cmOffsetY;
+    this.bodyGroup.position.z = cmOffsetZ;
+
+    // Fluid lateral traversal with spring damping (avoid robotic stiffness)
     const prevX = this.root.position.x;
-    // Base tracking follows player smoothly when not dodging
     if (!this.dodgeActive) {
-      const slowWeave = Math.sin(this.time * 0.45) * 0.35; // gentle, hypnotic patrol drift
-      this.clownTargetX = targetLaneX * 0.75 + slowWeave;
+      const slowWeave = Math.sin(this.time * 0.42) * 0.32 + Math.sin(this.time * 0.85 + 0.5) * 0.08;
+      this.clownTargetX = targetLaneX * 0.72 + slowWeave;
     }
-    this.currentClownX = THREE.MathUtils.damp(this.currentClownX || 0, this.clownTargetX, 2.8, dt);
+    this.currentClownX = THREE.MathUtils.damp(this.currentClownX || 0, this.clownTargetX, 3.4, dt);
     this.root.position.x = this.currentClownX;
 
     // Aerodynamic banking based on actual lateral velocity
     const lateralVel = (this.root.position.x - prevX) / Math.max(0.001, dt);
-    const targetBankZ = THREE.MathUtils.clamp(-lateralVel * 0.065, -0.28, 0.28);
-    this.currentBankZ = THREE.MathUtils.damp(this.currentBankZ, targetBankZ, 4.0, dt);
+    const targetBankZ = THREE.MathUtils.clamp(-lateralVel * 0.07, -0.26, 0.26);
+    this.currentBankZ = THREE.MathUtils.damp(this.currentBankZ, targetBankZ, 3.8, dt);
 
-    // Torso pitch damp
-    const targetPitchX = THREE.MathUtils.clamp(this.clownLiftY * 0.15, -0.2, 0.2);
-    this.currentPitchX = THREE.MathUtils.damp(this.currentPitchX, targetPitchX, 4.0, dt);
+    // Torso pitch damp (blends hover banking with tumbling front-flip somersault)
+    const basePitch = THREE.MathUtils.clamp(this.clownLiftY * 0.15, -0.2, 0.2);
+    this.currentPitchX = THREE.MathUtils.damp(this.currentPitchX, basePitch, 4.5, dt);
 
-    this.bodyGroup.rotation.x = this.currentPitchX;
+    this.bodyGroup.rotation.x = this.currentPitchX + this.currentSomersaultAngle;
     this.bodyGroup.rotation.y = Math.sin(this.time * 0.35) * 0.05 + spinAngleY;
     this.bodyGroup.rotation.z = this.currentBankZ + Math.sin(this.time * 0.5) * 0.035;
 
@@ -1676,7 +1768,16 @@ export class PursuerEntity {
       const subtleWobble = Math.sin(this.time * 0.8) * 0.04;
       this.headGroup.rotation.z = this.currentHeadTilt + subtleWobble - this.currentBankZ * 0.6;
       this.headGroup.rotation.y = (this.targetHeadRotY || 0) * 0.85 + Math.cos(this.time * 0.5) * 0.06;
-      this.headGroup.rotation.x = Math.sin(this.time * 0.9) * 0.04;
+      this.headGroup.rotation.x = Math.sin(this.time * 0.9) * 0.04 - 0.45 * this.somersaultTuck;
+    }
+
+    // Unified expressive jaw animation (acrobatic cackle at tumble apex + snarling predator)
+    if (this.jawGroup && !this.isJumpscare && !this.isDefeated) {
+      const isVaultLaugh = this.overheadVaultActive && this.somersaultTuck > 0.05;
+      const targetJawOpen = isVaultLaugh
+        ? -this.somersaultTuck * 1.15
+        : ((this.dodgeActive || playerHearts <= 1) ? -0.42 : -0.05);
+      this.jawGroup.rotation.x = THREE.MathUtils.damp(this.jawGroup.rotation.x, targetJawOpen, 8.5, dt);
     }
 
     // 3D Eye Tracking: Rotate / shift pupils and glowing Deadlights irises toward player's lane!
@@ -1772,26 +1873,38 @@ export class PursuerEntity {
       this.fingersL?.forEach((f) => { f.rotation.z = arch * 0.35; });
       this.fingersR?.forEach((f) => { f.rotation.z = -arch * 0.35; });
     } else {
-      // Slow, hypnotic claw reach & finger twitch
-      this.leftArm.rotation.x = -0.55 + Math.sin(this.time * 1.1) * 0.10;
-      this.leftArm.rotation.z = -0.15 - this.currentBankZ * 0.35;
+      // Slow, hypnotic claw reach & finger twitch + acrobatic gymnast tuck/flare during vault flip
+      const isFlipping = this.overheadVaultActive && this.somersaultTuck > 0.01;
+      const tuck = this.somersaultTuck;
+      const flare = (isFlipping && this.vaultProgress > 0.65)
+        ? Math.sin(Math.min(1, (this.vaultProgress - 0.65) / 0.35) * Math.PI) * 0.85
+        : 0;
 
-      this.rightArm.rotation.x = -0.70 + Math.sin(this.time * 1.2) * 0.12;
+      const armFlipX = isFlipping ? -1.85 * tuck : 0;
+      const armFlipZ = isFlipping ? (0.45 * tuck - flare) : 0;
+
+      this.leftArm.rotation.x = -0.55 + Math.sin(this.time * 1.1) * 0.10 + armFlipX;
+      this.leftArm.rotation.z = -0.15 - this.currentBankZ * 0.35 + armFlipZ;
+
+      this.rightArm.rotation.x = -0.70 + Math.sin(this.time * 1.2) * 0.12 + armFlipX;
       this.rightArm.rotation.y = 0.12 + Math.cos(this.time * 0.9) * 0.08;
-      this.rightArm.rotation.z = 0.10 - this.currentBankZ * 0.35;
+      this.rightArm.rotation.z = 0.10 - this.currentBankZ * 0.35 - armFlipZ;
 
       this.fingersL?.forEach((f, idx) => {
-        f.rotation.z = Math.sin(this.time * 1.8 + idx * 0.6) * 0.12;
+        f.rotation.z = Math.sin(this.time * 1.8 + idx * 0.6) * 0.12 + (isFlipping ? 0.45 * tuck : 0);
       });
       this.fingersR?.forEach((f, idx) => {
-        f.rotation.z = Math.cos(this.time * 2.0 + idx * 0.7) * 0.14;
+        f.rotation.z = Math.cos(this.time * 2.0 + idx * 0.7) * 0.14 - (isFlipping ? 0.45 * tuck : 0);
       });
     }
 
-    // Marionette leg dangle with smooth pendulum lag
+    // Marionette leg dangle with tight gymnast tuck during flip
+    const legTuck = this.overheadVaultActive ? this.somersaultTuck * 1.45 : 0;
+
     this.shoeGroups?.forEach((sg, idx) => {
       const legPhase = idx === 0 ? 0 : Math.PI * 0.75;
-      sg.rotation.x = Math.sin(this.time * 1.0 + legPhase) * 0.12 - this.currentBankZ * 0.2;
+      const baseLeg = Math.sin(this.time * 1.0 + legPhase) * 0.12 - this.currentBankZ * 0.2;
+      sg.rotation.x = baseLeg - legTuck;
       sg.rotation.z = (idx === 0 ? -1 : 1) * 0.06 - this.currentBankZ * 0.4;
     });
 
@@ -1803,12 +1916,15 @@ export class PursuerEntity {
       this.collarGroup.scale.set(breathe, 1, breathe);
     }
 
-    // Floating balloons trailing softly with fluid inertia
+    // Floating balloons soaring safely high above the aerial somersault and trailing on tethers
+    const balloonVaultLift = this.overheadVaultActive ? Math.sin(this.vaultProgress * Math.PI) * 2.3 : 0;
+    const balloonVaultLag = this.overheadVaultActive ? -Math.sin(this.vaultProgress * Math.PI) * 1.15 : 0;
+
     this.balloons.forEach((b) => {
       const spinLag = this.spinAnim.active ? -this.spinAnim.direction * Math.sin(spinProgress * Math.PI) * 0.45 : 0;
-      b.group.position.y = (hoverY + 0.2) + b.base.y * 0.45 + Math.sin(this.time * 1.1 + b.phase) * 0.25;
+      b.group.position.y = (hoverY + 0.2) + b.base.y * 0.45 + Math.sin(this.time * 1.1 + b.phase) * 0.22 + balloonVaultLift;
       b.group.position.x = b.base.x + Math.cos(this.time * 0.7 + b.phase) * 0.16 + spinLag - this.currentBankZ * 0.9;
-      b.group.position.z = b.base.z + Math.sin(this.time * 0.6 + b.phase) * 0.14;
+      b.group.position.z = b.base.z + Math.sin(this.time * 0.6 + b.phase) * 0.14 + balloonVaultLag;
       b.group.rotation.z = Math.sin(this.time * 0.7 + b.phase) * 0.10 + this.currentBankZ * 0.5;
       b.group.rotation.x = Math.cos(this.time * 0.6 + b.phase) * 0.08 + this.currentPitchX * 0.5;
     });
@@ -1818,20 +1934,15 @@ export class PursuerEntity {
     this.currentZ += (this.targetZ - this.currentZ) * Math.min(1, dt * 2.5);
     this.root.position.z = this.currentZ;
 
-    // Dynamic jaw drop
-    if (this.jawGroup) {
-      const targetJawOpen = (this.dodgeActive || playerHearts <= 1) ? -0.25 : -0.05;
-      this.jawGroup.rotation.x += (targetJawOpen - this.jawGroup.rotation.x) * Math.min(1, dt * 3.0);
-    }
-
-    // Deadlights sulfur-yellow & amber emissive pulsing
-    const baseEmissive = (this.dodgeActive || playerHearts <= 1) ? 3.8 : 1.8;
+    // Deadlights sulfur-yellow & amber emissive pulsing (flares brightly during vault somersault)
+    const isVaultGlow = this.overheadVaultActive && this.vaultProgress > 0.15 && this.vaultProgress < 0.85;
+    const baseEmissive = (this.dodgeActive || playerHearts <= 1 || isVaultGlow) ? 4.5 : 1.8;
     const pulse = Math.abs(Math.sin(this.time * 3.5)) * 0.9;
     if (this.faceMat) {
       this.faceMat.emissiveIntensity = baseEmissive + pulse;
     }
     if (this.deadlightsMat) {
-      this.deadlightsMat.emissiveIntensity = 3.0 + pulse * 2.0;
+      this.deadlightsMat.emissiveIntensity = 3.5 + pulse * 2.5 + (isVaultGlow ? 3.0 : 0);
     }
     if (this.auraHaloMat) {
       this.auraHaloMat.emissiveIntensity = 2.0 + pulse * 1.5;

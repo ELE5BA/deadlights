@@ -69,7 +69,7 @@ export default function AdminSecurityGate({ onAuthenticated, onLaunchGame }) {
             onClick={handleSubmit}
             style={{ marginTop: '0.5rem' }}
           >
-            ⚡ QUICK UNLOCK (BOOTH PREVIEW)
+            QUICK UNLOCK (BOOTH PREVIEW)
           </button>
         </form>
 
@@ -83,7 +83,7 @@ export default function AdminSecurityGate({ onAuthenticated, onLaunchGame }) {
                 onLaunchGame();
               }}
             >
-              🎮 Open / Play Game Window
+              Open / Play Game Window
             </button>
           )}
         </div>

@@ -88,6 +88,38 @@ function ExitIcon() {
   );
 }
 
+function RosterIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+const SAMPLE_PARTICIPANT_ROSTER = [
+  { playerId: 'p-01', fullName: 'Dela Cruz, Juan', section: '#Diamond', nickname: 'DELACRUZ', totalRuns: 14, bestScore: 54200, bestSurvival: 320.5, maxStagesCleared: 5, totalShards: 182, lastSeenAt: '2026-10-26T08:45:00Z' },
+  { playerId: 'p-02', fullName: 'Santos, Maria Clara', section: '#Section-1', nickname: 'CLARA_S', totalRuns: 18, bestScore: 61850, bestSurvival: 360.0, maxStagesCleared: 6, totalShards: 245, lastSeenAt: '2026-10-26T09:12:00Z' },
+  { playerId: 'p-03', fullName: 'Reyes, Christian', section: '#Diamond', nickname: 'REYES_C', totalRuns: 9, bestScore: 41300, bestSurvival: 215.4, maxStagesCleared: 4, totalShards: 98, lastSeenAt: '2026-10-26T07:30:00Z' },
+  { playerId: 'p-04', fullName: 'Gonzales, Gabriel', section: '#BSCS-3A', nickname: 'GABBY', totalRuns: 12, bestScore: 48900, bestSurvival: 275.2, maxStagesCleared: 4, totalShards: 140, lastSeenAt: '2026-10-26T08:10:00Z' },
+  { playerId: 'p-05', fullName: 'Aquino, Bea Angela', section: '#Section-1', nickname: 'BEA_A', totalRuns: 15, bestScore: 58400, bestSurvival: 345.8, maxStagesCleared: 5, totalShards: 195, lastSeenAt: '2026-10-26T09:05:00Z' },
+  { playerId: 'p-06', fullName: 'Mendoza, Ethan', section: '#CS-101', nickname: 'ETHAN_M', totalRuns: 6, bestScore: 32100, bestSurvival: 148.0, maxStagesCleared: 3, totalShards: 62, lastSeenAt: '2026-10-26T06:55:00Z' },
+  { playerId: 'p-07', fullName: 'Tan, Sophia Nicole', section: '#BSCS-3A', nickname: 'SOPHIA_T', totalRuns: 11, bestScore: 46750, bestSurvival: 242.1, maxStagesCleared: 4, totalShards: 128, lastSeenAt: '2026-10-26T08:22:00Z' },
+  { playerId: 'p-08', fullName: 'Villanueva, Marcus', section: '#Section-2', nickname: 'MARCUS_V', totalRuns: 7, bestScore: 36800, bestSurvival: 172.5, maxStagesCleared: 3, totalShards: 74, lastSeenAt: '2026-10-26T07:15:00Z' },
+];
+
 export default function AnalyticsDashboardScreen({ onExit }) {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [from, setFrom] = useState('');
@@ -96,6 +128,11 @@ export default function AnalyticsDashboardScreen({ onExit }) {
   const [activeMode, setActiveMode] = useState('simulation');
   const [activeTab, setActiveTab] = useState('overview');
   const [syncNotice, setSyncNotice] = useState('');
+
+  // Participant Roster State
+  const [rosterSearch, setRosterSearch] = useState('');
+  const [rosterSectionFilter, setRosterSectionFilter] = useState('ALL');
+  const [rosterSortBy, setRosterSortBy] = useState('score'); // 'score' | 'name' | 'survival' | 'runs'
 
   // Interactive Monte Carlo Simulation Controls
   const [cohortSize, setCohortSize] = useState(250);
@@ -132,7 +169,7 @@ export default function AnalyticsDashboardScreen({ onExit }) {
   useEffect(() => {
     const unsubscribe = subscribeTelemetryEvents((event) => {
       loadLive();
-      setSyncNotice(`⚡ Live run recorded from game window! (${event.detail?.score ? `${event.detail.score.toLocaleString()} pts` : 'Synced'})`);
+      setSyncNotice(`Live run recorded from game window! (${event.detail?.score ? `${event.detail.score.toLocaleString()} pts` : 'Synced'})`);
       const timer = setTimeout(() => setSyncNotice(''), 5000);
       return () => clearTimeout(timer);
     });
@@ -149,7 +186,7 @@ export default function AnalyticsDashboardScreen({ onExit }) {
     });
     setSimData(result);
     setActiveMode('simulation');
-    setSyncNotice(`⚡ Simulated cohort of ${cohortSize} runners calculated.`);
+    setSyncNotice(`Simulated cohort of ${cohortSize} runners calculated.`);
     setTimeout(() => setSyncNotice(''), 4000);
   };
 
@@ -364,6 +401,67 @@ export default function AnalyticsDashboardScreen({ onExit }) {
       },
     ];
   }, [isSim, simData, liveData, liveRunsCount]);
+
+  // Participant Roster Filtering & Sorting
+  const participantRoster = useMemo(() => {
+    const raw = (liveData?.playerRoster && liveData.playerRoster.length > 0)
+      ? liveData.playerRoster
+      : (isSim ? SAMPLE_PARTICIPANT_ROSTER : (liveData?.playerRoster || SAMPLE_PARTICIPANT_ROSTER));
+
+    return raw.filter((p) => {
+      const q = rosterSearch.toLowerCase();
+      const matchName = (p.fullName || '').toLowerCase().includes(q) || (p.nickname || '').toLowerCase().includes(q);
+      const matchSec = rosterSectionFilter === 'ALL' || (p.section || '').toLowerCase() === rosterSectionFilter.toLowerCase();
+      return matchName && matchSec;
+    }).sort((a, b) => {
+      if (rosterSortBy === 'name') return (a.fullName || a.nickname).localeCompare(b.fullName || b.nickname);
+      if (rosterSortBy === 'runs') return (b.totalRuns || 0) - (a.totalRuns || 0);
+      if (rosterSortBy === 'survival') return (b.bestSurvival || 0) - (a.bestSurvival || 0);
+      return (b.bestScore || 0) - (a.bestScore || 0);
+    });
+  }, [liveData, isSim, rosterSearch, rosterSectionFilter, rosterSortBy]);
+
+  const availableSections = useMemo(() => {
+    const raw = (liveData?.playerRoster && liveData.playerRoster.length > 0)
+      ? liveData.playerRoster
+      : SAMPLE_PARTICIPANT_ROSTER;
+    const set = new Set();
+    raw.forEach((p) => { if (p.section) set.add(p.section); });
+    return ['ALL', ...Array.from(set).sort()];
+  }, [liveData]);
+
+  const handleExportCsv = useCallback(() => {
+    playButtonClickSfx();
+    const headers = [
+      'Player Name [Last Name, First Name]',
+      'Section [#Section]',
+      'Arcade Call-sign',
+      'Completed Runs',
+      'High Score',
+      'Best Survival (sec)',
+      'Max Stage Cleared',
+      'Shards Collected',
+      'Last Active'
+    ];
+    const rows = participantRoster.map((p) => [
+      `"${(p.fullName || '').replace(/"/g, '""')}"`,
+      `"${(p.section || '').replace(/"/g, '""')}"`,
+      `"${(p.nickname || '').replace(/"/g, '""')}"`,
+      p.totalRuns || 0,
+      p.bestScore || 0,
+      typeof p.bestSurvival === 'number' ? p.bestSurvival.toFixed(1) : p.bestSurvival || 0,
+      p.maxStagesCleared || 0,
+      p.totalShards || 0,
+      `"${p.lastSeenAt || ''}"`
+    ]);
+    const csvStr = 'data:text/csv;charset=utf-8,' + encodeURIComponent([headers.join(','), ...rows.map((r) => r.join(','))].join('\n'));
+    const link = document.createElement('a');
+    link.setAttribute('href', csvStr);
+    link.setAttribute('download', `deadlights_student_roster_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [participantRoster]);
 
   // Security Gate if unauthenticated
   if (!isAuthenticated) {
@@ -600,6 +698,18 @@ export default function AnalyticsDashboardScreen({ onExit }) {
           >
             <TuningIcon />
             <span>Prescriptive Tuning ({recommendations.length})</span>
+          </button>
+
+          <button
+            type="button"
+            className={`tab-nav-btn ${activeTab === 'roster' ? 'is-active-tab' : ''}`}
+            onClick={() => {
+              playButtonClickSfx();
+              setActiveTab('roster');
+            }}
+          >
+            <RosterIcon />
+            <span>Participant Roster ({participantRoster.length})</span>
           </button>
 
           <button
@@ -852,6 +962,164 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                   endReasons={simData.endReasons}
                   totalRuns={simData.metrics?.completedRuns}
                 />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 6: PARTICIPANT ROSTER & STUDENT RECORDS ── */}
+        {activeTab === 'roster' && (
+          <div className="tab-content-panel">
+            <div className="admin-card-section">
+              <div className="funnel-chart-header" style={{ marginBottom: '14px' }}>
+                <div>
+                  <h4 className="chart-title">PARTICIPANT REGISTRY & STUDENT ACADEMIC ROSTER</h4>
+                  <p className="chart-subtitle">
+                    Recorded student names [Last Name, First Name], class sections [#Section], arcade runs, and apex scores
+                  </p>
+                </div>
+              </div>
+
+              {/* Roster Summary KPIs */}
+              <div className="roster-kpi-bar">
+                <div className="roster-kpi-item">
+                  <span className="roster-kpi-label">TOTAL REGISTERED PARTICIPANTS</span>
+                  <span className="roster-kpi-val" style={{ color: '#38bdf8' }}>{participantRoster.length}</span>
+                </div>
+                <div className="roster-kpi-item">
+                  <span className="roster-kpi-label">ACTIVE CLASS SECTIONS</span>
+                  <span className="roster-kpi-val" style={{ color: '#fbbf24' }}>{availableSections.length - 1}</span>
+                </div>
+                <div className="roster-kpi-item">
+                  <span className="roster-kpi-label">TOP RECORD SCORE</span>
+                  <span className="roster-kpi-val" style={{ color: '#10b981' }}>
+                    {participantRoster.length > 0
+                      ? Math.max(...participantRoster.map(p => p.bestScore || 0)).toLocaleString()
+                      : 0}
+                  </span>
+                </div>
+                <div className="roster-kpi-item">
+                  <span className="roster-kpi-label">TOTAL SESSIONS LOGGED</span>
+                  <span className="roster-kpi-val" style={{ color: '#f59e0b' }}>
+                    {participantRoster.reduce((sum, p) => sum + (p.totalRuns || 0), 0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Filter & Action Controls Bar */}
+              <div className="roster-filter-bar">
+                <div className="roster-filter-left">
+                  <input
+                    type="text"
+                    value={rosterSearch}
+                    onChange={(e) => setRosterSearch(e.target.value)}
+                    placeholder="Search by student name or call-sign…"
+                    className="roster-search-input"
+                  />
+
+                  <select
+                    value={rosterSectionFilter}
+                    onChange={(e) => setRosterSectionFilter(e.target.value)}
+                    className="roster-select-input"
+                  >
+                    <option value="ALL">All Sections (Filter)</option>
+                    {availableSections.filter(s => s !== 'ALL').map(sec => (
+                      <option key={sec} value={sec}>{sec}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={rosterSortBy}
+                    onChange={(e) => setRosterSortBy(e.target.value)}
+                    className="roster-select-input"
+                  >
+                    <option value="score">Sort by: High Score (Highest First)</option>
+                    <option value="survival">Sort by: Best Survival Time</option>
+                    <option value="runs">Sort by: Most Runs Completed</option>
+                    <option value="name">Sort by: Student Name (A-Z)</option>
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  className="roster-export-btn"
+                  onClick={handleExportCsv}
+                  title="Export student records to CSV spreadsheet"
+                >
+                  <DownloadIcon />
+                  <span>EXPORT CSV SPREADSHEET</span>
+                </button>
+              </div>
+
+              {/* Data Table */}
+              <div className="roster-table-container">
+                <table className="roster-data-table">
+                  <thead>
+                    <tr>
+                      <th className="roster-th">STUDENT NAME [Last Name, First Name]</th>
+                      <th className="roster-th">SECTION [#Section]</th>
+                      <th className="roster-th">CALL-SIGN</th>
+                      <th className="roster-th">RUNS</th>
+                      <th className="roster-th">HIGH SCORE</th>
+                      <th className="roster-th">BEST SURVIVAL</th>
+                      <th className="roster-th">MAX STAGE</th>
+                      <th className="roster-th">SHARDS</th>
+                      <th className="roster-th">LAST ACTIVE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {participantRoster.length === 0 ? (
+                      <tr>
+                        <td colSpan="9" style={{ textAlign: 'center', padding: '36px', color: '#94a3b8' }}>
+                          No participant records found matching the current search filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      participantRoster.map((p, idx) => (
+                        <tr key={p.playerId || idx} className="roster-tr">
+                          <td className="roster-td">
+                            <span className="student-avatar-circle">
+                              {(p.fullName || p.nickname).charAt(0).toUpperCase()}
+                            </span>
+                            <strong style={{ color: '#f8fafc' }}>{p.fullName || p.nickname}</strong>
+                          </td>
+                          <td className="roster-td">
+                            {p.section ? (
+                              <span className="section-badge-pill">{p.section}</span>
+                            ) : (
+                              <span style={{ color: '#64748b' }}>—</span>
+                            )}
+                          </td>
+                          <td className="roster-td">
+                            <span className="callsign-mono">{p.nickname}</span>
+                          </td>
+                          <td className="roster-td" style={{ textAlign: 'center' }}>
+                            <strong style={{ color: '#e2e8f0' }}>{p.totalRuns || 0}</strong>
+                          </td>
+                          <td className="roster-td">
+                            <span className="score-badge-gold">{(p.bestScore || 0).toLocaleString()}</span>
+                          </td>
+                          <td className="roster-td">
+                            <span style={{ color: '#38bdf8' }}>
+                              {typeof p.bestSurvival === 'number' ? p.bestSurvival.toFixed(1) : p.bestSurvival || '0.0'}s
+                            </span>
+                          </td>
+                          <td className="roster-td">
+                            <span style={{ color: (p.maxStagesCleared || 0) >= 6 ? '#10b981' : '#f59e0b', fontWeight: 700 }}>
+                              {(p.maxStagesCleared || 0) >= 6 ? 'APEX CLEAR (6/6)' : `Stage ${(p.maxStagesCleared || 0) + 1}/6`}
+                            </span>
+                          </td>
+                          <td className="roster-td" style={{ color: '#f59e0b' }}>
+                            {p.totalShards || 0}
+                          </td>
+                          <td className="roster-td" style={{ color: '#94a3b8', fontSize: '0.78rem' }}>
+                            {p.lastSeenAt ? new Date(p.lastSeenAt).toLocaleDateString() : 'Recent'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
