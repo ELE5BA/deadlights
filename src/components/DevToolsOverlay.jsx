@@ -1,4 +1,5 @@
 import React from 'react';
+import { GAME_STAGES } from '../../shared/gameConfig.js';
 
 /**
  * Bespoke Vector SVG Glyphs for Grimdex Cabinet Console
@@ -344,11 +345,11 @@ export default function DevToolsOverlay({ engine, gameState, onClose }) {
               WARP TO STAGE
             </span>
             <span style={{ fontSize: '0.62rem', color: '#38bdf8', fontWeight: 800 }}>
-              ACTIVE: STAGE {currentStage}/6
+              ACTIVE: STAGE {currentStage}/{GAME_STAGES.length}
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem' }}>
-            {[1, 2, 3, 4, 5, 6].map((num) => {
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${GAME_STAGES.length}, 1fr)`, gap: '0.3rem' }}>
+            {GAME_STAGES.map(({ stage: num }) => {
               const isActive = currentStage === num;
               return (
                 <button

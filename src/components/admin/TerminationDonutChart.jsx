@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { GAME_CONFIG } from '../../../shared/gameConfig.js';
 
 /**
  * TerminationDonutChart: Visual breakdown of why runs ended.
  * Categorizes runs into:
- *  - ALL 6 STAGES PURIFIED (Full Victory) -> Emerald #10b981
+ *  - ALL STAGES PURIFIED (Full Victory) -> Emerald #10b981
  *  - 0 HP VITALITY DEPLETED -> Crimson #ef4444
  *  - STAGE CARD MISSED (Zero-Miss Rule) -> Amber #f59e0b
  */
@@ -14,7 +15,7 @@ export default function TerminationDonutChart({ endReasons = [], totalRuns = 0 }
   const categories = [
     {
       key: 'all_stages_cleared',
-      label: 'ALL 6 STAGES PURIFIED',
+      label: `ALL ${GAME_CONFIG.stageCount} STAGES PURIFIED`,
       sublabel: 'Full Gauntlet Victory',
       color: '#10b981',
       glow: 'rgba(16, 185, 129, 0.4)',

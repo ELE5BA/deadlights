@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { GAME_STAGES } from '../../shared/gameConfig.js';
 import { continuePlayer, createPlayer, getHealth } from '../services/apiClient.js';
 import PlayerSetupScreen from '../screens/PlayerSetupScreen.jsx';
 import PlayerCodeNotice from '../screens/PlayerCodeNotice.jsx';
@@ -92,7 +93,7 @@ export default function App() {
   });
   const [soundMuted, setSoundMuted] = useState(() => isMuted());
   const [result, setResult] = useState(null);
-  const [attractStage, setAttractStage] = useState({ stage: 1, name: 'The Twilight Mist' });
+  const [attractStage, setAttractStage] = useState({ stage: 1, name: GAME_STAGES[0].name });
   const [showInstructions, setShowInstructions] = useState(false);
 
   const handleOpenAdminWindow = () => {

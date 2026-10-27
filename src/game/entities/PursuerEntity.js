@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createPixelTexture } from '../createScene.js';
 import { addBoxOutline, addHullOutline } from '../utils/outline.js';
+import { GAME_STAGES } from '../../../shared/gameConfig.js';
 
 /**
  * Creates authentic 256x256 hand-painted cel-shaded porcelain face texture for the Pennywise Deadlights villain.
@@ -1089,8 +1090,9 @@ export class PursuerEntity {
     this.defeatVfxGroup = group;
     this.root.add(group);
 
-    // 1. The 6 Purified Pokédex Seal Cards (Sleek Holographic Trading Card Frames)
-    const elementColors = ['#10b981', '#f59e0b', '#38bdf8', '#c084fc', '#94a3b8', '#06b6d4'];
+    // 1. One Purified Pokédex Seal Card per stage (Sleek Holographic Trading Card Frames)
+    const themeColors = ['#10b981', '#f59e0b', '#38bdf8', '#c084fc', '#94a3b8', '#06b6d4'];
+    const elementColors = GAME_STAGES.map((stage) => themeColors[stage.themeStage - 1]);
     this.sealCards = [];
     elementColors.forEach((colorHex, idx) => {
       const cardGroup = new THREE.Group();
@@ -1147,7 +1149,7 @@ export class PursuerEntity {
         group: cardGroup,
         beam,
         colorHex,
-        baseAngle: (idx * Math.PI) / 3,
+        baseAngle: (idx * Math.PI * 2) / elementColors.length,
         idx,
       });
     });
@@ -1264,7 +1266,7 @@ export class PursuerEntity {
       }
     };
 
-    // ── Phase 1 (0.0s to 1.4s): The 6-Card Hexedex Seal & Balloon Pop ──
+    // ── Phase 1 (0.0s to 1.4s): The Stage-Card Hexedex Seal & Balloon Pop ──
     if (t < 1.4) {
       const popTimes = [0.35, 0.75, 1.15];
       if (this.balloons) {

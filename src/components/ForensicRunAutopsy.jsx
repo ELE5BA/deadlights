@@ -1,4 +1,5 @@
 import React from 'react';
+import { GAME_CONFIG } from '../../shared/gameConfig.js';
 
 /**
  * Clean SVG Vector Icons (12x12) replacing raw emojis
@@ -110,7 +111,7 @@ export default function ForensicRunAutopsy({ telemetry, currentStage = 1, curren
   const eff = data.dodgeEfficiencyPct;
 
   // Tier 3: Predictive Run Analytics
-  const stageWeight = Math.min(1, Math.max(0.2, (currentStage || 1) / 6));
+  const stageWeight = Math.min(1, Math.max(0.2, (currentStage || 1) / GAME_CONFIG.stageCount));
   const projectedScore = Math.max(
     currentScore,
     Math.round((28000 + (eff / 100) * 34000) * (0.5 + 0.5 * stageWeight))
@@ -299,7 +300,7 @@ export default function ForensicRunAutopsy({ telemetry, currentStage = 1, curren
             <div className="predictive-card">
               <span className="pred-label">EST. SHARD YIELD</span>
               <span className="pred-value highlight-cyan">+{projectedShards}</span>
-              <span className="pred-sub">Stage 1-6 drop model</span>
+              <span className="pred-sub">Stage 1-{GAME_CONFIG.stageCount} drop model</span>
             </div>
           </div>
         </div>

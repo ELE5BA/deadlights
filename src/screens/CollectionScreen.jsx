@@ -9,7 +9,7 @@ const POKEMON_CARD_META = {
     lore: 'A cybernetic bulb Pokémon fused with ancient carnival moss. The flower blooming on its back absorbs spectral energy and radiates a soothing emerald aura.',
     element: 'GRASS / POISON',
     elementTag: 'GRASS',
-    stageOrigin: 'Stage 1: Twilight Mist',
+    stageOrigin: 'Starter: Twilight Mist',
     hp: 120,
     attacks: [
       { name: 'Razor Vine Burst', dmg: '40+', desc: 'Strikes with razor-sharp thorned vines. Deals 20 more damage if this Pokémon has full Vitality.' },
@@ -24,7 +24,7 @@ const POKEMON_CARD_META = {
     lore: 'An energetic electric mouse leaping across ticket booths in a protective yellow slicker. Its lightning tail lantern guides lost runners through the dark.',
     element: 'ELECTRIC / LIGHT',
     elementTag: 'LIGHT',
-    stageOrigin: 'Stage 2: Amber Hollow',
+    stageOrigin: 'Shard Vault: Amber Hollow',
     hp: 130,
     attacks: [
       { name: 'Spark Beacon', dmg: '45', desc: 'Discharges crackling high-voltage sparks from its cheek pouches, illuminating hidden track hazards.' },
@@ -39,7 +39,7 @@ const POKEMON_CARD_META = {
     lore: 'An electrified storm moth whose vibrating wings generate thousands of volts. It glides fearlessly along high-tension circus wires.',
     element: 'ELECTRIC / FLYING',
     elementTag: 'STORM',
-    stageOrigin: 'Stage 3: Crimson Mire',
+    stageOrigin: 'Stage 1: Crimson Mire',
     hp: 140,
     attacks: [
       { name: 'Electro Web Snare', dmg: '50', desc: 'Spins a crackling mesh of blue lightning across the rails, paralyzing incoming shadows.' },
@@ -54,7 +54,7 @@ const POKEMON_CARD_META = {
     lore: 'A shadowy phantom trickster lurking behind the haunted Ferris wheel. Its iconic wide grin gleams with eldritch purple flames.',
     element: 'GHOST / POISON',
     elementTag: 'GHOST',
-    stageOrigin: 'Stage 4: Glitch Rift',
+    stageOrigin: 'Stage 2: Glitch Rift',
     hp: 140,
     attacks: [
       { name: 'Shadow Pulse Barrage', dmg: '60', desc: 'Hurls an orb of concentrated ectoplasm from the ethereal plane into the physical track.' },
@@ -69,7 +69,7 @@ const POKEMON_CARD_META = {
     lore: 'An imposing raven warrior forged from clockwork brass gears and gunmetal steel armor. It perches atop the carousel roof, ever vigilant.',
     element: 'STEEL / FLYING',
     elementTag: 'STEEL',
-    stageOrigin: 'Stage 5: Abyssal Void',
+    stageOrigin: 'Stage 3: Abyssal Void',
     hp: 150,
     attacks: [
       { name: 'Razor Wing Flurry', dmg: '65', desc: 'Sweeps tempered steel feather blades forward, deflecting oncoming projectile hazards.' },
@@ -84,7 +84,7 @@ const POKEMON_CARD_META = {
     lore: 'A colossal sea dragon surging through the flooded subterranean flumes of Derry. Its ancient roar reverberates across dimensions.',
     element: 'WATER / DARK',
     elementTag: 'WATER',
-    stageOrigin: 'Stage 6: Grimlight Core',
+    stageOrigin: 'Stage 4: Grimlight Core',
     hp: 160,
     attacks: [
       { name: 'Tidal Flume Surge', dmg: '75', desc: 'Swings an armored serpentine tail to wash away track debris in a torrential neon deluge.' },

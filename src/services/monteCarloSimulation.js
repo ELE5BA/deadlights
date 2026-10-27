@@ -3,7 +3,7 @@ import { calculateScore, calculateShardAward } from '../../shared/scoreRules.js'
 
 /**
  * Monte Carlo Booth & Balance Simulation Engine for Grimdex.
- * Dynamically simulates N full 6-stage arcade gauntlet runs using canonical stage curves,
+ * Dynamically simulates N full arcade gauntlet runs (one pass per configured stage) using canonical stage curves,
  * hazard distributions, and scoring formulas to predict booth throughput and balance.
  */
 export function runMonteCarloSimulation({
@@ -35,8 +35,8 @@ export function runMonteCarloSimulation({
     double_blockade: 1.85,
   };
 
-  const stageReachCounts = [0, 0, 0, 0, 0, 0]; // Stage 1 to 6 reach counts
-  const stageClearCounts = [0, 0, 0, 0, 0, 0];
+  const stageReachCounts = GAME_STAGES.map(() => 0); // Stage 1 to N reach counts
+  const stageClearCounts = GAME_STAGES.map(() => 0);
 
   for (let i = 0; i < cohortSize; i++) {
     let health = 5;
@@ -219,8 +219,9 @@ export function runMonteCarloSimulation({
   const medianScore = scores[Math.floor(scores.length / 2)] || 0;
   const avgSurvival = Number((survivals.reduce((a, b) => a + b, 0) / survivals.length).toFixed(1));
   const medianSurvival = survivals[Math.floor(survivals.length / 2)] || 0;
-  const stage6Clears = runs.filter((r) => r.stagesCleared >= 6).length;
-  const stage6ClearRate = Number(((stage6Clears / cohortSize) * 100).toFixed(1));
+  const finalStageNumber = GAME_STAGES.length;
+  const finalStageClears = runs.filter((r) => r.stagesCleared >= finalStageNumber).length;
+  const finalStageClearRate = Number(((finalStageClears / cohortSize) * 100).toFixed(1));
   const totalShardsEarned = shards.reduce((a, b) => a + b, 0);
   const uniqueProfiles = Math.round(cohortSize * 0.76); // realistic arcade booth cohort
 
@@ -234,6 +235,7 @@ export function runMonteCarloSimulation({
   const funnel = stageReachCounts.map((reached, idx) => ({
     stage: idx + 1,
     name: GAME_STAGES[idx]?.name || `Stage ${idx + 1}`,
+    difficultyPercent: GAME_STAGES[idx]?.difficultyPercent ?? null,
     reached,
     pct: Number(((reached / cohortSize) * 100).toFixed(1)),
   }));
@@ -328,12 +330,12 @@ export function runMonteCarloSimulation({
     });
   }
 
-  if (stage6ClearRate > 35) {
+  if (finalStageClearRate > 35) {
     recommendations.push({
       id: 'P-04',
       sample: cohortSize,
-      observed: `Stage 6 Clear Rate: ${stage6ClearRate}% (Above 30% Target)`,
-      text: 'Slightly tighten late-stage speed scaling or increase Twin Barrage (double_blockade) spawn density in Stage 5–6.',
+      observed: `Stage ${finalStageNumber} Clear Rate: ${finalStageClearRate}% (Above 30% Target)`,
+      text: `Slightly tighten late-stage speed scaling or increase Twin Barrage (double_blockade) spawn density in Stage ${finalStageNumber - 1}–${finalStageNumber}.`,
       projectedImpact: 'Balances Apex Achievement Rarity',
     });
   }
@@ -356,7 +358,7 @@ export function runMonteCarloSimulation({
       medianScore,
       averageSurvival: avgSurvival,
       medianSurvival,
-      stage6ClearRate,
+      finalStageClearRate,
       totalShardsEarned,
       cardsUnlocked: Math.min(8, Math.round(totalShardsEarned / 20)),
       powerupStats: {

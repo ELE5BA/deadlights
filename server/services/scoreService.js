@@ -1,9 +1,15 @@
-import { GAME_CONFIG } from '../../shared/gameConfig.js';
+import { GAME_CONFIG, GAME_STAGES } from '../../shared/gameConfig.js';
 import { ENTITY_KEYS, EVENT_TYPES } from '../../shared/eventNames.js';
 import { calculateScore, calculateShardAward } from '../../shared/scoreRules.js';
 import { getDatabase } from '../db/index.js';
 
 const END_REASONS = new Set(['hit_points_zero', 'time_limit', 'player_exit', 'client_recovery', 'all_stages_cleared', 'card_missed']);
+
+// Only stages that exist in the active config can be cleared, and each awards its own creature fragment.
+const STAGE_CREATURE_MAP = Object.fromEntries(
+  GAME_STAGES.map((stage) => [ENTITY_KEYS[`STAGE_${stage.stage}`], stage.creatureRewardId]),
+);
+
 const knownEventRules = {
   [EVENT_TYPES.OBSTACLE_SPAWN]: new Set([ENTITY_KEYS.BLOCKER_CRATE, ENTITY_KEYS.SHADOW_WAVE, ENTITY_KEYS.SWAYING_SPECTER, ENTITY_KEYS.DOUBLE_BLOCKADE]),
   [EVENT_TYPES.COLLISION]: new Set([ENTITY_KEYS.BLOCKER_CRATE, ENTITY_KEYS.SHADOW_WAVE, ENTITY_KEYS.SWAYING_SPECTER, ENTITY_KEYS.DOUBLE_BLOCKADE]),
@@ -11,22 +17,10 @@ const knownEventRules = {
   [EVENT_TYPES.RARE_PICKUP]: new Set([ENTITY_KEYS.AMBER_ORB]),
   [EVENT_TYPES.FRAGMENT_PICKUP]: new Set([ENTITY_KEYS.CARD_FRAGMENT]),
   [EVENT_TYPES.CARD_MISSED]: new Set([ENTITY_KEYS.CARD_FRAGMENT]),
-  [EVENT_TYPES.STAGE_CLEAR]: new Set([
-    ENTITY_KEYS.STAGE_1, ENTITY_KEYS.STAGE_2, ENTITY_KEYS.STAGE_3,
-    ENTITY_KEYS.STAGE_4, ENTITY_KEYS.STAGE_5, ENTITY_KEYS.STAGE_6,
-  ]),
+  [EVENT_TYPES.STAGE_CLEAR]: new Set(Object.keys(STAGE_CREATURE_MAP)),
   [EVENT_TYPES.MILESTONE]: new Set([ENTITY_KEYS.MILESTONE_15, ENTITY_KEYS.MILESTONE_30, ENTITY_KEYS.MILESTONE_45]),
   [EVENT_TYPES.JUMP]: new Set([ENTITY_KEYS.PLAYER_JUMP]),
   [EVENT_TYPES.LANE_CHANGE]: new Set([ENTITY_KEYS.LEFT, ENTITY_KEYS.CENTER, ENTITY_KEYS.RIGHT]),
-};
-
-const STAGE_CREATURE_MAP = {
-  [ENTITY_KEYS.STAGE_1]: 'mossbyte',
-  [ENTITY_KEYS.STAGE_2]: 'lantern-hare',
-  [ENTITY_KEYS.STAGE_3]: 'static-moth',
-  [ENTITY_KEYS.STAGE_4]: 'velvet-wisp',
-  [ENTITY_KEYS.STAGE_5]: 'clockwork-crow',
-  [ENTITY_KEYS.STAGE_6]: 'grinfin',
 };
 
 function invalid(message) { return { error: 'INVALID_RUN_EVENTS', message }; }

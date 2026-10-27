@@ -62,9 +62,12 @@ const STAGE_THEMES = [
   },
 ];
 
+// Only the themes the playable rounds use, in round order.
+const ATTRACT_THEMES = GAME_STAGES.map((stage, idx) => ({ ...STAGE_THEMES[stage.themeStage - 1], round: idx + 1 }));
+
 /**
  * High-Octane 60FPS Three.js Animated Attract-Mode Background for HEXEDEX.
- * Cycles smoothly through all 6 Stages every 6.5 seconds, dynamically morphing
+ * Cycles smoothly through every playable stage every 6.5 seconds, dynamically morphing
  * lighting, fog, and neon rails. Spawns stage-matched obstacles and has the
  * runner weave lanes and jump obstacles in live gameplay demonstration!
  */
@@ -116,8 +119,8 @@ export default function HomeBackgroundCanvas({ runnerId = 'pika-georgie', onStag
 
     // Initial stage announce
     onStageChangeRef.current?.({
-      stage: STAGE_THEMES[0].stage,
-      name: STAGE_THEMES[0].name,
+      stage: ATTRACT_THEMES[0].round,
+      name: ATTRACT_THEMES[0].name,
     });
 
     function resize() {
@@ -137,19 +140,19 @@ export default function HomeBackgroundCanvas({ runnerId = 'pika-georgie', onStag
       const deltaMs = dt * 1000;
       elapsed += dt;
 
-      // 1. Cycle 6 Stages every 6.5 seconds
-      const nextStageIndex = Math.floor(elapsed / 6.5) % 6;
+      // 1. Cycle the playable stages every 6.5 seconds
+      const nextStageIndex = Math.floor(elapsed / 6.5) % GAME_STAGES.length;
       if (nextStageIndex !== currentStageIndex) {
         currentStageIndex = nextStageIndex;
-        const currentTheme = STAGE_THEMES[currentStageIndex];
+        const currentTheme = ATTRACT_THEMES[currentStageIndex];
         onStageChangeRef.current?.({
-          stage: currentTheme.stage,
+          stage: currentTheme.round,
           name: currentTheme.name,
         });
       }
 
       // 2. Smoothly lerp atmosphere colors toward target stage theme
-      const targetTheme = STAGE_THEMES[currentStageIndex];
+      const targetTheme = ATTRACT_THEMES[currentStageIndex];
       const lerpSpeed = Math.min(1, dt * 2.8);
 
       if (world.scene.background) {

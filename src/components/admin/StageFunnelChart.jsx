@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 /**
  * StageFunnelChart: Visual Stage-by-Stage Survival Funnel
- * Portrays player retention from Stage 1 (The Twilight Mist) to Stage 6 (The Grimlight Core).
+ * Portrays player retention from Stage 1 (The Twilight Mist) to the final stage, with each stage's difficulty %.
  * Fits the Dark Carnival & Obsidian theme with crisp SVG visual flows.
  */
 export default function StageFunnelChart({ funnelData = [], bottleneckStage = '' }) {
@@ -44,7 +44,7 @@ export default function StageFunnelChart({ funnelData = [], bottleneckStage = ''
           const dropPct = prevItem ? (prevItem.pct - item.pct).toFixed(1) : null;
           const isHovered = activeStage === item.stage;
 
-          // Theme gradient tailored across stages 1 to 6
+          // Theme gradient tailored across stages (cycles if more stages than colors)
           const stageColors = [
             { bar: 'linear-gradient(90deg, #10b981 0%, #34d399 100%)', text: '#34d399' },
             { bar: 'linear-gradient(90deg, #34d399 0%, #38bdf8 100%)', text: '#38bdf8' },
@@ -66,6 +66,9 @@ export default function StageFunnelChart({ funnelData = [], bottleneckStage = ''
                 <span className="stage-pill-num">STG 0{item.stage}</span>
                 <div className="stage-name-block">
                   <span className="stage-main-name">{item.name}</span>
+                  {item.difficultyPercent != null && (
+                    <span className="stage-difficulty-tag">{item.difficultyPercent}% difficulty</span>
+                  )}
                   {dropPct && Number(dropPct) > 0 && (
                     <span className="stage-attrition-tag">
                       ↓ -{dropPct}% attrition

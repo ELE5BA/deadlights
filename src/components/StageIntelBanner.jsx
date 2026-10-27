@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { STAGE_BRIEFINGS } from './InstructionsModal.jsx';
+import { GAME_STAGES } from '../../shared/gameConfig.js';
 
 /**
  * Stage Tactical Intel Scanner
@@ -78,7 +79,7 @@ export default function StageIntelBanner({ stageNumber = 1, onDismiss, autoDismi
               textTransform: 'uppercase',
             }}
           >
-            STAGE {stage.stage}/6
+            STAGE {stage.stage}/{GAME_STAGES.length}
           </span>
           <strong
             style={{

@@ -6,13 +6,16 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(here, '../..');
 export const dataDirectory = path.join(projectRoot, 'data');
-export const databasePath = path.join(dataDirectory, 'deadlights.sqlite');
+// DEADLIGHTS_DB_PATH lets tests run against a throwaway database instead of the booth data.
+export const databasePath = process.env.DEADLIGHTS_DB_PATH
+  ? path.resolve(process.env.DEADLIGHTS_DB_PATH)
+  : path.join(dataDirectory, 'deadlights.sqlite');
 
 let db;
 
 export function getDatabase() {
   if (db) return db;
-  fs.mkdirSync(dataDirectory, { recursive: true });
+  fs.mkdirSync(path.dirname(databasePath), { recursive: true });
   db = new Database(databasePath);
   db.pragma('foreign_keys = ON');
   db.pragma('journal_mode = WAL');

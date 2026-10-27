@@ -1,90 +1,65 @@
 import { useState, useEffect } from 'react';
 import { playButtonClickSfx } from '../game/soundEffects.js';
+import { GAME_STAGES } from '../../shared/gameConfig.js';
+
+function stageVelocityLabel(stageNumber, descriptor) {
+  const stage = GAME_STAGES[stageNumber - 1];
+  return `${stage.speed.base.toFixed(1)} m/s (${descriptor} · ${stage.difficultyPercent}% Difficulty)`;
+}
+
+function stageIdentity(stageNumber) {
+  const { stage, name, subtitle, difficultyPercent } = GAME_STAGES[stageNumber - 1];
+  return { stage, name, subtitle, difficultyPercent };
+}
 
 export const STAGE_BRIEFINGS = {
   1: {
-    stage: 1,
-    name: 'The Twilight Mist',
-    subtitle: 'Silent Carnival Grounds',
-    speed: '15.0 m/s (Moderate)',
+    ...stageIdentity(1),
+    speed: stageVelocityLabel(1, 'Brisk Pace'),
     hazards: [
       { name: 'Crate Blockers', action: 'DODGE LEFT / RIGHT', type: 'ROAD OBSTACLE', tip: 'Fixed crates blocking 1 lane. Shift into an open path.' },
       { name: 'Shadow Waves', action: 'JUMP / SPACE', type: 'GROUND WAVE', tip: 'Low crimson skimmer waves. Leap over them cleanly!' },
     ],
-    objective: 'Collect 5 Bulba-Moss Card Fragments to purify the Mist.',
+    objective: 'Collect 5 Static Moth Fragments to dispel the crimson swamp.',
     proTip: 'Leap early when you see the red ground glow of an incoming wave.',
-    cardReward: 'Bulba-Moss [Grass/Poison]',
-    accentColor: '#38bdf8',
+    cardReward: 'Static Moth [Electric/Flying]',
+    accentColor: '#f43f5e',
   },
   2: {
-    stage: 2,
-    name: 'The Amber Hollow',
-    subtitle: 'Lingering Lantern Grove',
-    speed: '17.5 m/s (Cruise Pace)',
+    ...stageIdentity(2),
+    speed: stageVelocityLabel(2, 'High Velocity'),
     hazards: [
       { name: 'Swaying Specters', action: 'ANTICIPATE CURVE', type: 'CURVE HAZARD', tip: 'Curving sine-wave ghosts that drift side-to-side. Predict their arc!' },
       { name: 'Crate Blockers', action: 'DODGE', type: 'ROAD OBSTACLE', tip: 'Spawned near curve hazards to test lateral agility.' },
       { name: 'Shadow Waves', action: 'JUMP', type: 'GROUND WAVE', tip: 'Higher-velocity ground skimmers.' },
     ],
-    objective: 'Collect 5 Pika-Lantern Fragments to cut through the lantern haze.',
-    proTip: 'Stay in the center lane until you see which direction the specter curves.',
-    cardReward: 'Pika-Lantern [Electric/Light]',
-    accentColor: '#fbbf24',
-  },
-  3: {
-    stage: 3,
-    name: 'The Crimson Mire',
-    subtitle: 'Watcher in the Red Weeds',
-    speed: '19.5 m/s (Brisk Tempo)',
-    hazards: [
-      { name: 'Double Blockades', action: 'FIND THE 1 OPEN LANE', type: 'TWIN BARRIER', tip: 'Twin hazard crates thrown simultaneously, sealing 2 of 3 lanes!' },
-      { name: 'Swaying Specters', action: 'ANTICIPATE SWAY', type: 'CURVE HAZARD', tip: 'Faster oscillation frequency.' },
-      { name: 'Shadow Waves', action: 'JUMP', type: 'GROUND WAVE', tip: 'Fast ground waves.' },
-    ],
-    objective: 'Collect 5 Static Moth Fragments to dispel the crimson swamp.',
-    proTip: 'Look ahead for the single safe lane ring; dive into it immediately.',
-    cardReward: 'Static Moth [Electric/Flying]',
-    accentColor: '#f43f5e',
-  },
-  4: {
-    stage: 4,
-    name: 'The Glitch Rift',
-    subtitle: 'Fractured Reality Field',
-    speed: '22.0 m/s (Accelerated)',
-    hazards: [
-      { name: 'Glitch Spacetime Shifts', action: 'QUICK REFLEXES', type: 'WARP HAZARD', tip: 'Hazard warning windows shrink and spawn frequency rises.' },
-      { name: 'Double Blockades', action: 'RAPID LANE DIVE', type: 'TWIN BARRIER', tip: 'Aggressive twin-lane barricades.' },
-      { name: 'Swaying Specters', action: 'DODGE CURVES', type: 'CURVE HAZARD', tip: 'Wide-angle curveballs.' },
-    ],
     objective: 'Collect 5 Velvet Wisp Fragments to stabilize reality.',
-    proTip: 'Return to center lane after each dodge so you are only 1 step from either side.',
+    proTip: 'Stay in the center lane until you see which direction the specter curves.',
     cardReward: 'Velvet Wisp [Ghost/Psychic]',
     accentColor: '#c084fc',
   },
-  5: {
-    stage: 5,
-    name: 'The Abyssal Void',
-    subtitle: 'The Darkness Closes In',
-    speed: '24.5 m/s (High Velocity)',
+  3: {
+    ...stageIdentity(3),
+    speed: stageVelocityLabel(3, 'Apex Velocity'),
     hazards: [
-      { name: 'Multi-Hazard Barrages', action: 'CHAIN EVASIONS', type: 'COMBO HAZARD', tip: 'Waves, specters, and double crates deployed in rapid succession.' },
-      { name: 'Pennywise Stalking Close', action: 'NO ERRORS', type: 'PROXIMITY THREAT', tip: 'Pennywise hovers closer; zero leeway for sluggish reactions.' },
+      { name: 'Double Blockades', action: 'FIND THE 1 OPEN LANE', type: 'TWIN BARRIER', tip: 'Twin hazard crates thrown simultaneously, sealing 2 of 3 lanes!' },
+      { name: 'Swaying Specters', action: 'ANTICIPATE SWAY', type: 'CURVE HAZARD', tip: 'Faster, wider oscillation.' },
+      { name: 'Shadow Waves', action: 'JUMP', type: 'GROUND WAVE', tip: 'Fast ground waves, sometimes paired beside a crate.' },
     ],
     objective: 'Collect 5 Clockwork Crow Fragments to break the void seal.',
-    proTip: 'Chain your jump and lane-shift in one fluid movement without hesitating.',
+    proTip: 'Look ahead for the single safe lane ring; dive into it immediately.',
     cardReward: 'Clockwork Crow [Steel/Dark]',
     accentColor: '#38bdf8',
   },
-  6: {
-    stage: 6,
-    name: 'The Grimlight Core',
-    subtitle: 'Apex Jester Confrontation',
-    speed: '27.0 m/s (Apex Gauntlet)',
+  4: {
+    ...stageIdentity(4),
+    speed: stageVelocityLabel(4, 'Overdrive Gauntlet'),
     hazards: [
-      { name: 'Apex Pennywise Barrage', action: 'MAXIMUM SURVIVAL', type: 'APEX GAUNTLET', tip: 'Full-track gauntlet barrage at maximum velocity.' },
+      { name: 'Apex Pennywise Barrage', action: 'CHAIN EVASIONS', type: 'APEX GAUNTLET', tip: 'Waves, specters, and double crates deployed in rapid succession.' },
       { name: 'Double Blockades', action: 'SPLIT-SECOND DODGE', type: 'TWIN BARRIER', tip: 'Rapid barrage of twin blocks.' },
+      { name: 'Swaying Specters', action: 'DODGE CURVES', type: 'CURVE HAZARD', tip: 'Wide-angle curveballs.' },
     ],
-    objective: 'Collect all 5 Final Fragments to trigger the 6-Card Hexedex banishment cutscene!',
+    objective: `Collect all 5 Final Fragments to trigger the ${GAME_STAGES.length}-Card Hexedex banishment cutscene!`,
     proTip: 'Focus strictly on oncoming telegraph rings. Catch the 5th card to claim victory!',
     cardReward: 'Grinfin [Apex Water/Dark]',
     accentColor: '#ff2a70',
@@ -229,7 +204,7 @@ export default function InstructionsModal({
           )}
         </div>
 
-        {/* 2-Tab Switcher: Controls & Power-Ups / Stage Intel (Stages 1-6) */}
+        {/* 2-Tab Switcher: Controls & Power-Ups / Stage Intel (all stages) */}
         <div
           style={{
             display: 'grid',
@@ -290,7 +265,7 @@ export default function InstructionsModal({
               transition: 'all 0.18s ease',
             }}
           >
-            STAGE INTEL (STAGES 1–6)
+            STAGE INTEL (STAGES 1–{GAME_STAGES.length})
           </button>
         </div>
 
@@ -425,12 +400,12 @@ export default function InstructionsModal({
             </div>
           )}
 
-          {/* TAB 2: STAGE INTEL (STAGES 1-6) */}
+          {/* TAB 2: STAGE INTEL (ALL STAGES) */}
           {activeTab === 'stages' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Stage selector buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
-                {[1, 2, 3, 4, 5, 6].map((stg) => {
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${GAME_STAGES.length}, 1fr)`, gap: '8px' }}>
+                {GAME_STAGES.map(({ stage: stg }) => {
                   const b = STAGE_BRIEFINGS[stg];
                   const isCur = selectedStage === stg;
                   return (
@@ -483,7 +458,7 @@ export default function InstructionsModal({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '12px' }}>
                   <div>
                     <span style={{ fontSize: '0.74rem', fontWeight: 800, color: stage.accentColor, letterSpacing: '0.12em' }}>
-                      STAGE {stage.stage} OF 6 · WHAT TO EXPECT
+                      STAGE {stage.stage} OF {GAME_STAGES.length} · {stage.difficultyPercent}% DIFFICULTY · WHAT TO EXPECT
                     </span>
                     <h3 style={{ margin: '4px 0 2px 0', fontSize: '1.35rem', color: '#f8fafc', letterSpacing: '0.03em' }}>
                       {stage.name.toUpperCase()}

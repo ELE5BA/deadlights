@@ -1,55 +1,59 @@
+// Difficulty is expressed as a percentage of the apex tuning below (100% = the former
+// Stage 6 "Grimlight Core" curve). Runner speed scales linearly with difficulty. Hazard
+// pressure (hazards per second) also scales linearly, split evenly between spawn cadence
+// and hazard chance (each scales by the square root), so neither knob double-counts.
+export const DIFFICULTY_APEX = Object.freeze({
+  speed: Object.freeze({ base: 27.0, perSecond: 0.065, maximum: 31.0 }),
+  spawnInterval: Object.freeze({ base: 1.08, perSecond: 0.0025, minimum: 0.90 }),
+  hazardChance: 0.72,
+});
+
+function roundTo(value, places) {
+  return Number(value.toFixed(places));
+}
+
+// Headroom above the former Stage 6 apex. Kept modest so hazard chance stays a probability
+// (0.72 * sqrt(1.2) ~ 0.79) and the within-stage ramps remain humanly reactable.
+export const MAX_DIFFICULTY_PERCENT = 120;
+
+export function tuneStageDifficulty(difficultyPercent) {
+  if (!Number.isFinite(difficultyPercent) || difficultyPercent <= 0 || difficultyPercent > MAX_DIFFICULTY_PERCENT) {
+    throw new RangeError(`difficultyPercent must be in (0, ${MAX_DIFFICULTY_PERCENT}], received ${difficultyPercent}`);
+  }
+  const d = difficultyPercent / 100;
+  const pressure = Math.sqrt(d);
+  const { speed, spawnInterval, hazardChance } = DIFFICULTY_APEX;
+  return {
+    difficultyPercent,
+    // Position on the original 6-step ladder (50% = step 0 ... 100% = step 5, 110% = step 6). The engine's
+    // secondary ramps (twin barrage odds, specter sway, wave combos) key off this so they
+    // track difficulty rather than how many rounds the run happens to have.
+    difficultyTier: Math.max(0, (difficultyPercent - 50) / 10),
+    speed: {
+      base: roundTo(speed.base * d, 3),
+      perSecond: roundTo(speed.perSecond * d, 5),
+      maximum: roundTo(speed.maximum * d, 3),
+    },
+    spawnInterval: {
+      base: roundTo(spawnInterval.base / pressure, 3),
+      perSecond: roundTo(spawnInterval.perSecond / pressure, 5),
+      minimum: roundTo(spawnInterval.minimum / pressure, 3),
+    },
+    hazardChance: roundTo(hazardChance * pressure, 3),
+  };
+}
+
+// Rounds are numbered 1-4 for progression, scoring and stage_N events. Each round borrows the
+// look of an original 6-stage theme (themeStage): name, atmosphere, music, hazard art, card reward.
 export const GAME_STAGES = Object.freeze([
   {
     stage: 1,
-    name: 'The Twilight Mist',
-    subtitle: 'Silent Carnival Grounds',
-    durationSeconds: 60,
-    speed: { base: 15.0, perSecond: 0.045, maximum: 17.8 },
-    spawnInterval: { base: 1.65, perSecond: 0.0035, minimum: 1.40 },
-    hazardChance: 0.52,
-    hazardTypes: ['blocker_crate', 'shadow_wave'],
-    atmosphere: {
-      fogColor: '#0a1622',
-      fogNear: 12,
-      fogFar: 38,
-      lightColor: '#43D9F2',
-      ambientColor: '#122536',
-      accentColor: '#38bdf8',
-      groundColor: '#070f18',
-    },
-    creatureRewardId: 'mossbyte',
-    fragmentName: 'Mossbyte Fragment',
-  },
-  {
-    stage: 2,
-    name: 'The Amber Hollow',
-    subtitle: 'Lingering Lantern Grove',
-    durationSeconds: 60,
-    speed: { base: 17.5, perSecond: 0.045, maximum: 20.2 },
-    spawnInterval: { base: 1.50, perSecond: 0.0030, minimum: 1.30 },
-    hazardChance: 0.56,
-    hazardTypes: ['blocker_crate', 'shadow_wave', 'swaying_specter'],
-    atmosphere: {
-      fogColor: '#201506',
-      fogNear: 10,
-      fogFar: 35,
-      lightColor: '#F7C56B',
-      ambientColor: '#2b1d09',
-      accentColor: '#fbbf24',
-      groundColor: '#140c03',
-    },
-    creatureRewardId: 'lantern-hare',
-    fragmentName: 'Lantern Hare Fragment',
-  },
-  {
-    stage: 3,
+    themeStage: 3,
     name: 'The Crimson Mire',
     subtitle: 'Watcher in the Red Weeds',
     durationSeconds: 60,
-    speed: { base: 19.5, perSecond: 0.050, maximum: 22.8 },
-    spawnInterval: { base: 1.38, perSecond: 0.0030, minimum: 1.18 },
-    hazardChance: 0.60,
-    hazardTypes: ['blocker_crate', 'shadow_wave', 'swaying_specter', 'double_blockade'],
+    ...tuneStageDifficulty(70),
+    hazardTypes: ['blocker_crate', 'shadow_wave'],
     atmosphere: {
       fogColor: '#2a0812',
       fogNear: 9,
@@ -63,14 +67,13 @@ export const GAME_STAGES = Object.freeze([
     fragmentName: 'Static Moth Fragment',
   },
   {
-    stage: 4,
+    stage: 2,
+    themeStage: 4,
     name: 'The Glitch Rift',
     subtitle: 'Fractured Reality Field',
     durationSeconds: 60,
-    speed: { base: 22.0, perSecond: 0.055, maximum: 25.5 },
-    spawnInterval: { base: 1.26, perSecond: 0.0028, minimum: 1.06 },
-    hazardChance: 0.64,
-    hazardTypes: ['blocker_crate', 'shadow_wave', 'swaying_specter', 'double_blockade'],
+    ...tuneStageDifficulty(80),
+    hazardTypes: ['blocker_crate', 'shadow_wave', 'swaying_specter'],
     atmosphere: {
       fogColor: '#1d0b2b',
       fogNear: 8,
@@ -84,13 +87,12 @@ export const GAME_STAGES = Object.freeze([
     fragmentName: 'Velvet Wisp Fragment',
   },
   {
-    stage: 5,
+    stage: 3,
+    themeStage: 5,
     name: 'The Abyssal Void',
     subtitle: 'The Darkness Closes In',
     durationSeconds: 60,
-    speed: { base: 24.5, perSecond: 0.060, maximum: 28.2 },
-    spawnInterval: { base: 1.16, perSecond: 0.0028, minimum: 0.98 },
-    hazardChance: 0.68,
+    ...tuneStageDifficulty(100),
     hazardTypes: ['blocker_crate', 'shadow_wave', 'swaying_specter', 'double_blockade'],
     atmosphere: {
       fogColor: '#070a12',
@@ -105,13 +107,12 @@ export const GAME_STAGES = Object.freeze([
     fragmentName: 'Clockwork Crow Fragment',
   },
   {
-    stage: 6,
+    stage: 4,
+    themeStage: 6,
     name: 'The Grimlight Core',
     subtitle: 'Apex Jester Barrage',
     durationSeconds: 60,
-    speed: { base: 27.0, perSecond: 0.065, maximum: 31.0 },
-    spawnInterval: { base: 1.08, perSecond: 0.0025, minimum: 0.90 },
-    hazardChance: 0.72,
+    ...tuneStageDifficulty(110),
     hazardTypes: ['blocker_crate', 'shadow_wave', 'swaying_specter', 'double_blockade'],
     atmosphere: {
       fogColor: '#220014',
@@ -127,11 +128,15 @@ export const GAME_STAGES = Object.freeze([
   },
 ]);
 
+const STAGE_DURATION_SECONDS = 60;
+const FIRST_STAGE = GAME_STAGES[0];
+const FINAL_STAGE = GAME_STAGES[GAME_STAGES.length - 1];
+
 export const GAME_CONFIG = Object.freeze({
-  version: '2.0.0',
-  stageCount: 6,
-  stageDurationSeconds: 60,
-  roundCapSeconds: 360,
+  version: '2.4.0',
+  stageCount: GAME_STAGES.length,
+  stageDurationSeconds: STAGE_DURATION_SECONDS,
+  roundCapSeconds: GAME_STAGES.length * STAGE_DURATION_SECONDS,
   startingHealth: 5,
   maxHealth: 5,
   cardsRequiredPerStage: 5,
@@ -140,12 +145,12 @@ export const GAME_CONFIG = Object.freeze({
   laneCenters: [-3, 0, 3],
   jumpDurationMs: 550,
   spawnDistance: 32,
-  speed: { base: 15.0, perSecond: 0.05, maximum: 31.0 },
-  spawnInterval: { base: 1.65, perSecond: 0.009, minimum: 0.90 },
+  speed: { base: FIRST_STAGE.speed.base, perSecond: FIRST_STAGE.speed.perSecond, maximum: FINAL_STAGE.speed.maximum },
+  spawnInterval: { base: FIRST_STAGE.spawnInterval.base, perSecond: FIRST_STAGE.spawnInterval.perSecond, minimum: FINAL_STAGE.spawnInterval.minimum },
   rewards: { normalShardAmount: 1, rareShardAmount: 3, stageClearShards: 15 },
   score: { survivalPerSecond: 10, normalShard: 25, rarePickup: 60, milestone: 50, stageClear: 300, fragmentPickup: 150 },
   eventCap: 1200,
   apiBodyLimit: '512kb',
 });
 
-export const GAME_CONFIG_NOTES = 'Version 2.0.0: 6 Escalating Difficulty Stages (60s each) with Pokemon-style Card Fragment Rewards.';
+export const GAME_CONFIG_NOTES = 'Version 2.4.0: 4 Escalating Difficulty Stages (60s each) at 70% / 80% / 100% / 110% of apex difficulty, themed after original stages 3-6 (Crimson Mire to Grimlight Core), with Pokemon-style Card Fragment Rewards.';

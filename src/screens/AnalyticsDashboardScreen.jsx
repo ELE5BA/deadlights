@@ -3,6 +3,7 @@ import { adminLogout, getAnalytics } from '../services/apiClient.js';
 import { runMonteCarloSimulation } from '../services/monteCarloSimulation.js';
 import { subscribeTelemetryEvents } from '../services/telemetryBroadcast.js';
 import { playButtonClickSfx } from '../game/soundEffects.js';
+import { GAME_CONFIG, GAME_STAGES } from '../../shared/gameConfig.js';
 import StageFunnelChart from '../components/admin/StageFunnelChart.jsx';
 import TerminationDonutChart from '../components/admin/TerminationDonutChart.jsx';
 import HazardComparisonChart from '../components/admin/HazardComparisonChart.jsx';
@@ -110,14 +111,14 @@ function DownloadIcon() {
 }
 
 const SAMPLE_PARTICIPANT_ROSTER = [
-  { playerId: 'p-01', fullName: 'Dela Cruz, Juan', section: '4ISB', nickname: 'JUAN_DEL4ISB', totalRuns: 14, bestScore: 54200, bestSurvival: 320.5, maxStagesCleared: 5, totalShards: 182, lastSeenAt: '2026-10-26T08:45:00Z' },
-  { playerId: 'p-02', fullName: 'Santos, Maria Clara', section: '3ISA', nickname: 'MARIA_SAN3ISA', totalRuns: 18, bestScore: 61850, bestSurvival: 360.0, maxStagesCleared: 6, totalShards: 245, lastSeenAt: '2026-10-26T09:12:00Z' },
-  { playerId: 'p-03', fullName: 'Reyes, Christian', section: '4ISA', nickname: 'CHRIST_REY4ISA', totalRuns: 9, bestScore: 41300, bestSurvival: 215.4, maxStagesCleared: 4, totalShards: 98, lastSeenAt: '2026-10-26T07:30:00Z' },
-  { playerId: 'p-04', fullName: 'Gonzales, Gabriel', section: '3ISB', nickname: 'GABRIE_GON3ISB', totalRuns: 12, bestScore: 48900, bestSurvival: 275.2, maxStagesCleared: 4, totalShards: 140, lastSeenAt: '2026-10-26T08:10:00Z' },
-  { playerId: 'p-05', fullName: 'Aquino, Bea Angela', section: '4ISB', nickname: 'BEAANG_AQU4ISB', totalRuns: 15, bestScore: 58400, bestSurvival: 345.8, maxStagesCleared: 5, totalShards: 195, lastSeenAt: '2026-10-26T09:05:00Z' },
-  { playerId: 'p-06', fullName: 'Mendoza, Ethan', section: '3ISA', nickname: 'ETHAN_MEN3ISA', totalRuns: 6, bestScore: 32100, bestSurvival: 148.0, maxStagesCleared: 3, totalShards: 62, lastSeenAt: '2026-10-26T06:55:00Z' },
-  { playerId: 'p-07', fullName: 'Tan, Sophia Nicole', section: '4ISA', nickname: 'SOPHIA_TAN4ISA', totalRuns: 11, bestScore: 46750, bestSurvival: 242.1, maxStagesCleared: 4, totalShards: 128, lastSeenAt: '2026-10-26T08:22:00Z' },
-  { playerId: 'p-08', fullName: 'Villanueva, Marcus', section: '3ISB', nickname: 'MARCUS_VIL3ISB', totalRuns: 7, bestScore: 36800, bestSurvival: 172.5, maxStagesCleared: 3, totalShards: 74, lastSeenAt: '2026-10-26T07:15:00Z' },
+  { playerId: 'p-01', fullName: 'Dela Cruz, Juan', section: '4ISB', nickname: 'JUAN_DEL4ISB', totalRuns: 14, bestScore: 54200, bestSurvival: 213.5, maxStagesCleared: 3, totalShards: 182, lastSeenAt: '2026-10-26T08:45:00Z' },
+  { playerId: 'p-02', fullName: 'Santos, Maria Clara', section: '3ISA', nickname: 'MARIA_SAN3ISA', totalRuns: 18, bestScore: 61850, bestSurvival: 240.0, maxStagesCleared: 4, totalShards: 245, lastSeenAt: '2026-10-26T09:12:00Z' },
+  { playerId: 'p-03', fullName: 'Reyes, Christian', section: '4ISA', nickname: 'CHRIST_REY4ISA', totalRuns: 9, bestScore: 41300, bestSurvival: 143.6, maxStagesCleared: 2, totalShards: 98, lastSeenAt: '2026-10-26T07:30:00Z' },
+  { playerId: 'p-04', fullName: 'Gonzales, Gabriel', section: '3ISB', nickname: 'GABRIE_GON3ISB', totalRuns: 12, bestScore: 48900, bestSurvival: 183.5, maxStagesCleared: 3, totalShards: 140, lastSeenAt: '2026-10-26T08:10:00Z' },
+  { playerId: 'p-05', fullName: 'Aquino, Bea Angela', section: '4ISB', nickname: 'BEAANG_AQU4ISB', totalRuns: 15, bestScore: 58400, bestSurvival: 230.5, maxStagesCleared: 3, totalShards: 195, lastSeenAt: '2026-10-26T09:05:00Z' },
+  { playerId: 'p-06', fullName: 'Mendoza, Ethan', section: '3ISA', nickname: 'ETHAN_MEN3ISA', totalRuns: 6, bestScore: 32100, bestSurvival: 98.7, maxStagesCleared: 1, totalShards: 62, lastSeenAt: '2026-10-26T06:55:00Z' },
+  { playerId: 'p-07', fullName: 'Tan, Sophia Nicole', section: '4ISA', nickname: 'SOPHIA_TAN4ISA', totalRuns: 11, bestScore: 46750, bestSurvival: 161.4, maxStagesCleared: 2, totalShards: 128, lastSeenAt: '2026-10-26T08:22:00Z' },
+  { playerId: 'p-08', fullName: 'Villanueva, Marcus', section: '3ISB', nickname: 'MARCUS_VIL3ISB', totalRuns: 7, bestScore: 36800, bestSurvival: 115.0, maxStagesCleared: 1, totalShards: 74, lastSeenAt: '2026-10-26T07:15:00Z' },
 ];
 
 export default function AnalyticsDashboardScreen({ onExit }) {
@@ -236,8 +237,8 @@ export default function AnalyticsDashboardScreen({ onExit }) {
   const PRIOR_OBSTACLES = useMemo(() => [
     { key: 'blocker_crate', name: 'Heavy Lob (blocker_crate)', priorSpawns: 185, priorCollisions: 24, wipeStage: 'Stage 2' },
     { key: 'shadow_wave', name: 'Low Skimmer (shadow_wave)', priorSpawns: 160, priorCollisions: 32, wipeStage: 'Stage 3' },
-    { key: 'swaying_specter', name: 'Curveball Pitch (swaying_specter)', priorSpawns: 130, priorCollisions: 36, wipeStage: 'Stage 4' },
-    { key: 'double_blockade', name: 'Twin Barrage (double_blockade)', priorSpawns: 95, priorCollisions: 39, wipeStage: 'Stage 5' },
+    { key: 'swaying_specter', name: 'Curveball Pitch (swaying_specter)', priorSpawns: 130, priorCollisions: 36, wipeStage: 'Stage 3' },
+    { key: 'double_blockade', name: 'Twin Barrage (double_blockade)', priorSpawns: 95, priorCollisions: 39, wipeStage: `Stage ${GAME_CONFIG.stageCount}` },
   ], []);
 
   // Aggregated KPIs
@@ -296,11 +297,11 @@ export default function AnalyticsDashboardScreen({ onExit }) {
     };
   }, [isSim, simData, liveRunsCount, livePowerupStats]);
 
-  const stage6ClearRate = useMemo(() => {
-    if (isSim) return simData.metrics.stage6ClearRate;
+  const finalStageClearRate = useMemo(() => {
+    if (isSim) return simData.metrics.finalStageClearRate;
     if (liveRunsCount >= 5) {
-      const stage6Runs = (liveData?.series?.endReasons || []).find((r) => r.reason === 'all_stages_cleared')?.count || 0;
-      return Number(((stage6Runs / liveRunsCount) * 100).toFixed(1));
+      const fullClearRuns = (liveData?.series?.endReasons || []).find((r) => r.reason === 'all_stages_cleared')?.count || 0;
+      return Number(((fullClearRuns / liveRunsCount) * 100).toFixed(1));
     }
     return 16.4;
   }, [isSim, simData, liveData, liveRunsCount]);
@@ -309,21 +310,15 @@ export default function AnalyticsDashboardScreen({ onExit }) {
   const funnelData = useMemo(() => {
     if (isSim) return simData.funnel;
     const total = liveRunsCount > 0 ? liveRunsCount : 250;
-    const basePcts = [100, 82.5, 61.0, 42.8, 28.5, 16.4];
-    const stageNames = [
-      'The Twilight Mist',
-      'Amber Hollow',
-      'Crimson Mire',
-      'Glitch Rift',
-      'Abyssal Void',
-      'The Grimlight Core',
-    ];
-    return stageNames.map((name, idx) => {
-      const pct = basePcts[idx];
+    // Prior reach curve for the 70% / 80% / 100% / 110% ladder: the 100% step is the steepest drop
+    const basePcts = [100, 80.5, 55.0, 26.0];
+    return GAME_STAGES.map((stageConfig, idx) => {
+      const pct = basePcts[idx] ?? basePcts[basePcts.length - 1];
       const reached = Math.max(1, Math.round(total * (pct / 100)));
       return {
-        stage: idx + 1,
-        name,
+        stage: stageConfig.stage,
+        name: stageConfig.name,
+        difficultyPercent: stageConfig.difficultyPercent,
         reached,
         pct: Number(pct.toFixed(1)),
       };
@@ -386,8 +381,8 @@ export default function AnalyticsDashboardScreen({ onExit }) {
       runsToCompleteBinder: runsForBinder,
       peakHourRuns: Math.round(nextDay * 0.35),
       nextDayProjection: nextDay,
-      bottleneckStage: 'Stage 4: Glitch Rift',
-      wipeProbability: 38.5,
+      bottleneckStage: `Stage 3: ${GAME_STAGES[2].name}`,
+      wipeProbability: 29.0,
     };
   }, [isSim, simData, liveData, liveRunsCount]);
 
@@ -403,14 +398,14 @@ export default function AnalyticsDashboardScreen({ onExit }) {
         id: 'P-01',
         sample: sampleTag,
         observed: 'Twin Barrage (double_blockade): 41.1% Hit Rate',
-        text: 'Calibrate safe-lane telegraphing 1.2s prior to Twin Barrage releases in Stage 5 to widen escape corridor.',
+        text: `Calibrate safe-lane telegraphing 1.2s prior to Twin Barrage releases in Stage ${GAME_CONFIG.stageCount} to widen escape corridor.`,
         projectedImpact: '+9.2% Stage Survival',
       },
       {
         id: 'P-02',
         sample: sampleTag,
         observed: 'Curveball Pitch (swaying_specter): 27.7% Hit Rate',
-        text: 'Dampen lateral sinusoidal frequency of Curveball Pitches in Stage 4 by 14% to reduce flank lane collision spikes.',
+        text: 'Dampen lateral sinusoidal frequency of Curveball Pitches in Stage 3 by 14% to reduce flank lane collision spikes.',
         projectedImpact: '+6.5% Progression Throughput',
       },
       {
@@ -424,13 +419,13 @@ export default function AnalyticsDashboardScreen({ onExit }) {
         id: 'P-04',
         sample: sampleTag,
         observed: 'Expected Shards: 24.5 / run (Binder Target: 140 Shards)',
-        text: 'Maintain 6-run binder progression curve; sustain 15-shard completion bonus on Stage 6 clear.',
+        text: `Maintain 6-run binder progression curve; sustain 15-shard completion bonus on Stage ${GAME_CONFIG.stageCount} clear.`,
         projectedImpact: 'Optimizes 6-Session Player Retention',
       },
       {
         id: 'P-05',
         sample: sampleTag,
-        observed: 'Stage 6 Clear Rate: 16.4% (The Grimlight Core)',
+        observed: `Stage ${GAME_CONFIG.stageCount} Clear Rate: 16.4% (${GAME_STAGES[GAME_STAGES.length - 1].name})`,
         text: 'Apex gauntlet difficulty calibrated within ideal 15–20% tournament balance envelope.',
         projectedImpact: 'Preserves Grimdex Master Holo Rarity',
       },
@@ -640,11 +635,11 @@ export default function AnalyticsDashboardScreen({ onExit }) {
           <div className="admin-kpi-card">
             <div className="kpi-card-glow" />
             <div className="kpi-header">
-              <span className="kpi-label">STAGE 6 VICTORY</span>
+              <span className="kpi-label">STAGE {GAME_CONFIG.stageCount} VICTORY</span>
               <span className="kpi-tag" style={{ color: '#10b981' }}>APEX CLEAR</span>
             </div>
             <div className="kpi-value-row">
-              <span className="kpi-main-val" style={{ color: '#10b981' }}>{stage6ClearRate}%</span>
+              <span className="kpi-main-val" style={{ color: '#10b981' }}>{finalStageClearRate}%</span>
               <span className="kpi-unit">cleared</span>
             </div>
             <span className="kpi-footer-note">
@@ -656,7 +651,7 @@ export default function AnalyticsDashboardScreen({ onExit }) {
             <div className="kpi-card-glow" />
             <div className="kpi-header">
               <span className="kpi-label">AVG SURVIVAL</span>
-              <span className="kpi-tag">CAP: 360s</span>
+              <span className="kpi-tag">CAP: {GAME_CONFIG.roundCapSeconds}s</span>
             </div>
             <div className="kpi-value-row">
               <span className="kpi-main-val" style={{ color: '#38bdf8' }}>{metrics.averageSurvival ?? 0}</span>
@@ -1230,8 +1225,10 @@ export default function AnalyticsDashboardScreen({ onExit }) {
                             </span>
                           </td>
                           <td className="roster-td">
-                            <span style={{ color: (p.maxStagesCleared || 0) >= 6 ? '#10b981' : '#f59e0b', fontWeight: 700 }}>
-                              {(p.maxStagesCleared || 0) >= 6 ? 'APEX CLEAR (6/6)' : `Stage ${(p.maxStagesCleared || 0) + 1}/6`}
+                            <span style={{ color: (p.maxStagesCleared || 0) >= GAME_CONFIG.stageCount ? '#10b981' : '#f59e0b', fontWeight: 700 }}>
+                              {(p.maxStagesCleared || 0) >= GAME_CONFIG.stageCount
+                                ? `APEX CLEAR (${GAME_CONFIG.stageCount}/${GAME_CONFIG.stageCount})`
+                                : `Stage ${(p.maxStagesCleared || 0) + 1}/${GAME_CONFIG.stageCount}`}
                             </span>
                           </td>
                           <td className="roster-td" style={{ color: '#f59e0b' }}>

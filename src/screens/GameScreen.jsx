@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GAME_CONFIG } from '../../shared/gameConfig.js';
+import { GAME_CONFIG, GAME_STAGES } from '../../shared/gameConfig.js';
 import GameCanvas from '../game/GameCanvas.jsx';
 import PokedexCardArt from '../components/PokedexCardArt.jsx';
 import ForensicRunAutopsy from '../components/ForensicRunAutopsy.jsx';
@@ -283,7 +283,7 @@ export const PENNYWISE_LINES = [
 ];
 
 const PENNYWISE_DEMISE_LINES = [
-  "WHAT?! ALL SIX POKÉDEX CARDS?! MY BALLOONS ARE POPPING!",
+  "WHAT?! ALL FOUR POKÉDEX CARDS?! MY BALLOONS ARE POPPING!",
   "DID YOU ACTUALLY BEAT MY HITBOXES?! WHO GAVE YOU THOSE PRO-GAMER REFLEXES?!",
   "NOOO! THE GRIMDEX SEAL IS CORRUPTING MY THREE.JS SHADERS!",
   "IMPOSSIBLE! YOU DIDN'T EVEN RAGE-QUIT ONCE?! MY GLITCHES ARE CONSUMING ME!",
@@ -404,7 +404,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     score: 0,
     elapsedSeconds: 0,
     stageNumber: 1,
-    totalStages: 6,
+    themeStage: GAME_STAGES[0].themeStage,
+    totalStages: GAME_CONFIG.stageCount,
     stageName: 'The Twilight Mist',
     stageElapsedSeconds: 0,
     stageDurationSeconds: 60,
@@ -738,7 +739,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
     playButtonClickSfx();
     const stageNum = completedCardModal?.stageNumber || 1;
     setCompletedCardModal(null);
-    if (stageNum >= (GAME_CONFIG.stageCount || 6)) {
+    if (stageNum >= GAME_CONFIG.stageCount) {
       engineRef.current?.triggerVictorySequence();
     } else {
       engineRef.current?.resume();
@@ -863,7 +864,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
         <aside className="hud-corner-plate hud-plate-left" aria-label="Stage Progress and Vitality">
           {/* Top Row: Stage Badge, Name, Timer, and 60FPS Bar */}
           <div className="hud-stage-row">
-            <span className="hud-stage-badge">STAGE {engineState.stageNumber}/6</span>
+            <span className="hud-stage-badge">STAGE {engineState.stageNumber}/{GAME_CONFIG.stageCount}</span>
             <span className="hud-stage-title">{engineState.stageName}</span>
             <span className="hud-timer-tabular">{stageSecondsRemaining}s</span>
           </div>
@@ -1068,7 +1069,8 @@ export default function GameScreen({ player, onFinished, runnerId }) {
 
       {/* 5. STAGE-SPECIFIC POKÉMON BOTTOM 5-CARD DOCK */}
       {!hasActiveModalOrCutscene && (() => {
-        const stageTargetCard = POKEMON_CARD_ROSTER[(engineState.stageNumber - 1) % POKEMON_CARD_ROSTER.length];
+        const themeStage = engineState.themeStage || engineState.stageNumber;
+        const stageTargetCard = POKEMON_CARD_ROSTER[(themeStage - 1) % POKEMON_CARD_ROSTER.length];
         return (
           <section
             className="hud-bottom-card-dock"
@@ -1113,7 +1115,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                           <span className="mini-card-hp">{stageTargetCard.hp}</span>
                         </div>
                         <div className="mini-card-art-box">
-                          <StagePokemonMiniSprite stageNumber={engineState.stageNumber} />
+                          <StagePokemonMiniSprite stageNumber={themeStage} />
                         </div>
                         <span className="mini-card-mon-name">{stageTargetCard.name.split('-')[0]}</span>
                       </div>
@@ -1165,10 +1167,10 @@ export default function GameScreen({ player, onFinished, runnerId }) {
             </div>
           </header>
 
-          {/* Bottom Celebration Bar with the 6 Glowing Pokémon Card Icons */}
+          {/* Bottom Celebration Bar with one Glowing Pokémon Card Icon per stage (its theme's Pokémon) */}
           <footer className="victory-bottom-cards-bar">
             <div className="victory-cards-row">
-              {POKEMON_CARD_ROSTER.slice(0, 6).map((card, idx) => (
+              {GAME_STAGES.map((stage) => ({ card: POKEMON_CARD_ROSTER[stage.themeStage - 1], themeStage: stage.themeStage })).map(({ card, themeStage }, idx) => (
                 <div
                   key={card.id || idx}
                   className="victory-mini-card-icon"
@@ -1181,7 +1183,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                 >
                   <div className="mini-card-badge">S{idx + 1}</div>
                   <div className="mini-card-art">
-                    <StagePokemonMiniSprite stageNumber={idx + 1} />
+                    <StagePokemonMiniSprite stageNumber={themeStage} />
                   </div>
                   <div className="mini-card-footer">
                     <span className="mini-card-name-short">{card.name.split('-')[0]}</span>
@@ -1192,7 +1194,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
               ))}
             </div>
             <div className="victory-cards-bar-subtitle">
-              ALL 6 POKÉDEX CARDS CONVERGED · HEXEDEX SEAL ACTIVE
+              ALL {GAME_CONFIG.stageCount} POKÉDEX CARDS CONVERGED · HEXEDEX SEAL ACTIVE
             </div>
           </footer>
         </div>
@@ -1272,9 +1274,9 @@ export default function GameScreen({ player, onFinished, runnerId }) {
                 onClick={dismissCardModal}
                 autoFocus
               >
-                {completedCardModal.stageNumber < 6
+                {completedCardModal.stageNumber < GAME_CONFIG.stageCount
                   ? `STAGE ${completedCardModal.stageNumber + 1} INTEL & BRIEFING [ENTER]`
-                  : 'CONQUERED ALL 6 STAGES · VIEW ARCHIVE [ENTER]'}
+                  : `CONQUERED ALL ${GAME_CONFIG.stageCount} STAGES · VIEW ARCHIVE [ENTER]`}
               </button>
             </div>
           </div>
@@ -1428,7 +1430,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
           <div className="countdown-stage-intel-card" role="status" aria-label="Pre-Stage Intel Briefing">
             <div className="countdown-intel-header">
               <div className="countdown-intel-title-group">
-                <span className="countdown-stage-tag">STAGE {engineState.stageNumber}/6</span>
+                <span className="countdown-stage-tag">STAGE {engineState.stageNumber}/{GAME_CONFIG.stageCount}</span>
                 <strong className="countdown-stage-name">{engineState.stageName}</strong>
               </div>
               <span className="countdown-speed-tag">
@@ -1493,7 +1495,7 @@ export default function GameScreen({ player, onFinished, runnerId }) {
             <div className="pause-marquee-header cabinet-modal-header">
               <h2 className="pause-cabinet-title cabinet-modal-title">GAME PAUSED</h2>
               <div className="pause-stage-badge cabinet-modal-sub">
-                STAGE {engineState.stageNumber} OF 6 · {engineState.stageName.toUpperCase()}
+                STAGE {engineState.stageNumber} OF {GAME_CONFIG.stageCount} · {engineState.stageName.toUpperCase()}
               </div>
             </div>
 

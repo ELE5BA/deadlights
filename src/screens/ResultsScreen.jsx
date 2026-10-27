@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import ForensicRunAutopsy from '../components/ForensicRunAutopsy.jsx';
+import { GAME_CONFIG, GAME_STAGES } from '../../shared/gameConfig.js';
 
-const STAGE_SEALS = [
+const ALL_STAGE_SEALS = [
   { stage: 1, roman: 'I', name: 'Bulba-Moss', color: '#10b981' },
   { stage: 2, roman: 'II', name: 'Pika-Lantern', color: '#f59e0b' },
   { stage: 3, roman: 'III', name: 'Zap-Venomoth', color: '#38bdf8' },
@@ -9,10 +10,16 @@ const STAGE_SEALS = [
   { stage: 5, roman: 'V', name: 'Corvi-Gear', color: '#94a3b8' },
   { stage: 6, roman: 'VI', name: 'Gyarados-Fin', color: '#06b6d4' },
 ];
+// One seal per round, numbered by round and showing the Pokémon of the theme it borrows.
+const STAGE_SEALS = GAME_STAGES.map((stage, idx) => ({
+  ...ALL_STAGE_SEALS[stage.themeStage - 1],
+  stage: stage.stage,
+  roman: ALL_STAGE_SEALS[idx].roman,
+}));
 
 export default function ResultsScreen({ result, onPlayAgain, onTitle, onLeaderboard }) {
   const stagesCleared = result.stagesCleared ?? 0;
-  const isFlawless = stagesCleared === 6;
+  const isFlawless = stagesCleared >= GAME_CONFIG.stageCount;
   const isCardMissed = result.endReason === 'card_missed';
   const isPersonalBest = result.score >= (result.bestScore ?? result.score);
 
@@ -48,7 +55,7 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onLeaderbo
           </div>
           <span className="status-banner-text">
             {isFlawless
-              ? 'VICTORY · ALL 6 STAGES PURIFIED'
+              ? `VICTORY · ALL ${GAME_CONFIG.stageCount} STAGES PURIFIED`
               : isCardMissed
               ? 'STAGE CARD MISSED · CLAIMED BY THE GRIMLIGHT'
               : 'GAUNTLET TERMINATED · CLAIMED BY THE GRIMLIGHT'}
@@ -69,8 +76,8 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onLeaderbo
           )}
         </div>
 
-        {/* 3. 6-STAGE CREATURE PURIFICATION STRIP */}
-        <div className="results-stage-strip" aria-label="Stage Purification Progress">
+        {/* 3. STAGE CREATURE PURIFICATION STRIP */}
+        <div className="results-stage-strip" style={{ '--stage-count': STAGE_SEALS.length }} aria-label="Stage Purification Progress">
           {STAGE_SEALS.map((s) => {
             const cleared = s.stage <= stagesCleared;
             return (
@@ -109,14 +116,14 @@ export default function ResultsScreen({ result, onPlayAgain, onTitle, onLeaderbo
           }}
         >
           {isFlawless
-            ? '★ ALL 6 POKÉDEX CARDS SECURED · CARNIVAL PURIFIED ★'
-            : `${stagesCleared} OF 6 CODEX CARDS PURIFIED · SURVIVE TO STAGE 6 TO FILL ALL CARDS`}
+            ? `★ ALL ${GAME_CONFIG.stageCount} POKÉDEX CARDS SECURED · CARNIVAL PURIFIED ★`
+            : `${stagesCleared} OF ${GAME_CONFIG.stageCount} CODEX CARDS PURIFIED · SURVIVE TO STAGE ${GAME_CONFIG.stageCount} TO FILL ALL CARDS`}
         </div>
 
         {/* 4. CLEAN 3×2 TELEMETRY GRID */}
         <div className="results-telemetry-grid cabinet-telemetry-well">
           <div className="telemetry-tile">
-            <span className="telemetry-val stat-val">{stagesCleared} / 6</span>
+            <span className="telemetry-val stat-val">{stagesCleared} / {GAME_CONFIG.stageCount}</span>
             <span className="telemetry-lbl stat-label">CARDS COMPLETED</span>
           </div>
           <div className="telemetry-tile">

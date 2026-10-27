@@ -7,8 +7,8 @@ test('canonical score example matches the blueprint', () => {
   assert.equal(calculateShardAward({ normalShardPickups: 7, rareBonusPickups: 1 }), 10);
 });
 
-test('survival score caps at round cap (360s)', () => {
-  assert.equal(calculateScore({ survivalSeconds: 400, normalShardPickups: 0, rareBonusPickups: 0, milestonesReached: 0 }), 3600);
+test('survival score caps at round cap (4 rounds x 60s = 240s)', () => {
+  assert.equal(calculateScore({ survivalSeconds: 400, normalShardPickups: 0, rareBonusPickups: 0, milestonesReached: 0 }), 2400);
 });
 
 test('stage clear and fragment awards add score and shards properly', () => {

@@ -400,8 +400,8 @@ export class GameEngine {
     const currentStage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
     const hazardChance = currentStage.hazardChance || 0.75;
     const nRem = (tRem / spawnInterval) * hazardChance;
-    const stageNum = this.currentStageIndex + 1;
-    const pHit = ((totalHits + 5 * (0.06 + 0.02 * stageNum)) / (totalSpawns + 5)) * Math.sqrt(currentSpeed / 11.0);
+    const difficultyStep = this.getDifficultyTier() + 1;
+    const pHit = ((totalHits + 5 * (0.06 + 0.02 * difficultyStep)) / (totalSpawns + 5)) * Math.sqrt(currentSpeed / 11.0);
     const lambda = nRem * pHit;
 
     let pSurviveSum = 0;
@@ -441,6 +441,24 @@ export class GameEngine {
   }
 
   /**
+   * Difficulty step of the active stage on the original 6-step ladder (see tuneStageDifficulty).
+   * Secondary hazard ramps use this instead of the raw stage index so they follow difficulty.
+   */
+  getDifficultyTier() {
+    const currentStage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
+    return currentStage.difficultyTier ?? this.currentStageIndex;
+  }
+
+  /**
+   * Original stage number (1-6) whose look the active round borrows: atmosphere, music,
+   * hazard art and Pokédex card. Progression, scoring and stage_N events use the round number.
+   */
+  getThemeStage(stageIndex = this.currentStageIndex) {
+    const stage = GAME_STAGES[stageIndex] || GAME_STAGES[0];
+    return stage.themeStage ?? stageIndex + 1;
+  }
+
+  /**
    * Primary HUD state builder dispatched to React onStateChange.
    */
   updateHud(extra = {}) {
@@ -460,6 +478,7 @@ export class GameEngine {
       shards: (this.normalShards || 0) + ((this.rarePickups || 0) * 3) + ((this.stagesCleared || 0) * (GAME_CONFIG.rewards.stageClearShards ?? 15)),
       elapsedSeconds: (this.elapsedMs || 0) / 1000,
       stageNumber: this.currentStageIndex + 1,
+      themeStage: this.getThemeStage(),
       totalStages: GAME_STAGES.length,
       stageName: currentStage.name,
       stageSubtitle: currentStage.subtitle,
@@ -581,10 +600,10 @@ export class GameEngine {
     }
     this.playerEntity.root.position.set(this.currentX, 0, 0);
 
-    this.world.applyAtmosphere(null, 1);
+    this.world.applyAtmosphere(null, this.getThemeStage(0));
     this.updateHudImmediate();
     this.clock.start();
-    startBackgroundMusic(1);
+    startBackgroundMusic(this.getThemeStage(0));
     this.frame();
   }
 
@@ -732,7 +751,7 @@ export class GameEngine {
 
   spawn() {
     const stage = GAME_STAGES[this.currentStageIndex] || GAME_STAGES[0];
-    const stageNum = this.currentStageIndex + 1;
+    const stageNum = this.getThemeStage(); // hazard art follows the round's theme
     const allowedHazards = stage.hazardTypes || ['blocker_crate', 'shadow_wave'];
     const spawnZ = -GAME_CONFIG.spawnDistance;
 
@@ -773,10 +792,11 @@ export class GameEngine {
         return;
       }
 
-      // Scaled progressive hazard chances (+0.3x arcade challenge)
-      const doubleChance = 0.11 + Math.max(0, this.currentStageIndex - 2) * 0.035; // 0.11 in S3, 0.145 in S4, 0.18 in S5, 0.215 in S6
-      const swayChance = 0.17 + Math.max(0, this.currentStageIndex - 1) * 0.035; // 0.17 in S2, 0.205 in S3, etc.
-      const waveChance = 0.30 + this.currentStageIndex * 0.025;
+      // Scaled progressive hazard chances (+0.3x arcade challenge), keyed on difficulty tier
+      const tier = this.getDifficultyTier();
+      const doubleChance = 0.11 + Math.max(0, tier - 2) * 0.035; // 0.215 at 100%, 0.25 at 110%
+      const swayChance = 0.17 + Math.max(0, tier - 1) * 0.035; // 0.205 at 70%, 0.24 at 80%, 0.31 at 100%, 0.345 at 110%
+      const waveChance = 0.30 + tier * 0.025;
 
       // If a card is active on track, nearby, or in predictive card window:
       // STRICTLY FORBID double_blockade and swaying_specter!
@@ -907,10 +927,10 @@ export class GameEngine {
       if (this.attackStats) this.attackStats[entityKey].spawns += 1;
       this.emit(EVENT_TYPES.OBSTACLE_SPAWN, entityKey, 0, lane);
 
-      // In Stages 3 to 6, when spawning a single-lane blocker_crate (and no card is active/nearby),
-      // allow a (25% + stageIndex * 6%) chance to simultaneously spawn a jumpable shadow_wave in an adjacent safe lane
-      if (!isWave && !isCardActiveOnTrack && !cardNearby && !isPredictiveCardWindow && this.currentStageIndex >= 2 && allowedHazards.includes('shadow_wave')) {
-        const comboChance = 0.25 + this.currentStageIndex * 0.06;
+      // From difficulty tier 2 upward (70% and above), when spawning a single-lane blocker_crate (and no card is active/nearby),
+      // allow a (25% + tier * 6%) chance to simultaneously spawn a jumpable shadow_wave in an adjacent safe lane
+      if (!isWave && !isCardActiveOnTrack && !cardNearby && !isPredictiveCardWindow && tier >= 2 && allowedHazards.includes('shadow_wave')) {
+        const comboChance = 0.25 + tier * 0.06;
         if (Math.random() < comboChance) {
           const adjCandidates = lane === 1 ? [0, 2] : [1];
           const validAdj = adjCandidates.filter((l) => !cardLanesOccupied.has(l));
@@ -1108,8 +1128,9 @@ export class GameEngine {
       }
 
       if (object.isSway) {
-        object.swayTime += deltaMs * (0.0020 + this.currentStageIndex * 0.0005);
-        const maxOffset = 1.05 + this.currentStageIndex * 0.16;
+        const swayTier = this.getDifficultyTier();
+        object.swayTime += deltaMs * (0.0020 + swayTier * 0.0005);
+        const maxOffset = 1.05 + swayTier * 0.16;
         const offset = Math.sin(object.swayTime) * maxOffset;
         if (!object.isThrownProjectile || object.throwElapsedMs >= object.throwDurationMs) {
           object.mesh.position.x = Math.max(-3.5, Math.min(3.5, object.baseX + offset));
@@ -1210,7 +1231,7 @@ export class GameEngine {
             const isFullCard = this.stageCardsCollected >= (GAME_CONFIG.cardsRequiredPerStage || 5);
             playCardFragmentSfx(isFullCard);
             this.emit(EVENT_TYPES.FRAGMENT_PICKUP, ENTITY_KEYS.CARD_FRAGMENT, 1, object.lane);
-            const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.currentStageIndex);
+            const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.getThemeStage() - 1);
 
             // 3D Card Ascend & Golden Burst animation
             this.pickupAnimations.push({
@@ -1304,7 +1325,7 @@ export class GameEngine {
     this.stagesCleared += 1;
 
     const completedCard = {
-      ...POKEMON_CARD_ROSTER[this.currentStageIndex % POKEMON_CARD_ROSTER.length],
+      ...POKEMON_CARD_ROSTER[(this.getThemeStage() - 1) % POKEMON_CARD_ROSTER.length],
       stageNumber: completedStageNum,
       cardsCollected: this.stageCardsCollected,
       totalRequired: GAME_CONFIG.cardsRequiredPerStage || 5,
@@ -1338,13 +1359,13 @@ export class GameEngine {
       this.currentStageIndex += 1;
       this.stageElapsedMs = 0;
 
-      this.world.applyAtmosphere(null, this.currentStageIndex + 1);
+      this.world.applyAtmosphere(null, this.getThemeStage());
 
       this.updateHudImmediate({
         stageCompletedCard: completedCard,
       });
     } else {
-      // Stage 6 complete: directly launch Pennywise's Demise & Hexedex Seal Cutscene!
+      // Final stage complete: directly launch Pennywise's Demise & Hexedex Seal Cutscene!
       this.triggerVictorySequence();
     }
   }
@@ -1785,7 +1806,7 @@ export class GameEngine {
     if (this.running) {
       this.paused = false;
       this.clock.getDelta();
-      startBackgroundMusic(this.currentStageIndex + 1);
+      startBackgroundMusic(this.getThemeStage());
       this.updateHudImmediate();
     }
   }
@@ -1841,8 +1862,8 @@ export class GameEngine {
       this.objects = [];
     }
 
-    this.world.applyAtmosphere(null, stageIdx + 1);
-    startBackgroundMusic(stageIdx + 1);
+    this.world.applyAtmosphere(null, this.getThemeStage(stageIdx));
+    startBackgroundMusic(this.getThemeStage(stageIdx));
     this.updateHudImmediate({ stageIndex: stageIdx });
   }
 
@@ -1852,7 +1873,7 @@ export class GameEngine {
     const isFullCard = this.stageCardsCollected >= (GAME_CONFIG.cardsRequiredPerStage || 5);
     playCardFragmentSfx(isFullCard);
     this.emit(EVENT_TYPES.FRAGMENT_PICKUP, ENTITY_KEYS.CARD_FRAGMENT, 1, this.laneIndex);
-    const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.currentStageIndex);
+    const cardPickup = getCardPickupInfo(this.stageCardsCollected, this.getThemeStage() - 1);
     this.updateHudImmediate({
       fragmentGot: true,
       cardPickup,
@@ -1899,7 +1920,7 @@ export class GameEngine {
   }
 
   devTriggerVictory() {
-    // Fill all 6 stages cleared and emit events so results screen has all 6 cards complete
+    // Fill every stage as cleared and emit events so results screen has all stage cards complete
     while (this.stagesCleared < GAME_CONFIG.stageCount) {
       this.stagesCleared += 1;
       const stageKey = ENTITY_KEYS[`STAGE_${this.stagesCleared}`];
@@ -1907,7 +1928,7 @@ export class GameEngine {
     }
     this.currentStageIndex = GAME_CONFIG.stageCount - 1;
     this.stageCardsCollected = GAME_CONFIG.cardsRequiredPerStage || 5;
-    this.fragmentsCollected = Math.max(this.fragmentsCollected || 0, 30);
+    this.fragmentsCollected = Math.max(this.fragmentsCollected || 0, GAME_CONFIG.stageCount * (GAME_CONFIG.cardsRequiredPerStage || 5));
     this.triggerVictorySequence();
   }
 
